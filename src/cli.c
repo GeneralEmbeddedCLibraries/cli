@@ -78,6 +78,7 @@ cli_status_t cli_is_init(bool * const p_is_init)
 	cli_status_t status = eCLI_OK;
 
 
+
 	return status;
 }
 
