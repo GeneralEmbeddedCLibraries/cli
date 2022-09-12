@@ -20,10 +20,14 @@
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
 #include "cli_if.h"
+#include "cli_cfg.h"
 
 // USER CODE BEGIN...
 
 #include "drivers/peripheral/usart/uart_dbg.h"
+
+// ThreadX
+#include "tx_api.h"
 
 // USER CODE END...
 
@@ -31,11 +35,29 @@
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
+// USER CODE BEGIN..
+
+/**
+ *      Mutex Timeout
+ *
+ *  @note   Refer to "TX_TIMER_TICKS_PER_SECOND" macro for unit.
+ */
+#define CLI_IF_MUTEX_TIMEOUT_TICK           ( 10 )
+
+// USER CODE END...
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
 ////////////////////////////////////////////////////////////////////////////////
 
+// USER CODE BEGIN...
+
+/**
+ * 		Mutex object
+ */
+static TX_MUTEX g_cli_port_mutex = {0};
+
+// USER CODE END...
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
@@ -46,6 +68,13 @@
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Initialize Command Line Interface communication port
+*
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_init(void)
 {
 	cli_status_t status = eCLI_OK;
@@ -57,25 +86,59 @@ cli_status_t cli_if_init(void)
 		status = eCLI_ERROR_INIT;
 	}
 
+	#if ( 1 == CLI_CFG_MUTEX_EN )
+
+		// Create mutex
+		if ( TX_SUCCESS != tx_mutex_create( &g_cli_port_mutex, "Cli Mutex", TX_INHERIT ))
+		{
+			status = eCLI_ERROR_INIT;
+		}
+
+	#endif
+
 	// USER CODE END...
 
 	return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		De-initialize Command Line Interface communication port
+*
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_deinit(void)
 {
 	cli_status_t status = eCLI_OK;
 
 	// USER CODE BEGIN...
 
+	// TODO: De-init debug UART!!!
+
+	#if ( 1 == CLI_CFG_MUTEX_EN )
+
+		// Delete mutex as is no longer needed!
+		if ( TX_SUCCESS != tx_mutex_delete( &g_cli_port_mutex ))
+		{
+			status = eCLI_ERROR_INIT;
+		}
+
+	#endif
 
 	// USER CODE END...
 
 	return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Receive data
+*
+* @param[out]	p_data	- Pointer to received data
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_receive(uint8_t * const p_data)
 {
 	cli_status_t status = eCLI_OK;
@@ -92,7 +155,14 @@ cli_status_t cli_if_receive(uint8_t * const p_data)
 	return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Transmit data
+*
+* @param[in]	p_data	- Pointer to transmit data
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_transmit(const uint8_t * const p_data)
 {
 	cli_status_t status = eCLI_OK;
@@ -129,6 +199,10 @@ cli_status_t cli_if_aquire_mutex(void)
 
 	// USER CODE BEGIN...
 
+	if ( TX_SUCCESS != tx_mutex_get( &g_cli_port_mutex, CLI_IF_MUTEX_TIMEOUT_TICK ))
+	{
+		status = eCLI_ERROR;
+	}
 
 	// USER CODE END...
 
@@ -155,13 +229,13 @@ cli_status_t cli_if_release_mutex(void)
 
 	// USER CODE BEGIN...
 
+	// Release mutex
+	tx_mutex_put( &g_cli_port_mutex );
 
 	// USER CODE END...
 
 	return status;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

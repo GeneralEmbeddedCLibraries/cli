@@ -96,8 +96,6 @@ static cli_status_t cli_send_str(const uint8_t * const p_str)
 	return status;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /**
 * @} <!-- END GROUP -->
@@ -195,16 +193,23 @@ cli_status_t cli_printf(const uint8_t * p_format, ...)
 	cli_status_t 	status = eCLI_OK;
 	va_list 		args;
 
-	// Taking args from stack
-	va_start(args, p_format);
-	vsprintf((char*) gu8_tx_buffer, p_format, args);
-	va_end(args);
+	if ( true == gb_is_init )
+	{
+		// Taking args from stack
+		va_start(args, p_format);
+		vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+		va_end(args);
 
-	// Add line termination and print message
-	strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
+		// Add line termination and print message
+		strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
 
-	// Send string
-	status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+		// Send string
+		status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+	}
+	else
+	{
+		status = eCLI_ERROR_INIT;
+	}
 
 	return status;
 }
