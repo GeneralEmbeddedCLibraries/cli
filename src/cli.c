@@ -33,6 +33,22 @@
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Function prototypes
+////////////////////////////////////////////////////////////////////////////////
+static cli_status_t cli_send_str(const uint8_t * const p_str);
+
+// Basic CLI functions
+static void cli_help		  	(const uint8_t* attr);
+static void cli_reset	   	  	(const uint8_t* attr);
+static void cli_fw_version  	(const uint8_t* attr);
+static void cli_hw_version  	(const uint8_t* attr);
+static void cli_proj_info  		(const uint8_t* attr);
+static void cli_unknown	  		(const uint8_t* attr);
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,11 +63,23 @@ static bool gb_is_init = false;
  */
 static uint8_t gu8_tx_buffer[CLI_CFG_PRINTF_BUF_SIZE] = {0};
 
+/**
+ * 		Basic CLI commands
+ */
+static cli_cmd_t g_cli_basic_table[] =
+{
+	// -----------------------------------------------------------------------------
+	// 	name			function			help string
+	// -----------------------------------------------------------------------------
+	{ 	"help", 		cli_help, 			"Print all commands help" 			},
+	{ 	"reset", 		cli_reset, 			"Reset device" 						},
+	{ 	"fw_ver", 		cli_fw_version, 	"Print device firmware version" 	},
+	{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
+	{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
+};
 
-////////////////////////////////////////////////////////////////////////////////
-// Function prototypes
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_send_str(const uint8_t * const p_str);
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +122,38 @@ static cli_status_t cli_send_str(const uint8_t * const p_str)
 	#endif
 
 	return status;
+}
+
+static void cli_help(const uint8_t* attr)
+{
+
+}
+
+
+static void cli_reset(const uint8_t* attr)
+{
+
+}
+
+static void cli_fw_version(const uint8_t* attr)
+{
+
+}
+
+static void cli_hw_version(const uint8_t* attr)
+{
+
+}
+
+static void cli_proj_info(const uint8_t* attr)
+{
+
+}
+
+
+static void cli_unknown(const uint8_t* attr)
+{
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -213,6 +273,38 @@ cli_status_t cli_printf(const uint8_t * p_format, ...)
 
 	return status;
 }
+
+#if ( 1 == CLI_CFG_CHANNEL_EN )
+
+	// TODO: Append channel name...
+	cli_status_t cli_printf_ch	(const cli_ch_opt_t ch, const uint8_t * p_format, ...)
+	{
+		cli_status_t 	status = eCLI_OK;
+		va_list 		args;
+
+		if ( true == gb_is_init )
+		{
+			// Taking args from stack
+			va_start(args, p_format);
+			vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+			va_end(args);
+
+			// Add line termination and print message
+			strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
+
+			// TODO: Append channel name...
+
+			// Send string
+			status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+		}
+		else
+		{
+			status = eCLI_ERROR_INIT;
+		}
+
+		return status;
+	}
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

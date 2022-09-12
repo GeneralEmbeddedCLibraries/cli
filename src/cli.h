@@ -26,6 +26,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "../../cli_cfg.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -50,6 +52,21 @@ typedef enum
 
 } cli_status_t;
 
+/**
+ * 	 CLI Command Function
+ */
+typedef void(*pf_cli_cmd)(const uint8_t * const p_attr);
+
+/**
+ * 	 CLI Command Table
+ */
+typedef struct
+{
+	const uint8_t * p_name;		/**<Command name*/
+	pf_cli_cmd		p_func;		/**<Command function */
+	const uint8_t * p_help;		/**<Command help string */
+} cli_cmd_t;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -59,6 +76,11 @@ cli_status_t cli_deinit		(void);
 cli_status_t cli_is_init	(bool * const p_is_init);
 cli_status_t cli_hndl		(void);
 cli_status_t cli_printf		(const uint8_t * p_format, ...);
+
+#if ( 1 == CLI_CFG_CHANNEL_EN )
+	cli_status_t cli_printf_ch	(const cli_ch_opt_t ch, const uint8_t * p_format, ...);
+#endif
+
 
 #endif // __CLI_H
 
