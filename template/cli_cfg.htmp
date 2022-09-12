@@ -24,7 +24,6 @@
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
 
-
 // USER CODE BEGIN...
 
 #include "project_config.h"
@@ -38,6 +37,23 @@
 // USER CODE BEGIN...
 
 /**
+ * 	Termination string
+ *
+ * 	@note	Each "cli_printf" will have termination string appended to
+ * 			its back.
+ *
+ * 			If not used leave empty. E.g. ""
+ */
+#define CLI_CFG_TERMINATION_STRING				((const uint8_t*) ( "\r\n" ))
+
+/**
+ * 	Printf buffer size
+ *
+ * 	Unit: bytes
+ */
+#define CLI_CFG_PRINTF_BUF_SIZE					( 128 )
+
+/**
  * 	Enable/Disable debug mode
  */
 #define CLI_CFG_DEBUG_EN						( 0 )
@@ -45,7 +61,12 @@
 /**
  * 	Enable/Disable assertions
  */
-#define CLI_CFG_ASSERT_EN						( 0 )
+#define CLI_CFG_ASSERT_EN						( 1 )
+
+/**
+ * 	Enable/Disable multiple access protection
+ */
+#define CLI_CFG_MUTEX_EN						( 1 )
 
 /**
  * 	Debug communication port macros
