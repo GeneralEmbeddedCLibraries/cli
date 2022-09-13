@@ -260,11 +260,11 @@ static void cli_unknown(const uint8_t* attr)
 	static void	cli_send_intro(void)
 	{
 		cli_printf( "**************************************************" );
-		cli_printf( "\tProject:\t%s", CLI_CFG_INTRO_PROJECT_NAME );
-
-		// TODO: ...
-		//cli_printf( "\tFW ver.:\t%s", CLI_CFG_INTRO_PROJECT_NAME );
-		//cli_printf( "\tHW ver.:\t%s", CLI_CFG_INTRO_PROJECT_NAME );
+		cli_printf( "\tProject:\t%s", 	CLI_CFG_INTRO_PROJECT_NAME );
+		cli_printf( "\tFW ver.:\t%s", 	CLI_CFG_INTRO_SW_VER );
+		cli_printf( "\tHW ver.:\t%s", 	CLI_CFG_INTRO_HW_VER );
+		cli_printf( " ");
+		cli_printf( " See 'help' for further details." );
 		cli_printf( "**************************************************" );
 		cli_printf( "Ready to take orders..." );
 	}
