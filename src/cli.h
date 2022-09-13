@@ -75,10 +75,10 @@ cli_status_t cli_init		(void);
 cli_status_t cli_deinit		(void);
 cli_status_t cli_is_init	(bool * const p_is_init);
 cli_status_t cli_hndl		(void);
-cli_status_t cli_printf		(const uint8_t * p_format, ...);
+cli_status_t cli_printf		(char * p_format, ...);
 
 #if ( 1 == CLI_CFG_CHANNEL_EN )
-	cli_status_t cli_printf_ch	(const cli_ch_opt_t ch, const uint8_t * p_format, ...);
+	cli_status_t cli_printf_ch	(const cli_ch_opt_t ch, char * p_format, ...);
 #endif
 
 

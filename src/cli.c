@@ -33,11 +33,19 @@
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * 		Working buffer size
+ *
+ * 	Unit: byte
+ */
+#define CLI_PARSER_BUF_SIZE					( 128 )
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_send_str(const uint8_t * const p_str);
+static cli_status_t cli_send_str			(const uint8_t * const p_str);
+static cli_status_t cli_parser_hndl			(void);
+static void 		cli_execute_cmd			(const uint8_t * const p_cmd);
 
 // Basic CLI functions
 static void cli_help		  	(const uint8_t* attr);
@@ -47,6 +55,9 @@ static void cli_hw_version  	(const uint8_t* attr);
 static void cli_proj_info  		(const uint8_t* attr);
 static void cli_unknown	  		(const uint8_t* attr);
 
+#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+	static void			cli_send_intro			(void);
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,22 +75,38 @@ static bool gb_is_init = false;
 static uint8_t gu8_tx_buffer[CLI_CFG_PRINTF_BUF_SIZE] = {0};
 
 /**
- * 		Basic CLI commands
+ * 		Parser data
  */
-static cli_cmd_t g_cli_basic_table[] =
-{
-	// -----------------------------------------------------------------------------
-	// 	name			function			help string
-	// -----------------------------------------------------------------------------
-	{ 	"help", 		cli_help, 			"Print all commands help" 			},
-	{ 	"reset", 		cli_reset, 			"Reset device" 						},
-	{ 	"fw_ver", 		cli_fw_version, 	"Print device firmware version" 	},
-	{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
-	{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
-};
+static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
 
+#if __GNUC__
+	#pragma GCC diagnostic  push
+	#pragma GCC diagnostic  ignored "-Wpointer-sign"	// Ignore pointer sign for basic table
+#endif // __GNUC__
 
+	/**
+	 * 		Basic CLI commands
+	 */
+	static cli_cmd_t g_cli_basic_table[] =
+	{
+		// -----------------------------------------------------------------------------
+		// 	name			function			help string
+		// -----------------------------------------------------------------------------
+		{ 	"help", 		cli_help, 			"Print all commands help" 			},
+		{ 	"reset", 		cli_reset, 			"Reset device" 						},
+		{ 	"fw_ver", 		cli_fw_version, 	"Print device firmware version" 	},
+		{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
+		{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
+	};
 
+#if __GNUC__
+	#pragma GCC diagnostic  pop		// Restore all warnings
+#endif // __GNUC__
+
+/**
+ * 	Number of basic commands
+ */
+static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_table ) / sizeof( cli_cmd_t )));
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +151,77 @@ static cli_status_t cli_send_str(const uint8_t * const p_str)
 	return status;
 }
 
+static cli_status_t cli_parser_hndl(void)
+{
+			cli_status_t 	status 	= eCLI_OK;
+	static 	uint32_t  		buf_idx	= 0;
+
+	// Take all data from reception buffer
+	while ( eCLI_OK == cli_if_receive( &gu8_parser_buffer[buf_idx] ))
+	{
+		// Check for termination character
+		if 	(	( '\r' == gu8_parser_buffer[buf_idx] )
+			||	( '\n' == gu8_parser_buffer[buf_idx] ))
+		{
+			// Replace end termination with NULL
+			gu8_parser_buffer[buf_idx] = '\0';
+
+			// Reset buffer index
+			buf_idx = 0;
+
+			// Execute command
+			cli_execute_cmd( gu8_parser_buffer );
+
+			break;
+		}
+
+		// Still size in buffer?
+		else if ( buf_idx < ( CLI_PARSER_BUF_SIZE - 2 ))
+		{
+			buf_idx++;
+		}
+
+		// No more size in buffer --> OVERRUN ERROR
+		else
+		{
+			CLI_DBG_PRINT( "CLI: Overrun Error!" )
+			CLI_ASSERT( 0 );
+
+			// Reset index
+			buf_idx = 0;
+
+			status = eCLI_ERROR;
+
+			break;
+		}
+
+		// TODO: Implement protection again infinite loop!
+	}
+
+	return status;
+}
+
+static void cli_execute_cmd(const uint8_t * const p_cmd)
+{
+	uint32_t cmd_idx = 0;
+
+	// Basic command check
+	for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
+	{
+		if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table[cmd_idx].p_name, strlen((const char*) g_cli_basic_table[cmd_idx].p_name ))))
+		{
+			g_cli_basic_table[cmd_idx].p_func(NULL);
+			break;
+		}
+	}
+
+	// No command found in side table
+	if ( cmd_idx >= ( gu32_basic_cmd_num_of - 1 ))
+	{
+		cli_unknown(NULL);
+	}
+}
+
 static void cli_help(const uint8_t* attr)
 {
 
@@ -153,8 +251,25 @@ static void cli_proj_info(const uint8_t* attr)
 
 static void cli_unknown(const uint8_t* attr)
 {
-
+	cli_printf( "Unknown command!" );
 }
+
+#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+
+
+	static void	cli_send_intro(void)
+	{
+		cli_printf( "**************************************************" );
+		cli_printf( "\tProject:\t%s", CLI_CFG_INTRO_PROJECT_NAME );
+
+		// TODO: ...
+		//cli_printf( "\tFW ver.:\t%s", CLI_CFG_INTRO_PROJECT_NAME );
+		//cli_printf( "\tHW ver.:\t%s", CLI_CFG_INTRO_PROJECT_NAME );
+		cli_printf( "**************************************************" );
+		cli_printf( "Ready to take orders..." );
+	}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -180,17 +295,23 @@ cli_status_t cli_init(void)
 		// Initialize interface
 		status = cli_if_init();
 
+		// Low level driver init error!
+		CLI_ASSERT( eCLI_OK == status );
+
 		if ( eCLI_OK == status )
 		{
+			// Init success
 			gb_is_init = true;
+
+			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+				cli_send_intro();
+			#endif
 		}
 	}
 	else
 	{
 		status = eCLI_ERROR_INIT;
 	}
-
-	CLI_ASSERT( eCLI_OK == status );
 
 	return status;
 }
@@ -202,7 +323,11 @@ cli_status_t cli_deinit(void)
 
 	if ( true == gb_is_init )
 	{
+		// De-init interface
 		status = cli_if_deinit();
+
+		// Low level driver de-init error
+		CLI_ASSERT( eCLI_OK == status );
 
 		if ( eCLI_OK == status )
 		{
@@ -213,8 +338,6 @@ cli_status_t cli_deinit(void)
 	{
 		status = eCLI_ERROR_INIT;
 	}
-
-	CLI_ASSERT( eCLI_OK == status );
 
 	return status;
 }
@@ -243,12 +366,17 @@ cli_status_t cli_hndl(void)
 {
 	cli_status_t status = eCLI_OK;
 
+	// Cli parser handler
+	status = cli_parser_hndl();
+
+	// Data streaming
+	// TODO: ...
 
 	return status;
 }
 
 
-cli_status_t cli_printf(const uint8_t * p_format, ...)
+cli_status_t cli_printf(char * p_format, ...)
 {
 	cli_status_t 	status = eCLI_OK;
 	va_list 		args;
@@ -277,7 +405,7 @@ cli_status_t cli_printf(const uint8_t * p_format, ...)
 #if ( 1 == CLI_CFG_CHANNEL_EN )
 
 	// TODO: Append channel name...
-	cli_status_t cli_printf_ch	(const cli_ch_opt_t ch, const uint8_t * p_format, ...)
+	cli_status_t cli_printf_ch	(const cli_ch_opt_t ch, char * p_format, ...)
 	{
 		cli_status_t 	status = eCLI_OK;
 		va_list 		args;
