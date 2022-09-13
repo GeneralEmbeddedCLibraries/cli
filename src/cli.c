@@ -473,7 +473,7 @@ static uint32_t	cli_calc_cmd_size(const char * p_cmd, const char * attr)
 /*!
 * @brief        Show help
 *
-* @param[in]	attr 	- Rest of the command string
+* @param[in]	attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -528,7 +528,7 @@ static void cli_help(const uint8_t* attr)
 /*!
 * @brief        Reset device
 *
-* @param[in]	attr 	- Rest of the command string
+* @param[in]	aattr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -549,7 +549,7 @@ static void cli_reset(const uint8_t* attr)
 /*!
 * @brief        Show SW version
 *
-* @param[in]	attr 	- Rest of the command string
+* @param[in]	attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,7 +569,7 @@ static void cli_sw_version(const uint8_t* attr)
 /*!
 * @brief        Show HW version
 *
-* @param[in]	attr 	- Rest of the command string
+* @param[in]	attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +589,7 @@ static void cli_hw_version(const uint8_t* attr)
 /*!
 * @brief        Show detailed project informations
 *
-* @param[in]	attr 	- Rest of the command string
+* @param[in]	attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -609,7 +609,7 @@ static void cli_proj_info(const uint8_t* attr)
 /*!
 * @brief        Unknown command received
 *
-* @param[in]	attr 	- Rest of the command string
+* @param[in]	attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -620,36 +620,96 @@ static void cli_unknown(const uint8_t* attr)
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Print parameter details
+	*
+	* @note			Command format: >>>par_print
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_print(const uint8_t* attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Set parameter value
+	*
+	* @note			Command format: >>>par_set [ID,value]
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_set(const uint8_t* attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		get parameter value
+	*
+	* @note			Command format: >>>par_get [ID]
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_get(const uint8_t* attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Set parameter value to default
+	*
+	* @note			Command format: >>>par_def [ID]
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_def(const uint8_t* attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Set all parameters value to default
+	*
+	* @note			Command format: >>>par_def_all
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_def_all(const uint8_t* attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Store all persistent parameters to NVM
+	*
+	* @note			Command format: >>>par_store
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_store(const uint8_t* attr)
 	{
 		// TODO: ...
