@@ -30,8 +30,7 @@
 #include "../../cli_if.h"
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-	// TODO: Remove
-	//#include "middleware/parameters/parameters/src/par.h"
+	#include "middleware/parameters/parameters/src/par.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,12 +90,13 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 #endif
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-	static void cli_par_print	  	(const uint8_t * p_attr);
-	static void cli_par_set		  	(const uint8_t * p_attr);
-	static void cli_par_get		  	(const uint8_t * p_attr);
-	static void cli_par_def		  	(const uint8_t * p_attr);
-	static void cli_par_def_all	  	(const uint8_t * p_attr);
-	static void cli_par_store	  	(const uint8_t * p_attr);
+	static void 		cli_par_print	  		(const uint8_t * p_attr);
+	static void 		cli_par_set		  		(const uint8_t * p_attr);
+	static void 		cli_par_get		  		(const uint8_t * p_attr);
+	static void 		cli_par_def		  		(const uint8_t * p_attr);
+	static void 		cli_par_def_all	  		(const uint8_t * p_attr);
+	static void 		cli_par_store	  		(const uint8_t * p_attr);
+	static float32_t 	cli_par_val_to_float	(const par_type_list_t par_type, const void * p_val);
 #endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
@@ -696,8 +696,58 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_print(const uint8_t * p_attr)
 	{
-		// TODO: ...
-		cli_printf("Needs to be defined...");
+		par_cfg_t 	par_cfg 	= { 0 };
+		uint32_t 	par_num		= 0UL;
+		uint32_t	par_val		= 0UL;
+
+		// Send header
+		cli_printf(";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level");
+
+		cli_printf( ":PARAMETER ACCESS LEGEND" );
+		cli_printf( ":RO - Read Only" );
+		cli_printf( ":RW - Read Write" );
+		cli_printf( ": " );
+
+		// For each parameter
+		for ( par_num = 0; par_num < ePAR_NUM_OF; par_num++ )
+		{
+			// Get parameter configuration
+			par_get_config( par_num, &par_cfg );
+
+			// Get current parameter value
+			par_get( par_num, &par_val );
+
+			// Print header
+			// TODO: Define how to print header
+			//shell_par_print_header( par_num );
+
+			if ( NULL != par_cfg.unit )
+			{
+				// Par info response
+				cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4\r",
+						(int) par_cfg.id,
+						par_cfg.name,
+						cli_par_val_to_float( par_cfg.type, &par_val ),
+						cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
+						cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
+						cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ),
+						par_cfg.unit );
+			}
+			else
+			{
+				// Par info response
+				cli_printf("%u, %s, %g, %g, %g, %g, ,f,4\r",
+						(int) par_cfg.id,
+						par_cfg.name,
+						cli_par_val_to_float( par_cfg.type, &par_val ),
+						cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
+						cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
+						cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ));
+			}
+
+		}
+
+		cli_printf(";END");
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -778,6 +828,59 @@ static void cli_unknown(const uint8_t * p_attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 	Convert parameter any value type to float
+	*
+	* 	@note	It is being used for sprintf functionalities
+	*
+	* @param[in] 	par_type	- Data type of parameter
+	* @param[in] 	p_val		- Pointer to parameter value
+	* @return 		f32_par_val	- Floating representation of parameter value
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	static float32_t cli_par_val_to_float(const par_type_list_t par_type, const void * p_val)
+	{
+		float32_t f32_par_val = 0.0f;
+
+		switch( par_type )
+		{
+			case ePAR_TYPE_U8:
+				f32_par_val = *(uint8_t*) p_val;
+				break;
+
+			case ePAR_TYPE_I8:
+				f32_par_val = *(int8_t*) p_val;
+				break;
+
+			case ePAR_TYPE_U16:
+				f32_par_val = *(uint16_t*) p_val;
+				break;
+
+			case ePAR_TYPE_I16:
+				f32_par_val = *(int16_t*) p_val;
+				break;
+
+			case ePAR_TYPE_U32:
+				f32_par_val = *(uint32_t*) p_val;
+				break;
+
+			case ePAR_TYPE_I32:
+				f32_par_val = *(int32_t*) p_val;
+				break;
+
+			case ePAR_TYPE_F32:
+				f32_par_val = *(float32_t*) p_val;
+				break;
+
+			default:
+				// No actions..
+				break;
+		}
+
+		return f32_par_val;
 	}
 
 #endif
