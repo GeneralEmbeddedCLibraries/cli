@@ -85,7 +85,7 @@
  *
  * 			size_of_cmd_table = ( 12 * CLI_CFG_MAX_NUM_OF_COMMANDS ) [bytes]
  */
-#define CLI_CFG_MAX_NUM_OF_COMMANDS				( 10 )
+#define CLI_CFG_MAX_NUM_OF_COMMANDS				( 4 )
 
 /**
  * 	Maximum number of user defined command tables
@@ -102,16 +102,6 @@
  * 	@note
  */
 #define CLI_CFG_MAX_NUM_OF_USER_TABLES			( 8 )
-
-/**
- * 	Enable/Disable debug mode
- */
-#define CLI_CFG_DEBUG_EN						( 0 )
-
-/**
- * 	Enable/Disable assertions
- */
-#define CLI_CFG_ASSERT_EN						( 1 )
 
 /**
  * 	Enable/Disable multiple access protection
@@ -144,14 +134,14 @@
 #endif
 
 /**
- * 	Debug communication port macros
+ * 	Enable/Disable debug mode
  */
-#if ( 1 == CLI_CFG_DEBUG_EN )
-	#define CLI_DBG_PRINT( ... )				( com_dbg_print( eCOM_DBG_CH_NONE, (const char*) __VA_ARGS__ ))
-#else
-	#define CLI_DBG_PRINT( ... )				{ ; }
+#define CLI_CFG_DEBUG_EN						( 1 )
 
-#endif
+/**
+ * 	Enable/Disable assertions
+ */
+#define CLI_CFG_ASSERT_EN						( 1 )
 
 /**
  * 	 Assertion macros

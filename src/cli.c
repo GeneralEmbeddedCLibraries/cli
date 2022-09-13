@@ -45,6 +45,16 @@
  */
 #define CLI_USER_CMD_TABLE_MAX_COUNT		( 8 )
 
+/**
+ * 	Debug communication port macros
+ */
+#if ( 1 == CLI_CFG_DEBUG_EN )
+	#define CLI_DBG_PRINT(...)				( cli_printf((char*) __VA_ARGS__ ))
+#else
+	#define CLI_DBG_PRINT(...)				{ ; }
+
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +74,7 @@ static void cli_unknown	  		(const uint8_t* attr);
 	static void			cli_send_intro			(void);
 #endif
 
+static bool cli_validate_user_table(const cli_cmd_table_t * const p_cmd_table);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -198,7 +209,7 @@ static cli_status_t cli_parser_hndl(void)
 		// No more size in buffer --> OVERRUN ERROR
 		else
 		{
-			CLI_DBG_PRINT( "CLI: Overrun Error!" )
+			CLI_DBG_PRINT( "CLI: Overrun Error!" );
 			CLI_ASSERT( 0 );
 
 			// Reset index
@@ -265,7 +276,12 @@ static void cli_help(const uint8_t* attr)
 	// Basic command table printout
 	for ( cmd_idx = 0; cmd_idx < g_cli_basic_table.num_of; cmd_idx++ )
 	{
-		cli_printf( " %s\t\t\t\t%s", g_cli_basic_table.cmd[cmd_idx].p_name, g_cli_basic_table.cmd[cmd_idx].p_help );
+		// Get name and help string
+		const char * name_str = g_cli_basic_table.cmd[cmd_idx].p_name;
+		const char * help_str = g_cli_basic_table.cmd[cmd_idx].p_help ;
+
+		// Left adjust for 20 chars
+		cli_printf( "%-20s%s", name_str, help_str );
 	}
 
 	// User defined tables
@@ -280,7 +296,12 @@ static void cli_help(const uint8_t* attr)
 			// Show help for that table
 			for ( user_cmd_idx = 0; user_cmd_idx < num_of_user_cmd; user_cmd_idx++ )
 			{
-				cli_printf( " %s\t\t\t\t%s", gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_name, gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_help );
+				// Get name and help string
+				const char * name_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_name;
+				const char * help_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_help;
+
+				// Left adjust for 20 chars
+				cli_printf( "%-20s%s", name_str, help_str );
 			}
 		}
 	}
@@ -374,6 +395,48 @@ static void cli_unknown(const uint8_t* attr)
 	}
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Validate user defined table
+*
+* @param[in]	p_cmd_table		- User defined cli command table
+* @return		valid			- Validation flag
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_validate_user_table(const cli_cmd_table_t * const p_cmd_table)
+{
+			bool 		valid = true;
+	const 	uint32_t	num_of = p_cmd_table->num_of;
+
+	// Check max. num of commands
+	if ( num_of <= CLI_CFG_MAX_NUM_OF_COMMANDS )
+	{
+		// Roll thru all commands
+		for (uint32_t cmd_num = 0; cmd_num < num_of; cmd_num++)
+		{
+			// Get name, func and help
+			const char * name 	= p_cmd_table->cmd[cmd_num].p_name;
+			const char * help 	= p_cmd_table->cmd[cmd_num].p_help;
+			pf_cli_cmd func 	= p_cmd_table->cmd[cmd_num].p_func;
+
+			// Missing definitions?
+			if 	(	( NULL == name )
+				||	( NULL == help )
+				||	( NULL == func ))
+			{
+				valid = false;
+				break;
+			}
+		}
+	}
+	else
+	{
+		valid = false;
+	}
+
+	return valid;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -558,12 +621,33 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 
 	CLI_ASSERT( NULL != p_cmd_table );
 
-	if ( NULL != p_cmd_table )
+	if ( true == gb_is_init )
 	{
-		if ( gu32_user_table_count < CLI_USER_CMD_TABLE_MAX_COUNT )
+		if ( NULL != p_cmd_table )
 		{
-			gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
-			gu32_user_table_count++;
+			// Is there any space left for user tables?
+			if ( gu32_user_table_count < CLI_USER_CMD_TABLE_MAX_COUNT )
+			{
+				// User table defined OK
+				if ( true == cli_validate_user_table( p_cmd_table ))
+				{
+					// Store
+					gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
+					gu32_user_table_count++;
+				}
+
+				// User table definition error
+				else
+				{
+					CLI_DBG_PRINT( "CLI ERROR: Invalid definition of user table!");
+					CLI_ASSERT( 0 );
+					status = eCLI_ERROR;
+				}
+			}
+			else
+			{
+				status = eCLI_ERROR;
+			}
 		}
 		else
 		{
@@ -572,7 +656,7 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 	}
 	else
 	{
-		status = eCLI_ERROR;
+		status = eCLI_ERROR_INIT;
 	}
 
 	return status;
