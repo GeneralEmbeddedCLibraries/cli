@@ -29,6 +29,11 @@
 #include "../../cli_cfg.h"
 #include "../../cli_if.h"
 
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+	// TODO: Remove
+	//#include "middleware/parameters/parameters/src/par.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,11 +61,6 @@
 #endif
 
 /**
- * 	Number of basic commands
- */
-#define CLI_NUM_OF_BASIC_CMD				( 5 )
-
-/**
  * 	Get max
  */
 #define CLI_MAX(a,b) 						((a >= b) ? (a) : (b))
@@ -83,6 +83,15 @@ static void cli_sw_version  	(const uint8_t* attr);
 static void cli_hw_version  	(const uint8_t* attr);
 static void cli_proj_info  		(const uint8_t* attr);
 static void cli_unknown	  		(const uint8_t* attr);
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+	static void cli_par_print	  	(const uint8_t* attr);
+	static void cli_par_set		  	(const uint8_t* attr);
+	static void cli_par_get		  	(const uint8_t* attr);
+	static void cli_par_def		  	(const uint8_t* attr);
+	static void cli_par_def_all	  	(const uint8_t* attr);
+	static void cli_par_store	  	(const uint8_t* attr);
+#endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
 	static void			cli_send_intro			(void);
@@ -114,17 +123,31 @@ static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
 /**
  * 		Basic CLI commands
  */
-static cli_cmd_t g_cli_basic_table[CLI_NUM_OF_BASIC_CMD] =
+static cli_cmd_t g_cli_basic_table[] =
 {
-	// -----------------------------------------------------------------------------
+	// ----------------------------------------------------------------------------------
 	// 	name			function			help string
-	// -----------------------------------------------------------------------------
-	{ 	"help", 		cli_help, 			"Print all commands help" 			},
-	{ 	"reset", 		cli_reset, 			"Reset device" 						},
-	{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 	},
-	{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
-	{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
+	// ----------------------------------------------------------------------------------
+	{ 	"help", 		cli_help, 			"Print all commands help" 					},
+	{ 	"reset", 		cli_reset, 			"Reset device" 								},
+	{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 			},
+	{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 			},
+	{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 				},
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+	{"par_print",		cli_par_print,		    "Prints parameters"						},
+	{"par_set", 		cli_par_set,			"Set parameter [parID,value]"			},
+	{"par_get",			cli_par_get,		    "Get parameter [parID]"					},
+	{"par_def",			cli_par_def,	    	"Set parameter to default [parID]"		},
+	{"par_def_all",		cli_par_def_all,    	"Set all parameters to default"			},
+	{"par_save",		cli_par_store,	    	"Save parameter to NVM"					},
+#endif
 };
+
+/**
+ *     Number of basic commands
+ */
+static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_table ) / sizeof( cli_cmd_t )));
 
 /**
  * 	Pointer array to user defined tables
@@ -323,7 +346,7 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const uint32_t cmd
 	bool 		cmd_found 		= false;
 
 	// Walk thru basic commands
-	for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
+	for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
 	{
 		// Get cmd name
 		name_str = g_cli_basic_table[cmd_idx].p_name;
@@ -463,7 +486,7 @@ static void cli_help(const uint8_t* attr)
 	if ( NULL == attr )
 	{
 		// Basic command table printout
-		for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
+		for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
 		{
 			// Get name and help string
 			const char * name_str = g_cli_basic_table[cmd_idx].p_name;
@@ -594,6 +617,46 @@ static void cli_unknown(const uint8_t* attr)
 {
 	cli_printf( "ERR, Unknown command!" );
 }
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+	static void cli_par_print(const uint8_t* attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+	static void cli_par_set(const uint8_t* attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+	static void cli_par_get(const uint8_t* attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+	static void cli_par_def(const uint8_t* attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+	static void cli_par_def_all(const uint8_t* attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+	static void cli_par_store(const uint8_t* attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+#endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
 

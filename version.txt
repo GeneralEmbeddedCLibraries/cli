@@ -3,12 +3,19 @@
 ============================================================
  
  Brief:
-   - 
+	- Initial implementation
+   
  
  Features: 
-   - 
+   - Implementation of command line parser
+   - Definition of basic command functions
+   - Implementation of user command table 
+   	 registration during runtime
    
  Todo:
-   - 
+   - Debug channels
+   - Parameters support
+   - Live watch support
+   - Osci support
    
 ============================================================
