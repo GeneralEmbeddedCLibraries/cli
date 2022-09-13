@@ -64,9 +64,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_send_str			(const uint8_t * const p_str);
-static cli_status_t cli_parser_hndl			(void);
-static void 		cli_execute_cmd			(const uint8_t * const p_cmd);
+static cli_status_t cli_send_str					(const uint8_t * const p_str);
+static cli_status_t cli_parser_hndl					(void);
+static void 		cli_execute_cmd					(const uint8_t * const p_cmd);
+static bool 		cli_basic_table_check_and_exe	(const char * p_cmd, const char * attr);
+static bool 		cli_user_table_check_and_exe	(const char * p_cmd, const char * attr);
 
 // Basic CLI functions
 static void cli_help		  	(const uint8_t* attr);
@@ -80,7 +82,9 @@ static void cli_unknown	  		(const uint8_t* attr);
 	static void			cli_send_intro			(void);
 #endif
 
-static bool cli_validate_user_table(const cli_cmd_table_t * const p_cmd_table);
+static bool 			cli_validate_user_table	(const cli_cmd_table_t * const p_cmd_table);
+static const char * 	cli_find_char			(const char * const str, const char target_char, const uint32_t size);
+static const int32_t 	cli_find_char_pos		(const char * const str, const char target_char, const uint32_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -232,55 +236,143 @@ static cli_status_t cli_parser_hndl(void)
 * @note			Entering that function means CR or LF has been received. Input
 * 				string is terminated with '\0'.
 *
+* @note			Dividing into simple and combined commands. Simple command
+* 				does not have empty space in it. Combined command uses
+* 				empty spaces (' ') in order to pass multiple attributes.
+*
 * @param[in]	p_cmd	- NULL terminated input string
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_execute_cmd(const uint8_t * const p_cmd)
 {
-	uint32_t 	cmd_idx 	= 0;
-	uint32_t 	table_idx	= 0;
-	bool		cmd_found 	= false;
+	bool cmd_found = false;
 
-	// Basic command check
-	for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
-	{
-		// Valid command?
-		if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table[cmd_idx].p_name, strlen((const char*) g_cli_basic_table[cmd_idx].p_name ))))
-		{
-			// Execute command
-			g_cli_basic_table[cmd_idx].p_func(NULL);
+	// Get command options
+	const char * cmd_opt = cli_find_char((const char * const) p_cmd, ' ', CLI_PARSER_BUF_SIZE );
 
-			// Comamnd found
-			cmd_found = true;
-
-			break;
-		}
-	}
+	// First check and execute for basic commands
+	cmd_found = cli_basic_table_check_and_exe((const char*) p_cmd, cmd_opt );
 
 	// Command not founded jet
 	if ( false == cmd_found )
 	{
-		// Search thru user defined tables
-		for ( table_idx = 0; table_idx < CLI_USER_CMD_TABLE_MAX_COUNT; table_idx++ )
+		// Check and execute user defined commands
+		cmd_found = cli_user_table_check_and_exe((const char*) p_cmd, cmd_opt );
+	}
+
+	// No command found in any of the tables
+	if ( false == cmd_found )
+	{
+		cli_unknown( NULL );
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Check and execute basic table commands
+*
+* @note			Dividing into simple and combined commands. Simple command
+* 				does not have empty space in it. Combined command uses
+* 				empty spaces (' ') in order to pass multiple attributes.
+*
+* @param[in]	p_cmd		- NULL terminated input string
+* @param[in]	attr		- Additional command attributes
+* @return       cmd_found	- Command found flag
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_basic_table_check_and_exe(const char * p_cmd, const char * attr)
+{
+	uint32_t 	cmd_idx 	= 0;
+	bool 		cmd_found 	= false;
+
+	// Walk thru basic commands
+	for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
+	{
+		// Simple command - without empty space
+		if ( NULL == attr )
 		{
-			// Check if registered
-			if ( NULL != gp_cli_user_tables[table_idx] )
+			// Valid command?
+			if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table[cmd_idx].p_name, strlen((const char*) p_cmd ))))
 			{
-				// Get number of user commands inside single table
-				const uint32_t num_of_user_cmd = gp_cli_user_tables[table_idx]->num_of;
+				// Execute command
+				g_cli_basic_table[cmd_idx].p_func( NULL );
 
-				// Go thru command table
-				for ( cmd_idx = 0; cmd_idx < num_of_user_cmd; cmd_idx++ )
+				// Comamnd found
+				cmd_found = true;
+
+				break;
+			}
+		}
+
+		// Combined command - with additional attributes separated by empty space
+		else
+		{
+			// Valid command?
+			if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table[cmd_idx].p_name, strlen((const char*) g_cli_basic_table[cmd_idx].p_name ))))
+			{
+				// Execute command
+				g_cli_basic_table[cmd_idx].p_func((const uint8_t * const) attr );
+
+				// Comamnd found
+				cmd_found = true;
+
+				break;
+			}
+		}
+	}
+
+	return cmd_found;
+}
+
+static bool cli_user_table_check_and_exe(const char * p_cmd, const char * attr)
+{
+	uint32_t 	cmd_idx 	= 0;
+	uint32_t 	table_idx	= 0;
+	bool 		cmd_found = false;
+
+	// Search thru user defined tables
+	for ( table_idx = 0; table_idx < CLI_USER_CMD_TABLE_MAX_COUNT; table_idx++ )
+	{
+		// Check if registered
+		if ( NULL != gp_cli_user_tables[table_idx] )
+		{
+			// Get number of user commands inside single table
+			const uint32_t num_of_user_cmd = gp_cli_user_tables[table_idx]->num_of;
+
+			// Go thru command table
+			for ( cmd_idx = 0; cmd_idx < num_of_user_cmd; cmd_idx++ )
+			{
+				// Get name
+				const char * name_str = gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_name;
+
+				// Simple command - without empty space
+				if ( NULL == attr )
 				{
-					// Get name
-					const char * name_str = gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_name;
-
 					// Valid command?
-					if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, strlen((const char*) name_str ))))
+					if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, strlen((const char*) p_cmd ))))
 					{
 						// Execute command
-						gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func(NULL);
+						gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func( NULL );
+
+						// Comand founded
+						cmd_found = true;
+
+						break;
+					}
+				}
+
+				// Combined command - with additional attributes separated by empty space
+				else
+				{
+					// Calculate number of chars till space
+					const int32_t size_to_compare = cli_find_char_pos( p_cmd, ' ', CLI_PARSER_BUF_SIZE );
+
+					// Valid command?
+					if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, size_to_compare )))
+					{
+						// Execute command
+						gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func((const uint8_t * const) attr );
 
 						// Comand founded
 						cmd_found = true;
@@ -289,20 +381,16 @@ static void cli_execute_cmd(const uint8_t * const p_cmd)
 					}
 				}
 			}
+		}
 
-			// When command is found stop searching
-			if ( true == cmd_found )
-			{
-				break;
-			}
+		// When command is found stop searching
+		if ( true == cmd_found )
+		{
+			break;
 		}
 	}
 
-	// No command found in any of the tables
-	if ( false == cmd_found )
-	{
-		cli_unknown(NULL);
-	}
+	return cmd_found;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,37 +406,45 @@ static void cli_help(const uint8_t* attr)
 	uint32_t cmd_idx 		= 0;
 	uint32_t user_cmd_idx 	= 0;
 
-	// Basic command table printout
-	for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
+	// No additional attributes
+	if ( NULL == attr )
 	{
-		// Get name and help string
-		const char * name_str = g_cli_basic_table[cmd_idx].p_name;
-		const char * help_str = g_cli_basic_table[cmd_idx].p_help ;
-
-		// Left adjust for 20 chars
-		cli_printf( "%-20s%s", name_str, help_str );
-	}
-
-	// User defined tables
-	for ( cmd_idx = 0; cmd_idx < CLI_USER_CMD_TABLE_MAX_COUNT; cmd_idx++ )
-	{
-		// Check if registered
-		if ( NULL != gp_cli_user_tables[cmd_idx] )
+		// Basic command table printout
+		for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
 		{
-			// Get number of user commands inside single table
-			const uint32_t num_of_user_cmd = gp_cli_user_tables[cmd_idx]->num_of;
+			// Get name and help string
+			const char * name_str = g_cli_basic_table[cmd_idx].p_name;
+			const char * help_str = g_cli_basic_table[cmd_idx].p_help ;
 
-			// Show help for that table
-			for ( user_cmd_idx = 0; user_cmd_idx < num_of_user_cmd; user_cmd_idx++ )
+			// Left adjust for 20 chars
+			cli_printf( "%-20s%s", name_str, help_str );
+		}
+
+		// User defined tables
+		for ( cmd_idx = 0; cmd_idx < CLI_USER_CMD_TABLE_MAX_COUNT; cmd_idx++ )
+		{
+			// Check if registered
+			if ( NULL != gp_cli_user_tables[cmd_idx] )
 			{
-				// Get name and help string
-				const char * name_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_name;
-				const char * help_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_help;
+				// Get number of user commands inside single table
+				const uint32_t num_of_user_cmd = gp_cli_user_tables[cmd_idx]->num_of;
 
-				// Left adjust for 20 chars
-				cli_printf( "%-20s%s", name_str, help_str );
+				// Show help for that table
+				for ( user_cmd_idx = 0; user_cmd_idx < num_of_user_cmd; user_cmd_idx++ )
+				{
+					// Get name and help string
+					const char * name_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_name;
+					const char * help_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_help;
+
+					// Left adjust for 20 chars
+					cli_printf( "%-20s%s", name_str, help_str );
+				}
 			}
 		}
+	}
+	else
+	{
+		cli_unknown(NULL);
 	}
 }
 
@@ -362,8 +458,15 @@ static void cli_help(const uint8_t* attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_reset(const uint8_t* attr)
 {
-	cli_printf("OK, reseting device...");
-	cli_if_device_reset();
+	if ( NULL == attr )
+	{
+		cli_printf("OK, reseting device...");
+		cli_if_device_reset();
+	}
+	else
+	{
+		cli_unknown(NULL);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -376,7 +479,14 @@ static void cli_reset(const uint8_t* attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_sw_version(const uint8_t* attr)
 {
-	cli_printf( "OK, SW ver.: %s", 	CLI_CFG_INTRO_SW_VER );
+	if ( NULL == attr )
+	{
+		cli_printf( "OK, SW ver.: %s", 	CLI_CFG_INTRO_SW_VER );
+	}
+	else
+	{
+		cli_unknown(NULL);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -389,7 +499,14 @@ static void cli_sw_version(const uint8_t* attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_hw_version(const uint8_t* attr)
 {
-	cli_printf( "OK, HW ver.: %s", 	CLI_CFG_INTRO_HW_VER );
+	if ( NULL == attr )
+	{
+		cli_printf( "OK, HW ver.: %s", 	CLI_CFG_INTRO_HW_VER );
+	}
+	else
+	{
+		cli_unknown(NULL);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -402,7 +519,14 @@ static void cli_hw_version(const uint8_t* attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_proj_info(const uint8_t* attr)
 {
-	cli_printf( "OK, Project Info..." );
+	if ( NULL == attr )
+	{
+		cli_printf( "OK, Project Info..." );
+	}
+	else
+	{
+		cli_unknown(NULL);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,6 +605,83 @@ static bool cli_validate_user_table(const cli_cmd_table_t * const p_cmd_table)
 	}
 
 	return valid;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Find character inside string
+*
+* @note			Returned sub-string is string from target_char on and not with
+* 				it!
+*
+* 				E.g: 	str 			= "Hello World"
+* 						target_char 	= ' '
+* 						sub_str 		= "World"
+*
+* @note			If target string is last char in string it will return NULL!
+*
+* @param[in]	str				- Search string
+* @param[in]	target_char		- Character to find
+* @param[in]	size			- Total size to search for
+* @return		sub_str			- Sub-string from target char on
+*/
+////////////////////////////////////////////////////////////////////////////////
+static const char * cli_find_char(const char * const str, const char target_char, const uint32_t size)
+{
+	char * 	sub_str = NULL;
+	uint32_t 	ch 		= 0;
+
+	for ( ch = 0; ch < size; ch++)
+	{
+		// End string reached
+		if ( '\0' == str[ch] )
+		{
+			break;
+		}
+
+		// Target char found
+		else if ( target_char == str[ch] )
+		{
+			// Return sub-string wihtout target char
+			sub_str = (char*)( str + ch + 1 );
+
+			break;
+		}
+		else
+		{
+			// No actions...
+		}
+	}
+
+	return sub_str;
+}
+
+static const int32_t cli_find_char_pos(const char * const str, const char target_char, const uint32_t size)
+{
+	int32_t 	pos = -1;
+	uint32_t 	ch 	= 0;
+
+	for ( ch = 0; ch < size; ch++)
+	{
+		// End string reached
+		if ( '\0' == str[ch] )
+		{
+			break;
+		}
+
+		// Target char found
+		else if ( target_char == str[ch] )
+		{
+			pos = ch;
+			break;
+		}
+		else
+		{
+			// No actions...
+		}
+	}
+
+	return pos;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -656,10 +857,14 @@ cli_status_t cli_printf(char * p_format, ...)
 	return status;
 }
 
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Register user defined CLI command table
+*
+* @param[in]	p_cmd_table	- Pointer to user cmd table
+* @return       status		- Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 {
 	cli_status_t status = eCLI_OK;
