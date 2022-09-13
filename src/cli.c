@@ -55,6 +55,12 @@
 
 #endif
 
+/**
+ * 	Number of basic commands
+ */
+#define CLI_NUM_OF_BASIC_CMD				( 5 )
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,23 +104,16 @@ static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
 /**
  * 		Basic CLI commands
  */
-static cli_cmd_table_t g_cli_basic_table =
+static cli_cmd_t g_cli_basic_table[CLI_NUM_OF_BASIC_CMD] =
 {
-	// List of commands
-	.cmd =
-	{
-			// -----------------------------------------------------------------------------
-			// 	name			function			help string
-			// -----------------------------------------------------------------------------
-			{ 	"help", 		cli_help, 			"Print all commands help" 			},
-			{ 	"reset", 		cli_reset, 			"Reset device" 						},
-			{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 	},
-			{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
-			{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
-		},
-
-	// Number of
-	.num_of = 5,
+	// -----------------------------------------------------------------------------
+	// 	name			function			help string
+	// -----------------------------------------------------------------------------
+	{ 	"help", 		cli_help, 			"Print all commands help" 			},
+	{ 	"reset", 		cli_reset, 			"Reset device" 						},
+	{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 	},
+	{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
+	{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
 };
 
 /**
@@ -239,22 +238,68 @@ static cli_status_t cli_parser_hndl(void)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_execute_cmd(const uint8_t * const p_cmd)
 {
-	uint32_t cmd_idx = 0;
+	uint32_t 	cmd_idx 	= 0;
+	uint32_t 	table_idx	= 0;
+	bool		cmd_found 	= false;
 
 	// Basic command check
-	for ( cmd_idx = 0; cmd_idx < g_cli_basic_table.num_of; cmd_idx++ )
+	for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
 	{
-		if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table.cmd[cmd_idx].p_name, strlen((const char*) g_cli_basic_table.cmd[cmd_idx].p_name ))))
+		// Valid command?
+		if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table[cmd_idx].p_name, strlen((const char*) g_cli_basic_table[cmd_idx].p_name ))))
 		{
-			g_cli_basic_table.cmd[cmd_idx].p_func(NULL);
+			// Execute command
+			g_cli_basic_table[cmd_idx].p_func(NULL);
+
+			// Comamnd found
+			cmd_found = true;
+
 			break;
 		}
 	}
 
-	// TODO: Added parsing also user defined functions...
+	// Command not founded jet
+	if ( false == cmd_found )
+	{
+		// Search thru user defined tables
+		for ( table_idx = 0; table_idx < CLI_USER_CMD_TABLE_MAX_COUNT; table_idx++ )
+		{
+			// Check if registered
+			if ( NULL != gp_cli_user_tables[table_idx] )
+			{
+				// Get number of user commands inside single table
+				const uint32_t num_of_user_cmd = gp_cli_user_tables[table_idx]->num_of;
 
-	// No command found in side table
-	if ( cmd_idx >= ( g_cli_basic_table.num_of - 1 ))
+				// Go thru command table
+				for ( cmd_idx = 0; cmd_idx < num_of_user_cmd; cmd_idx++ )
+				{
+					// Get name
+					const char * name_str = gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_name;
+
+					// Valid command?
+					if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, strlen((const char*) name_str ))))
+					{
+						// Execute command
+						gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func(NULL);
+
+						// Comand founded
+						cmd_found = true;
+
+						break;
+					}
+				}
+			}
+
+			// When command is found stop searching
+			if ( true == cmd_found )
+			{
+				break;
+			}
+		}
+	}
+
+	// No command found in any of the tables
+	if ( false == cmd_found )
 	{
 		cli_unknown(NULL);
 	}
@@ -274,11 +319,11 @@ static void cli_help(const uint8_t* attr)
 	uint32_t user_cmd_idx 	= 0;
 
 	// Basic command table printout
-	for ( cmd_idx = 0; cmd_idx < g_cli_basic_table.num_of; cmd_idx++ )
+	for ( cmd_idx = 0; cmd_idx < CLI_NUM_OF_BASIC_CMD; cmd_idx++ )
 	{
 		// Get name and help string
-		const char * name_str = g_cli_basic_table.cmd[cmd_idx].p_name;
-		const char * help_str = g_cli_basic_table.cmd[cmd_idx].p_help ;
+		const char * name_str = g_cli_basic_table[cmd_idx].p_name;
+		const char * help_str = g_cli_basic_table[cmd_idx].p_help ;
 
 		// Left adjust for 20 chars
 		cli_printf( "%-20s%s", name_str, help_str );
