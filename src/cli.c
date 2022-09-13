@@ -77,20 +77,26 @@ static bool 		cli_user_table_check_and_exe	(const char * p_cmd, const uint32_t c
 static uint32_t		cli_calc_cmd_size				(const char * p_cmd, const char * attr);
 
 // Basic CLI functions
-static void cli_help		  	(const uint8_t* attr);
-static void cli_reset	   	  	(const uint8_t* attr);
-static void cli_sw_version  	(const uint8_t* attr);
-static void cli_hw_version  	(const uint8_t* attr);
-static void cli_proj_info  		(const uint8_t* attr);
-static void cli_unknown	  		(const uint8_t* attr);
+static void cli_help		  	(const uint8_t * p_attr);
+static void cli_reset	   	  	(const uint8_t * p_attr);
+static void cli_sw_version  	(const uint8_t * p_attr);
+static void cli_hw_version  	(const uint8_t * p_attr);
+static void cli_proj_info  		(const uint8_t * p_attr);
+static void cli_unknown	  		(const uint8_t * p_attr);
+
+#if ( 1 == CLI_CFG_CHANNEL_EN )
+	static void cli_ch_info		(const uint8_t * p_attr);
+	static void cli_ch_enable	(const uint8_t * p_attr);
+	static void cli_ch_disable	(const uint8_t * p_attr);
+#endif
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-	static void cli_par_print	  	(const uint8_t* attr);
-	static void cli_par_set		  	(const uint8_t* attr);
-	static void cli_par_get		  	(const uint8_t* attr);
-	static void cli_par_def		  	(const uint8_t* attr);
-	static void cli_par_def_all	  	(const uint8_t* attr);
-	static void cli_par_store	  	(const uint8_t* attr);
+	static void cli_par_print	  	(const uint8_t * p_attr);
+	static void cli_par_set		  	(const uint8_t * p_attr);
+	static void cli_par_get		  	(const uint8_t * p_attr);
+	static void cli_par_def		  	(const uint8_t * p_attr);
+	static void cli_par_def_all	  	(const uint8_t * p_attr);
+	static void cli_par_store	  	(const uint8_t * p_attr);
 #endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
@@ -125,22 +131,28 @@ static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
  */
 static cli_cmd_t g_cli_basic_table[] =
 {
-	// ----------------------------------------------------------------------------------
-	// 	name			function			help string
-	// ----------------------------------------------------------------------------------
-	{ 	"help", 		cli_help, 			"Print all commands help" 					},
-	{ 	"reset", 		cli_reset, 			"Reset device" 								},
-	{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 			},
-	{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 			},
-	{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 				},
+	// ------------------------------------------------------------------------------------------
+	// 	name					function				help string
+	// ------------------------------------------------------------------------------------------
+	{ 	"help", 				cli_help, 				"Print all commands help" 				},
+	{ 	"reset", 				cli_reset, 				"Reset device" 							},
+	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 		},
+	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 		},
+	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 			},
+
+#if ( 1 == CLI_CFG_CHANNEL_EN )
+	{	"com_ch_info",			cli_ch_info,			"Show COM channels info"				},
+	{	"com_ch_enable",		cli_ch_enable,			"Enable COM channels [chID]"			},
+	{	"com_ch_disable",		cli_ch_disable,			"Disable COM channels [chID]"			},
+#endif
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-	{"par_print",		cli_par_print,		    "Prints parameters"						},
-	{"par_set", 		cli_par_set,			"Set parameter [parID,value]"			},
-	{"par_get",			cli_par_get,		    "Get parameter [parID]"					},
-	{"par_def",			cli_par_def,	    	"Set parameter to default [parID]"		},
-	{"par_def_all",		cli_par_def_all,    	"Set all parameters to default"			},
-	{"par_save",		cli_par_store,	    	"Save parameter to NVM"					},
+	{	"par_print",			cli_par_print,		    "Prints parameters"						},
+	{	"par_set", 				cli_par_set,			"Set parameter [parID,value]"			},
+	{	"par_get",				cli_par_get,		    "Get parameter [parID]"					},
+	{	"par_def",				cli_par_def,	    	"Set parameter to default [parID]"		},
+	{	"par_def_all",			cli_par_def_all,    	"Set all parameters to default"			},
+	{	"par_save",				cli_par_store,	    	"Save parameter to NVM"					},
 #endif
 };
 
@@ -477,13 +489,13 @@ static uint32_t	cli_calc_cmd_size(const char * p_cmd, const char * attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_help(const uint8_t* attr)
+static void cli_help(const uint8_t * p_attr)
 {
 	uint32_t cmd_idx 		= 0;
 	uint32_t user_cmd_idx 	= 0;
 
 	// No additional attributes
-	if ( NULL == attr )
+	if ( NULL == p_attr )
 	{
 		// Basic command table printout
 		for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
@@ -532,9 +544,9 @@ static void cli_help(const uint8_t* attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_reset(const uint8_t* attr)
+static void cli_reset(const uint8_t * p_attr)
 {
-	if ( NULL == attr )
+	if ( NULL == p_attr )
 	{
 		cli_printf("OK, reseting device...");
 		cli_if_device_reset();
@@ -553,9 +565,9 @@ static void cli_reset(const uint8_t* attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_sw_version(const uint8_t* attr)
+static void cli_sw_version(const uint8_t * p_attr)
 {
-	if ( NULL == attr )
+	if ( NULL == p_attr )
 	{
 		cli_printf( "OK, SW ver.: %s", 	CLI_CFG_INTRO_SW_VER );
 	}
@@ -573,9 +585,9 @@ static void cli_sw_version(const uint8_t* attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_hw_version(const uint8_t* attr)
+static void cli_hw_version(const uint8_t * p_attr)
 {
-	if ( NULL == attr )
+	if ( NULL == p_attr )
 	{
 		cli_printf( "OK, HW ver.: %s", 	CLI_CFG_INTRO_HW_VER );
 	}
@@ -593,9 +605,9 @@ static void cli_hw_version(const uint8_t* attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_proj_info(const uint8_t* attr)
+static void cli_proj_info(const uint8_t * p_attr)
 {
-	if ( NULL == attr )
+	if ( NULL == p_attr )
 	{
 		cli_printf( "OK, Project Info..." );
 	}
@@ -613,10 +625,62 @@ static void cli_proj_info(const uint8_t* attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_unknown(const uint8_t* attr)
+static void cli_unknown(const uint8_t * p_attr)
 {
 	cli_printf( "ERR, Unknown command!" );
 }
+
+#if ( 1 == CLI_CFG_CHANNEL_EN )
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Print communication channels details
+	*
+	* @note			Command format: >>>com_ch_info
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	static void cli_ch_info(const uint8_t * p_attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Print communication channels details
+	*
+	* @note			Command format: >>>com_ch_enable [chID]
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	static void cli_ch_enable(const uint8_t * p_attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Print communication channels details
+	*
+	* @note			Command format: >>>com_ch_disable [chID]
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return 		void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	static void cli_ch_disable(const uint8_t * p_attr)
+	{
+		// TODO: ...
+		cli_printf("Needs to be defined...");
+	}
+
+#endif
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
@@ -630,7 +694,7 @@ static void cli_unknown(const uint8_t* attr)
 	* @return 		void
 	*/
 	////////////////////////////////////////////////////////////////////////////////
-	static void cli_par_print(const uint8_t* attr)
+	static void cli_par_print(const uint8_t * p_attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
@@ -646,7 +710,7 @@ static void cli_unknown(const uint8_t* attr)
 	* @return 		void
 	*/
 	////////////////////////////////////////////////////////////////////////////////
-	static void cli_par_set(const uint8_t* attr)
+	static void cli_par_set(const uint8_t * p_attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
@@ -662,7 +726,7 @@ static void cli_unknown(const uint8_t* attr)
 	* @return 		void
 	*/
 	////////////////////////////////////////////////////////////////////////////////
-	static void cli_par_get(const uint8_t* attr)
+	static void cli_par_get(const uint8_t * p_attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
@@ -678,7 +742,7 @@ static void cli_unknown(const uint8_t* attr)
 	* @return 		void
 	*/
 	////////////////////////////////////////////////////////////////////////////////
-	static void cli_par_def(const uint8_t* attr)
+	static void cli_par_def(const uint8_t * p_attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
@@ -694,7 +758,7 @@ static void cli_unknown(const uint8_t* attr)
 	* @return 		void
 	*/
 	////////////////////////////////////////////////////////////////////////////////
-	static void cli_par_def_all(const uint8_t* attr)
+	static void cli_par_def_all(const uint8_t * p_attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
@@ -710,7 +774,7 @@ static void cli_unknown(const uint8_t* attr)
 	* @return 		void
 	*/
 	////////////////////////////////////////////////////////////////////////////////
-	static void cli_par_store(const uint8_t* attr)
+	static void cli_par_store(const uint8_t * p_attr)
 	{
 		// TODO: ...
 		cli_printf("Needs to be defined...");
