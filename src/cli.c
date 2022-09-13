@@ -231,14 +231,10 @@ static cli_status_t cli_parser_hndl(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
-* @brief        Find & execute cli command
+* @brief        Find & execute Command Line Interface command
 *
 * @note			Entering that function means CR or LF has been received. Input
 * 				string is terminated with '\0'.
-*
-* @note			Dividing into simple and combined commands. Simple command
-* 				does not have empty space in it. Combined command uses
-* 				empty spaces (' ') in order to pass multiple attributes.
 *
 * @param[in]	p_cmd	- NULL terminated input string
 * @return       void
@@ -272,9 +268,17 @@ static void cli_execute_cmd(const uint8_t * const p_cmd)
 /*!
 * @brief        Check and execute basic table commands
 *
-* @note			Dividing into simple and combined commands. Simple command
-* 				does not have empty space in it. Combined command uses
-* 				empty spaces (' ') in order to pass multiple attributes.
+* @note			Commands are divided into simple and combined commands
+*
+* 				SIMPLE COMMAND: Do not pass additional attributes
+*
+* 					E.g.: >>>help
+*
+* 				COMBINED COMMAND: 	Has additional attributes separated by
+* 									empty spaces (' ').
+*
+*					E.g.: >>>par_get 0
+*
 *
 * @param[in]	p_cmd		- NULL terminated input string
 * @param[in]	attr		- Additional command attributes
@@ -298,7 +302,7 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const char * attr)
 				// Execute command
 				g_cli_basic_table[cmd_idx].p_func( NULL );
 
-				// Comamnd found
+				// Command found
 				cmd_found = true;
 
 				break;
@@ -314,7 +318,7 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const char * attr)
 				// Execute command
 				g_cli_basic_table[cmd_idx].p_func((const uint8_t * const) attr );
 
-				// Comamnd found
+				// Command found
 				cmd_found = true;
 
 				break;
@@ -325,11 +329,35 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const char * attr)
 	return cmd_found;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Check and execute user table commands
+*
+* @note			Commands are divided into simple and combined commands
+*
+* 				SIMPLE COMMAND: Do not pass additional attributes
+*
+* 					E.g.: >>>help
+*
+* 				COMBINED COMMAND: 	Has additional attributes separated by
+* 									empty spaces (' ').
+*
+*					E.g.: >>>par_get 0
+*
+*
+* @param[in]	p_cmd		- NULL terminated input string
+* @param[in]	attr		- Additional command attributes
+* @return       cmd_found	- Command found flag
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+#define CLI_MAX(a,b) 		((a >= b) ? (a) : (b))
+
 static bool cli_user_table_check_and_exe(const char * p_cmd, const char * attr)
 {
 	uint32_t 	cmd_idx 	= 0;
 	uint32_t 	table_idx	= 0;
-	bool 		cmd_found = false;
+	bool 		cmd_found 	= false;
 
 	// Search thru user defined tables
 	for ( table_idx = 0; table_idx < CLI_USER_CMD_TABLE_MAX_COUNT; table_idx++ )
@@ -346,6 +374,38 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const char * attr)
 				// Get name
 				const char * name_str = gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_name;
 
+				uint32_t size_to_compare;
+
+				if ( NULL == attr )
+				{
+					const uint32_t cmd_len 			= strlen((const char*) p_cmd );
+					const uint32_t name_len			= strlen((const char*) name_str );
+					size_to_compare	= CLI_MAX( cmd_len, name_len );
+				}
+				else
+				{
+					size_to_compare		= cli_find_char_pos( p_cmd, ' ', CLI_PARSER_BUF_SIZE );
+				}
+
+/*				const uint32_t cmd_len 			= strlen((const char*) p_cmd );
+				const uint32_t name_len			= strlen((const char*) name_str );
+				const uint32_t len_to_space		= cli_find_char_pos( p_cmd, ' ', CLI_PARSER_BUF_SIZE );*/
+
+
+				// Valid command?
+				if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, size_to_compare )))
+				{
+					// Execute command
+					gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func((const uint8_t*) attr );
+
+					// Command founded
+					cmd_found = true;
+
+					break;
+				}
+
+
+#if 0
 				// Simple command - without empty space
 				if ( NULL == attr )
 				{
@@ -355,7 +415,7 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const char * attr)
 						// Execute command
 						gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func( NULL );
 
-						// Comand founded
+						// Command founded
 						cmd_found = true;
 
 						break;
@@ -374,12 +434,14 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const char * attr)
 						// Execute command
 						gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func((const uint8_t * const) attr );
 
-						// Comand founded
+						// Command founded
 						cmd_found = true;
 
 						break;
 					}
 				}
+#endif
+
 			}
 		}
 
@@ -656,6 +718,22 @@ static const char * cli_find_char(const char * const str, const char target_char
 	return sub_str;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Find character inside string
+*
+* @note			E.g: 	str 			= "Hello World"
+* 						target_char 	= ' '
+* 						pos				= 6
+*
+* @note			If "target_char" is not found it returns -1!
+*
+* @param[in]	str				- Search string
+* @param[in]	target_char		- Character to find
+* @param[in]	size			- Total size to search for
+* @return		pos				- Position of target char inside string
+*/
+////////////////////////////////////////////////////////////////////////////////
 static const int32_t cli_find_char_pos(const char * const str, const char target_char, const uint32_t size)
 {
 	int32_t 	pos = -1;
