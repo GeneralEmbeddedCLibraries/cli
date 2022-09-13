@@ -24,6 +24,7 @@
 
 // USER CODE BEGIN...
 
+#include "stm32l4xx_hal.h"
 #include "drivers/peripheral/usart/uart_dbg.h"
 
 // ThreadX
@@ -231,6 +232,31 @@ cli_status_t cli_if_release_mutex(void)
 
 	// Release mutex
 	tx_mutex_put( &g_cli_port_mutex );
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Reset device
+*
+* @note	User shall provide definition of that function based on used platform!
+*
+*		If not being used leave empty.
+*
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_device_reset(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	// Reset device
+	HAL_NVIC_SystemReset();
 
 	// USER CODE END...
 

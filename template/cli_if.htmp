@@ -35,6 +35,7 @@ cli_status_t cli_if_receive			(uint8_t * const p_data);
 cli_status_t cli_if_transmit		(const uint8_t * const p_data);
 cli_status_t cli_if_aquire_mutex	(void);
 cli_status_t cli_if_release_mutex	(void);
+cli_status_t cli_if_device_reset	(void);
 
 #endif // __CLI_H
 

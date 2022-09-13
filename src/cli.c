@@ -40,6 +40,11 @@
  */
 #define CLI_PARSER_BUF_SIZE					( 128 )
 
+/**
+ * 		Maximum number of user defined tables
+ */
+#define CLI_USER_CMD_TABLE_MAX_COUNT		( 8 )
+
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,35 +84,37 @@ static uint8_t gu8_tx_buffer[CLI_CFG_PRINTF_BUF_SIZE] = {0};
  */
 static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
 
-#if __GNUC__
-	#pragma GCC diagnostic  push
-	#pragma GCC diagnostic  ignored "-Wpointer-sign"	// Ignore pointer sign for basic table
-#endif // __GNUC__
-
-	/**
-	 * 		Basic CLI commands
-	 */
-	static cli_cmd_t g_cli_basic_table[] =
+/**
+ * 		Basic CLI commands
+ */
+static cli_cmd_table_t g_cli_basic_table =
+{
+	// List of commands
+	.cmd =
 	{
-		// -----------------------------------------------------------------------------
-		// 	name			function			help string
-		// -----------------------------------------------------------------------------
-		{ 	"help", 		cli_help, 			"Print all commands help" 			},
-		{ 	"reset", 		cli_reset, 			"Reset device" 						},
-		{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 	},
-		{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
-		{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
-	};
+			// -----------------------------------------------------------------------------
+			// 	name			function			help string
+			// -----------------------------------------------------------------------------
+			{ 	"help", 		cli_help, 			"Print all commands help" 			},
+			{ 	"reset", 		cli_reset, 			"Reset device" 						},
+			{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 	},
+			{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
+			{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
+		},
 
-#if __GNUC__
-	#pragma GCC diagnostic  pop		// Restore all warnings
-#endif // __GNUC__
+	// Number of
+	.num_of = 5,
+};
 
 /**
- * 	Number of basic commands
+ * 	Pointer array to user defined tables
  */
-static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_table ) / sizeof( cli_cmd_t )));
+static cli_cmd_table_t * gp_cli_user_tables[CLI_USER_CMD_TABLE_MAX_COUNT] = { NULL };
 
+/**
+ * 	User defined table counts
+ */
+static uint32_t	gu32_user_table_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -224,17 +231,19 @@ static void cli_execute_cmd(const uint8_t * const p_cmd)
 	uint32_t cmd_idx = 0;
 
 	// Basic command check
-	for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
+	for ( cmd_idx = 0; cmd_idx < g_cli_basic_table.num_of; cmd_idx++ )
 	{
-		if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table[cmd_idx].p_name, strlen((const char*) g_cli_basic_table[cmd_idx].p_name ))))
+		if ( 0 == ( strncmp((const char*) p_cmd, (const char*) g_cli_basic_table.cmd[cmd_idx].p_name, strlen((const char*) g_cli_basic_table.cmd[cmd_idx].p_name ))))
 		{
-			g_cli_basic_table[cmd_idx].p_func(NULL);
+			g_cli_basic_table.cmd[cmd_idx].p_func(NULL);
 			break;
 		}
 	}
 
+	// TODO: Added parsing also user defined functions...
+
 	// No command found in side table
-	if ( cmd_idx >= ( gu32_basic_cmd_num_of - 1 ))
+	if ( cmd_idx >= ( g_cli_basic_table.num_of - 1 ))
 	{
 		cli_unknown(NULL);
 	}
@@ -250,12 +259,30 @@ static void cli_execute_cmd(const uint8_t * const p_cmd)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_help(const uint8_t* attr)
 {
-	uint32_t cmd_idx = 0;
+	uint32_t cmd_idx 		= 0;
+	uint32_t user_cmd_idx 	= 0;
 
 	// Basic command table printout
-	for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
+	for ( cmd_idx = 0; cmd_idx < g_cli_basic_table.num_of; cmd_idx++ )
 	{
-		cli_printf( " %s\t\t\t\t%s", g_cli_basic_table[cmd_idx].p_name, g_cli_basic_table[cmd_idx].p_help );
+		cli_printf( " %s\t\t\t\t%s", g_cli_basic_table.cmd[cmd_idx].p_name, g_cli_basic_table.cmd[cmd_idx].p_help );
+	}
+
+	// User defined tables
+	for ( cmd_idx = 0; cmd_idx < CLI_USER_CMD_TABLE_MAX_COUNT; cmd_idx++ )
+	{
+		// Check if registered
+		if ( NULL != gp_cli_user_tables[cmd_idx] )
+		{
+			// Get number of user commands inside single table
+			const uint32_t num_of_user_cmd = gp_cli_user_tables[cmd_idx]->num_of;
+
+			// Show help for that table
+			for ( user_cmd_idx = 0; user_cmd_idx < num_of_user_cmd; user_cmd_idx++ )
+			{
+				cli_printf( " %s\t\t\t\t%s", gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_name, gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_help );
+			}
+		}
 	}
 }
 
@@ -516,6 +543,36 @@ cli_status_t cli_printf(char * p_format, ...)
 	else
 	{
 		status = eCLI_ERROR_INIT;
+	}
+
+	return status;
+}
+
+
+
+
+
+cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
+{
+	cli_status_t status = eCLI_OK;
+
+	CLI_ASSERT( NULL != p_cmd_table );
+
+	if ( NULL != p_cmd_table )
+	{
+		if ( gu32_user_table_count < CLI_USER_CMD_TABLE_MAX_COUNT )
+		{
+			gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
+			gu32_user_table_count++;
+		}
+		else
+		{
+			status = eCLI_ERROR;
+		}
+	}
+	else
+	{
+		status = eCLI_ERROR;
 	}
 
 	return status;

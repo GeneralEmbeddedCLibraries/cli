@@ -28,6 +28,8 @@
 
 #include "project_config.h"
 
+#include "revision/revision/src/version.h"
+
 // USER CODE END...
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,24 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // USER CODE BEGIN...
+
+/**
+ * 	Enable/Disable intro string
+ *
+ * 	@brief	Intro string will be transmitted at "cli_init()" function call,
+ * 			if low level com driver are initialized OK.
+ */
+#define CLI_CFG_INTRO_STRING_EN					( 1 )
+
+#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+
+	/**
+	 * 	Intro strings
+	 */
+	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "Evaluation of Inter-COM" )
+	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
+	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
+#endif
 
 /**
  * 	Termination string
@@ -54,6 +74,36 @@
 #define CLI_CFG_PRINTF_BUF_SIZE					( 128 )
 
 /**
+ * 	Maximum number of commands within a single table
+ *
+ * @note	Space for table command is allocated statically in compile time therefore
+ * 			take special care defining that number. It is recommended to set
+ * 			to a minimum as needed.
+ *
+ * 	@note 	Size of single table will increase with CLI_CFG_MAX_NUM_OF_COMMANDS
+ * 			macro by following formula:
+ *
+ * 			size_of_cmd_table = ( 12 * CLI_CFG_MAX_NUM_OF_COMMANDS ) [bytes]
+ */
+#define CLI_CFG_MAX_NUM_OF_COMMANDS				( 10 )
+
+/**
+ * 	Maximum number of user defined command tables
+ *
+ * @note	Space for table command is allocated statically in compile time therefore
+ * 			take special care defining that number. It is recommended to set
+ * 			to a minimum as needed.
+ *
+ * 	@note 	Total size of all command table  will increase with CLI_CFG_MAX_NUM_OF_COMMANDS
+ * 			and CLI_CFG_MAX_NUM_OF_USER_TABLES macro by following formula:
+ *
+ * 			tatal_size_of_all_cmd_tables = ( CLI_CFG_MAX_NUM_OF_USER_TABLES * (( 12 * CLI_CFG_MAX_NUM_OF_COMMANDS [bytes] ) + 4 )) [bytes]
+ *
+ * 	@note
+ */
+#define CLI_CFG_MAX_NUM_OF_USER_TABLES			( 8 )
+
+/**
  * 	Enable/Disable debug mode
  */
 #define CLI_CFG_DEBUG_EN						( 0 )
@@ -66,7 +116,32 @@
 /**
  * 	Enable/Disable multiple access protection
  */
-#define CLI_CFG_MUTEX_EN						( 0 )
+#define CLI_CFG_MUTEX_EN						( 1 )
+
+/**
+ * 	Enable/Disable communication channels
+ */
+#define CLI_CFG_CHANNEL_EN						( 1 )
+
+#if ( 1 == CLI_CFG_CHANNEL_EN )
+
+	/**
+	 * 	List of communication channels
+	 */
+	typedef enum
+	{
+		// USER CODE BEGIN...
+
+		eCLI_CH_WAR = 0,		/**<Warning channel */
+		eCLI_CH_ERR,			/**<Error channel */
+
+
+		// USER CODE END...
+
+		eCLI_CH_NUM_OF			/**<Leave unchange - Must be last! */
+	} cli_ch_opt_t;
+
+#endif
 
 /**
  * 	Debug communication port macros

@@ -58,15 +58,25 @@ typedef enum
 typedef void(*pf_cli_cmd)(const uint8_t * const p_attr);
 
 /**
- * 	 CLI Command Table
+ * 	 Single CLI Command
+ *
+ * 	 Sizeof: 12 bytes
  */
 typedef struct
 {
-	const uint8_t * p_name;		/**<Command name*/
-	pf_cli_cmd		p_func;		/**<Command function */
-	const uint8_t * p_help;		/**<Command help string */
+	char * 		p_name;		/**<Command name*/
+	pf_cli_cmd	p_func;		/**<Command function */
+	char * 		p_help;		/**<Command help string */
 } cli_cmd_t;
 
+/**
+ * 	CLI Command Table
+ */
+typedef struct
+{
+	cli_cmd_t  	cmd[CLI_CFG_MAX_NUM_OF_COMMANDS];	/**<Command table */
+	uint32_t 	num_of;								/**<Number of commands */
+} cli_cmd_table_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -76,7 +86,7 @@ cli_status_t cli_deinit				(void);
 cli_status_t cli_is_init			(bool * const p_is_init);
 cli_status_t cli_hndl				(void);
 cli_status_t cli_printf				(char * p_format, ...);
-cli_status_t cli_register_cmd		(const cli_cmd_t * const p_cmd);
+cli_status_t cli_register_cmd_table (const cli_cmd_table_t * const p_cmd_table);
 
 
 #if ( 1 == CLI_CFG_CHANNEL_EN )
