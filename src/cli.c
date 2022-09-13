@@ -696,58 +696,65 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_print(const uint8_t * p_attr)
 	{
-		par_cfg_t 	par_cfg 	= { 0 };
-		uint32_t 	par_num		= 0UL;
-		uint32_t	par_val		= 0UL;
-
-		// Send header
-		cli_printf(";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level");
-
-		cli_printf( ":PARAMETER ACCESS LEGEND" );
-		cli_printf( ":RO - Read Only" );
-		cli_printf( ":RW - Read Write" );
-		cli_printf( ": " );
-
-		// For each parameter
-		for ( par_num = 0; par_num < ePAR_NUM_OF; par_num++ )
+		if ( NULL == p_attr )
 		{
-			// Get parameter configuration
-			par_get_config( par_num, &par_cfg );
+			par_cfg_t 	par_cfg 	= { 0 };
+			uint32_t 	par_num		= 0UL;
+			uint32_t	par_val		= 0UL;
 
-			// Get current parameter value
-			par_get( par_num, &par_val );
+			// Send header
+			cli_printf(";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level");
 
-			// Print header
-			// TODO: Define how to print header
-			//shell_par_print_header( par_num );
+			cli_printf( ":PARAMETER ACCESS LEGEND" );
+			cli_printf( ":RO - Read Only" );
+			cli_printf( ":RW - Read Write" );
+			cli_printf( ": " );
 
-			if ( NULL != par_cfg.unit )
+			// For each parameter
+			for ( par_num = 0; par_num < ePAR_NUM_OF; par_num++ )
 			{
-				// Par info response
-				cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4",
-						(int) par_cfg.id,
-						par_cfg.name,
-						cli_par_val_to_float( par_cfg.type, &par_val ),
-						cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
-						cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
-						cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ),
-						par_cfg.unit );
-			}
-			else
-			{
-				// Par info response
-				cli_printf("%u, %s, %g, %g, %g, %g, ,f,4",
-						(int) par_cfg.id,
-						par_cfg.name,
-						cli_par_val_to_float( par_cfg.type, &par_val ),
-						cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
-						cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
-						cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ));
+				// Get parameter configuration
+				par_get_config( par_num, &par_cfg );
+
+				// Get current parameter value
+				par_get( par_num, &par_val );
+
+				// Print header
+				// TODO: Define how to print header
+				//shell_par_print_header( par_num );
+
+				if ( NULL != par_cfg.unit )
+				{
+					// Par info response
+					cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4",
+							(int) par_cfg.id,
+							par_cfg.name,
+							cli_par_val_to_float( par_cfg.type, &par_val ),
+							cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
+							cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
+							cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ),
+							par_cfg.unit );
+				}
+				else
+				{
+					// Par info response
+					cli_printf("%u, %s, %g, %g, %g, %g, ,f,4",
+							(int) par_cfg.id,
+							par_cfg.name,
+							cli_par_val_to_float( par_cfg.type, &par_val ),
+							cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
+							cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
+							cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ));
+				}
+
 			}
 
+			cli_printf(";END");
 		}
-
-		cli_printf(";END");
+		else
+		{
+			cli_unknown(NULL);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -771,7 +778,7 @@ static void cli_unknown(const uint8_t * p_attr)
 		par_cfg_t		par_cfg		= {0};
 
 		// Check input command
-		if ( 2U == sscanf( p_attr, "%u,%f", (unsigned int*)&par_id, &par_data.f32 ))
+		if ( 2U == sscanf((const char*) p_attr, "%u,%f", (unsigned int*)&par_id, &par_data.f32 ))
 		{
 			// Get parameter number from ID
 			par_get_num_by_id( par_id, &par_num );
@@ -847,17 +854,17 @@ static void cli_unknown(const uint8_t * p_attr)
 
 				if ( ePAR_OK != status )
 				{
-					cli_printf( "ERR %u, Cannot write value!", (uint16_t) status );
+					cli_printf( "ERR, err_code: %u", (uint16_t)status);
 				}
 			}
 			else
 			{
-				cli_printf( "ERR, Parameter is read only!" );
+				cli_printf( "ERR, Parameter is read only" );
 			}
 		}
 		else
 		{
-			cli_printf("ERR, Wrong parameter!");
+			cli_printf("ERR, Wrong parameter");
 		}
 	}
 
@@ -882,7 +889,7 @@ static void cli_unknown(const uint8_t * p_attr)
 		par_cfg_t		par_cfg		= {0};
 
 		// Check input command
-		if ( 1U == sscanf( p_attr, "%u", (unsigned int*)&par_id ))
+		if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
 		{
 			// Get parameter number from ID
 			par_get_num_by_id( par_id, &par_num );
@@ -952,12 +959,12 @@ static void cli_unknown(const uint8_t * p_attr)
 
 			if ( ePAR_OK != status )
 			{
-				cli_printf( "ERR %u, Cannot read value!", (uint16_t)status);
+				cli_printf( "ERR, err_code: %u", (uint16_t)status);
 			}
 		}
 		else
 		{
-			cli_printf( "ERR, Wrong parameter!" );
+			cli_printf( "ERR, Wrong parameter" );
 		}
 	}
 
@@ -973,8 +980,25 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_def(const uint8_t * p_attr)
 	{
-		// TODO: ...
-		cli_printf("Needs to be defined...");
+		par_num_t 	par_num	= 0UL;
+		uint16_t	par_id	= 0UL;
+
+		// Check input command
+		if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
+		{
+			// Get parameter number from ID
+			par_get_num_by_id( par_id, &par_num );
+
+			// Set to default
+			par_set_to_default( par_num );
+
+			// Rtn msg
+			cli_printf( "OK, Parameter %u set to default", par_id );
+		}
+		else
+		{
+			cli_printf( "ERR, Invalid Input" );
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -989,8 +1013,18 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_def_all(const uint8_t * p_attr)
 	{
-		// TODO: ...
-		cli_printf("Needs to be defined...");
+		if ( NULL == p_attr )
+		{
+			// Set to default
+			par_set_all_to_default();
+
+			// Rtn msg
+			cli_printf( "OK, All parameters set to default!" );
+		}
+		else
+		{
+			cli_unknown(NULL);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -1005,8 +1039,27 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_store(const uint8_t * p_attr)
 	{
-		// TODO: ...
-		cli_printf("Needs to be defined...");
+		if ( NULL == p_attr )
+		{
+			#if ( 1 == PAR_CFG_NVM_EN )
+
+				if ( ePAR_OK == par_save_all())
+				{
+					cli_printf( "OK, Parameter successfully store to NVM" );
+				}
+				else
+				{
+					cli_printf( "ERR, Error while storing to NVM" );
+				}
+
+			#else
+				cli_printf( "ERR, Storing to NVM not supported" );
+			#endif
+		}
+		else
+		{
+			cli_unknown(NULL);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
