@@ -50,7 +50,7 @@ static void 		cli_execute_cmd			(const uint8_t * const p_cmd);
 // Basic CLI functions
 static void cli_help		  	(const uint8_t* attr);
 static void cli_reset	   	  	(const uint8_t* attr);
-static void cli_fw_version  	(const uint8_t* attr);
+static void cli_sw_version  	(const uint8_t* attr);
 static void cli_hw_version  	(const uint8_t* attr);
 static void cli_proj_info  		(const uint8_t* attr);
 static void cli_unknown	  		(const uint8_t* attr);
@@ -94,7 +94,7 @@ static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
 		// -----------------------------------------------------------------------------
 		{ 	"help", 		cli_help, 			"Print all commands help" 			},
 		{ 	"reset", 		cli_reset, 			"Reset device" 						},
-		{ 	"fw_ver", 		cli_fw_version, 	"Print device firmware version" 	},
+		{ 	"sw_ver", 		cli_sw_version, 	"Print device software version" 	},
 		{ 	"hw_ver", 		cli_hw_version, 	"Print device hardware version" 	},
 		{ 	"proj_info", 	cli_proj_info, 		"Print project informations" 		},
 	};
@@ -151,6 +151,13 @@ static cli_status_t cli_send_str(const uint8_t * const p_str)
 	return status;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Parse input string
+*
+* @return       status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
 static cli_status_t cli_parser_hndl(void)
 {
 			cli_status_t 	status 	= eCLI_OK;
@@ -201,6 +208,17 @@ static cli_status_t cli_parser_hndl(void)
 	return status;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Find & execute cli command
+*
+* @note			Entering that function means CR or LF has been received. Input
+* 				string is terminated with '\0'.
+*
+* @param[in]	p_cmd	- NULL terminated input string
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_execute_cmd(const uint8_t * const p_cmd)
 {
 	uint32_t cmd_idx = 0;
@@ -222,41 +240,100 @@ static void cli_execute_cmd(const uint8_t * const p_cmd)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show help
+*
+* @param[in]	attr 	- Rest of the command string
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_help(const uint8_t* attr)
 {
+	uint32_t cmd_idx = 0;
 
+	// Basic command table printout
+	for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
+	{
+		cli_printf( " %s\t\t\t\t%s", g_cli_basic_table[cmd_idx].p_name, g_cli_basic_table[cmd_idx].p_help );
+	}
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Reset device
+*
+* @param[in]	attr 	- Rest of the command string
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_reset(const uint8_t* attr)
 {
-
+	cli_printf("OK, reseting device...");
+	cli_if_device_reset();
 }
 
-static void cli_fw_version(const uint8_t* attr)
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show SW version
+*
+* @param[in]	attr 	- Rest of the command string
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_sw_version(const uint8_t* attr)
 {
-
+	cli_printf( "OK, SW ver.: %s", 	CLI_CFG_INTRO_SW_VER );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show HW version
+*
+* @param[in]	attr 	- Rest of the command string
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_hw_version(const uint8_t* attr)
 {
-
+	cli_printf( "OK, HW ver.: %s", 	CLI_CFG_INTRO_HW_VER );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show detailed project informations
+*
+* @param[in]	attr 	- Rest of the command string
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_proj_info(const uint8_t* attr)
 {
-
+	cli_printf( "OK, Project Info..." );
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Unknown command received
+*
+* @param[in]	attr 	- Rest of the command string
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_unknown(const uint8_t* attr)
 {
-	cli_printf( "Unknown command!" );
+	cli_printf( "ERR, Unknown command!" );
 }
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
 
-
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Send intro string
+	*
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void	cli_send_intro(void)
 	{
 		cli_printf( "**************************************************" );
@@ -286,6 +363,13 @@ static void cli_unknown(const uint8_t* attr)
 */
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Initialize command line interface
+*
+* @return       status	- Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_init(void)
 {
 	cli_status_t status = eCLI_OK;
@@ -316,7 +400,13 @@ cli_status_t cli_init(void)
 	return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        De-Initialize command line interface
+*
+* @return       status	- Status of de-initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_deinit(void)
 {
 	cli_status_t status = eCLI_OK;
@@ -342,7 +432,14 @@ cli_status_t cli_deinit(void)
 	return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Get initialization flag
+*
+* @param[out]	p_is_init	- Initialization flag
+* @return       status		- Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_is_init(bool * const p_is_init)
 {
 	cli_status_t status = eCLI_OK;
@@ -361,7 +458,13 @@ cli_status_t cli_is_init(bool * const p_is_init)
 	return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Main Command Line Interface handler
+*
+* @return       status	- Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_hndl(void)
 {
 	cli_status_t status = eCLI_OK;
@@ -375,24 +478,40 @@ cli_status_t cli_hndl(void)
 	return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Print formated string
+*
+* @param[in]	p_format	- Formated string
+* @return       status		- Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_printf(char * p_format, ...)
 {
 	cli_status_t 	status = eCLI_OK;
 	va_list 		args;
 
+	CLI_ASSERT( NULL != p_format );
+
 	if ( true == gb_is_init )
 	{
-		// Taking args from stack
-		va_start(args, p_format);
-		vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
-		va_end(args);
+		if ( NULL != p_format )
+		{
+			// Taking args from stack
+			va_start(args, p_format);
+			vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+			va_end(args);
 
-		// Add line termination and print message
-		strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
+			// Add line termination and print message
+			strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
 
-		// Send string
-		status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+			// Send string
+			status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+		}
+		else
+		{
+			status = eCLI_ERROR;
+		}
 	}
 	else
 	{
@@ -404,26 +523,43 @@ cli_status_t cli_printf(char * p_format, ...)
 
 #if ( 1 == CLI_CFG_CHANNEL_EN )
 
-	// TODO: Append channel name...
-	cli_status_t cli_printf_ch	(const cli_ch_opt_t ch, char * p_format, ...)
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Print formated string within debug channel
+	*
+	* @param[in]	ch			- Debug channel
+	* @param[in]	p_format	- Formated string
+	* @return       status		- Status of initialization
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 	{
 		cli_status_t 	status = eCLI_OK;
 		va_list 		args;
 
+		CLI_ASSERT( NULL != p_format );
+
 		if ( true == gb_is_init )
 		{
-			// Taking args from stack
-			va_start(args, p_format);
-			vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
-			va_end(args);
+			if ( NULL != p_format )
+			{
+				// Taking args from stack
+				va_start(args, p_format);
+				vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+				va_end(args);
 
-			// Add line termination and print message
-			strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
+				// TODO: Append debug channel name...
 
-			// TODO: Append channel name...
+				// Add line termination and print message
+				strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
 
-			// Send string
-			status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+				// Send string
+				status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+			}
+			else
+			{
+				status = eCLI_ERROR;
+			}
 		}
 		else
 		{
@@ -432,6 +568,7 @@ cli_status_t cli_printf(char * p_format, ...)
 
 		return status;
 	}
+
 #endif
 
 
