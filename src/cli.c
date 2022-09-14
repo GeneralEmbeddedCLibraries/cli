@@ -42,7 +42,7 @@
  *
  * 	Unit: byte
  */
-#define CLI_PARSER_BUF_SIZE					( 128 )
+#define CLI_PARSER_BUF_SIZE					( 256 )
 
 /**
  * 		Maximum number of user defined tables
@@ -188,6 +188,7 @@ static uint32_t	gu32_user_table_count = 0;
 	/**
 	 * 	Live watch variables
 	 */
+	// TODO: Put that into structure!!!
 	static bool		gb_live_watch_active								= false;
 	static uint8_t 	gu8_live_watch_num_of 								= 0;
 	static uint16_t	gu16_live_watch_par_id[CLI_PAR_MAX_IN_LIVE_WATCH]	= {0};
@@ -580,7 +581,7 @@ static void cli_reset(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		cli_printf("OK, reseting device...");
+		cli_printf("OK, Reseting device...");
 		cli_if_device_reset();
 	}
 	else
@@ -1380,7 +1381,7 @@ static const char * cli_find_char(const char * const str, const char target_char
 		// Target char found
 		else if ( target_char == str[ch] )
 		{
-			// Return sub-string wihtout target char
+			// Return sub-string without target char
 			sub_str = (char*)( str + ch + 1 );
 
 			break;

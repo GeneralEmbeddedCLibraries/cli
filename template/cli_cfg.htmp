@@ -72,7 +72,7 @@
  *
  * 	Unit: bytes
  */
-#define CLI_CFG_PRINTF_BUF_SIZE					( 128 )
+#define CLI_CFG_PRINTF_BUF_SIZE					( 256 )
 
 /**
  * 	Maximum number of commands within a single table
@@ -86,7 +86,7 @@
  *
  * 			size_of_cmd_table = ( 12 * CLI_CFG_MAX_NUM_OF_COMMANDS ) [bytes]
  */
-#define CLI_CFG_MAX_NUM_OF_COMMANDS				( 4 )
+#define CLI_CFG_MAX_NUM_OF_COMMANDS				( 10 )
 
 /**
  * 	Maximum number of user defined command tables
@@ -112,7 +112,7 @@
 /**
  * 	Enable/Disable communication channels
  */
-#define CLI_CFG_CHANNEL_EN						( 1 )
+#define CLI_CFG_CHANNEL_EN						( 0 )
 
 #if ( 1 == CLI_CFG_CHANNEL_EN )
 
