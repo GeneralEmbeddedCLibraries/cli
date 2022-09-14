@@ -30,7 +30,13 @@ typedef float float32_t;
 
 3. In case of using device parameters (CLI_CFG_PAR_USE_EN = 1) it is mandatory to use [Parameters module](https://github.com/GeneralEmbeddedCLibraries/parameters).
 
- ## **API**
+## **General Embedded C Libraries Ecosystem**
+In order to be part of *General Embedded C Libraries Ecosystem* this module must be placed in following path: 
+```
+root/middleware/cli/cli/"module_space"
+```
+
+## **API**
 ---
 | API Functions | Description | Prototype |
 | --- | ----------- | ----- |
@@ -44,8 +50,21 @@ typedef float float32_t;
 
 ## Usage
 
+
+#### Preparing files
 **Put all user code between sections: USER CODE BEGIN & USER CODE END!**
 
 1. Copy template files to root directory of module.
+
+### Configuration setup
+
+### Initialization and first run
+
+### Registration of user command
+
+### Using device parameters
+
+
+
 
 
