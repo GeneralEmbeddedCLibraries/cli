@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <assert.h>
 
 #include "cli.h"
 #include "../../cli_cfg.h"
@@ -31,6 +32,15 @@
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 	#include "middleware/parameters/parameters/src/par.h"
+
+	/**
+	 * 	Compatibility check with RING_BUFFER
+	 *
+	 * 	Support version V1.2.x
+	 */
+	static_assert( 1 == PAR_VER_MAJOR );
+	static_assert( 2 == PAR_VER_MINOR );
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
