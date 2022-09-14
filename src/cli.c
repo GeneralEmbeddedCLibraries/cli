@@ -519,6 +519,10 @@ static void cli_help(const uint8_t * p_attr)
 	// No additional attributes
 	if ( NULL == p_attr )
 	{
+		cli_printf( " " );
+		cli_printf( "    List of device commands " );
+		cli_printf( "--------------------------------------------------------" );
+
 		// Basic command table printout
 		for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
 		{
@@ -526,8 +530,8 @@ static void cli_help(const uint8_t * p_attr)
 			const char * name_str = g_cli_basic_table[cmd_idx].p_name;
 			const char * help_str = g_cli_basic_table[cmd_idx].p_help ;
 
-			// Left adjust for 20 chars
-			cli_printf( "%-20s%s", name_str, help_str );
+			// Left adjust for 25 chars
+			cli_printf( "%-25s%s", name_str, help_str );
 		}
 
 		// User defined tables
@@ -539,6 +543,9 @@ static void cli_help(const uint8_t * p_attr)
 				// Get number of user commands inside single table
 				const uint32_t num_of_user_cmd = gp_cli_user_tables[cmd_idx]->num_of;
 
+				// Print separator between user commands
+				cli_printf( "--------------------------------------------------------" );
+
 				// Show help for that table
 				for ( user_cmd_idx = 0; user_cmd_idx < num_of_user_cmd; user_cmd_idx++ )
 				{
@@ -546,11 +553,14 @@ static void cli_help(const uint8_t * p_attr)
 					const char * name_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_name;
 					const char * help_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_help;
 
-					// Left adjust for 20 chars
-					cli_printf( "%-20s%s", name_str, help_str );
+					// Left adjust for 25 chars
+					cli_printf( "%-25s%s", name_str, help_str );
 				}
 			}
 		}
+
+		// Print separator at the end
+		cli_printf( "--------------------------------------------------------" );
 	}
 	else
 	{
@@ -591,7 +601,7 @@ static void cli_sw_version(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		cli_printf( "OK, SW ver.: %s", 	CLI_CFG_INTRO_SW_VER );
+		cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
 	}
 	else
 	{
@@ -611,7 +621,7 @@ static void cli_hw_version(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		cli_printf( "OK, HW ver.: %s", 	CLI_CFG_INTRO_HW_VER );
+		cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
 	}
 	else
 	{
@@ -631,7 +641,7 @@ static void cli_proj_info(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		cli_printf( "OK, Project Info..." );
+		cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
 	}
 	else
 	{
@@ -1279,13 +1289,15 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void	cli_send_intro(void)
 	{
-		cli_printf( "**************************************************" );
-		cli_printf( "\tProject:\t%s", 	CLI_CFG_INTRO_PROJECT_NAME );
-		cli_printf( "\tFW ver.:\t%s", 	CLI_CFG_INTRO_SW_VER );
-		cli_printf( "\tHW ver.:\t%s", 	CLI_CFG_INTRO_HW_VER );
+		cli_printf( " " );
+		cli_printf( "********************************************************" );
+		cli_printf( "        %s", 	CLI_CFG_INTRO_PROJECT_NAME );
+		cli_printf( "********************************************************" );
+		cli_printf( " %s", 	CLI_CFG_INTRO_SW_VER );
+		cli_printf( " %s", 	CLI_CFG_INTRO_HW_VER );
 		cli_printf( " ");
-		cli_printf( " See 'help' for further details." );
-		cli_printf( "**************************************************" );
+		cli_printf( " Enter 'help' to display supported commands" );
+		cli_printf( "********************************************************" );
 		cli_printf( "Ready to take orders..." );
 	}
 
