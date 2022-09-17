@@ -13,33 +13,114 @@
 /*!
 * @addtogroup CLI_CFG
 * @{ <!-- BEGIN GROUP -->
+*
+*
+* 	User shall put code inside inside code block start with
+* 	"USER_CODE_BEGIN" and with end of "USER_CODE_END".
+*
 */
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
+#include <stdint.h>
 #include "cli_cfg.h"
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+	#include "middleware/parameters/parameters/src/par.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+	/**
+	 * 	Device parameter group name
+	 */
+	typedef struct
+	{
+		par_num_t 	par_num;
+		char * 		name;
+	} cli_cfg_par_group_t;
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
 ////////////////////////////////////////////////////////////////////////////////
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Function prototypes
-////////////////////////////////////////////////////////////////////////////////
+#if ( 1 == CLI_CFG_PAR_USE_EN )
 
+	/**
+	 * 		Parameter group name definitions
+	 *
+	 *
+	 * @note	First parameter in group is defining name of the group!
+	 *
+	 * 	@note	Change code only between "USER_CODE_BEGIN" and
+	 * 			"USER_CODE_END" section!
+	 */
+	static const cli_cfg_par_group_t g_par_groups[] =
+	{
+		// USER CODE BEGIN...
+
+		// --------------------------------------------------------------------------------------------
+		//	Group start parameter						Group name
+		// --------------------------------------------------------------------------------------------
+		{ 	.par_num = ePAR_POT_VOLT, 					.name="POTENCIOMETER" 						},
+		{ 	.par_num = ePAR_PPM_SYNC_WIDTH, 			.name="PPM SETTINGS" 						},
+		{ 	.par_num = ePAR_PPM_TX_CNT, 				.name="PPM STATUS" 							},
+		{ 	.par_num = ePAR_COM_PPM_FRAME_PERIOD, 		.name="COMMUNICATION SETTINGS" 				},
+		{ 	.par_num = ePAR_SYS_STATUS, 				.name="SYSTEM STATUS" 						},
+
+		// USER CODE END
+	};
+
+	/**
+	 * 	Number of device parameter groups
+	 */
+	static const uint32_t gu32_par_group_num_of = (uint32_t)( sizeof(g_par_groups) / sizeof(cli_cfg_par_group_t));
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Get parameter groupe name
+	*
+	* @note			If parameter number is not assosited with group name it
+	* 				will return NULL!
+	*
+	* @param[in]	par_num		- Parameter enumeration
+	* @return 		group_name	- Name of the groupe
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	const char * cli_cfg_get_par_groupe_str(const uint32_t par_num)
+	{
+		char * group_name = NULL;
+
+		for (uint32_t par_idx = 0; par_idx < gu32_par_group_num_of; par_idx++)
+		{
+			if ( g_par_groups[par_idx].par_num == par_num )
+			{
+				group_name = (char*) g_par_groups[par_idx].name;
+				break;
+			}
+		}
+
+		return group_name;
+	}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

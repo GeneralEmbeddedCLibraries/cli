@@ -117,6 +117,7 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static void 		cli_status_des  		(const uint8_t * p_attr);
 	static float32_t 	cli_par_val_to_float	(const par_type_list_t par_type, const void * p_val);
 	static void			cli_par_live_watch_hndl	(void);
+	static void 		cli_par_group_print		(const par_num_t par_num);
 #endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
@@ -762,10 +763,10 @@ static void cli_unknown(const uint8_t * p_attr)
 				// Get current parameter value
 				par_get( par_num, &par_val );
 
-				// Print header
-				// TODO: Define how to print header
-				//shell_par_print_header( par_num );
+				// Print group name
+				cli_par_group_print( par_num );
 
+				// TODO: Needs to redefine par print...
 				if ( NULL != par_cfg.unit )
 				{
 					// Par info response
@@ -826,7 +827,7 @@ static void cli_unknown(const uint8_t * p_attr)
 			// Get parameter number from ID
 			par_get_num_by_id( par_id, &par_num );
 
-			// Check for validy
+			// Check for valid
 			if ( par_num < ePAR_NUM_OF )
 			{
 				param_found = true;
@@ -937,7 +938,7 @@ static void cli_unknown(const uint8_t * p_attr)
 			// Get parameter number from ID
 			par_get_num_by_id( par_id, &par_num );
 
-			// Check for validy
+			// Check for valid
 			if ( par_num < ePAR_NUM_OF )
 			{
 				param_found = true;
@@ -1284,6 +1285,26 @@ static void cli_unknown(const uint8_t * p_attr)
 
 			// Terminate line
 			cli_printf("");
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Print parameter groupe name
+	*
+	* @param[in]	par_num	- Parameter enumeration number
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	static void cli_par_group_print(const par_num_t par_num)
+	{
+		// Get group name
+		const char * group_name = cli_cfg_get_par_groupe_str( par_num );
+
+		// If defined print it
+		if ( NULL != group_name )
+		{
+			cli_printf( ":%s", group_name );
 		}
 	}
 

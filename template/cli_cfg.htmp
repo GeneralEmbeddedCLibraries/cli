@@ -51,7 +51,7 @@
 	/**
 	 * 	Intro strings
 	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "Evaluation of Inter-COM" )
+	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "PPM Interface Evaluation" )
 	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
 	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
 	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
@@ -65,7 +65,7 @@
  *
  * 			If not used leave empty. E.g. ""
  */
-#define CLI_CFG_TERMINATION_STRING				((const uint8_t*) ( "\r\n" ))
+#define CLI_CFG_TERMINATION_STRING				((const uint8_t*) ( "\r" ))
 
 /**
  * 	Printf buffer size
@@ -107,7 +107,7 @@
 /**
  * 	Enable/Disable multiple access protection
  */
-#define CLI_CFG_MUTEX_EN						( 1 )
+#define CLI_CFG_MUTEX_EN						( 0 )
 
 /**
  * 	Enable/Disable communication channels
@@ -140,7 +140,7 @@
  * 	@brief	Usage of device parameters.
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
-#define CLI_CFG_PAR_USE_EN						( 0 )
+#define CLI_CFG_PAR_USE_EN						( 1 )
 
 /**
  * 	Enable/Disable debug mode
@@ -168,6 +168,9 @@
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+	const char * cli_cfg_get_par_groupe_str(const uint32_t par_num);
+#endif
 
 #endif // __CLI_CFG_H
 
