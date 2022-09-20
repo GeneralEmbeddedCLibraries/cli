@@ -1659,26 +1659,35 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 
 	CLI_ASSERT( NULL != p_cmd_table );
 
-	if ( true == gb_is_init )
-	{
-		if ( NULL != p_cmd_table )
-		{
-			// Is there any space left for user tables?
-			if ( gu32_user_table_count < CLI_USER_CMD_TABLE_MAX_COUNT )
-			{
-				// User table defined OK
-				if ( true == cli_validate_user_table( p_cmd_table ))
-				{
-					// Store
-					gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
-					gu32_user_table_count++;
-				}
+	#if ( 1 == CLI_CFG_MUTEX_EN )
 
-				// User table definition error
+		// Mutex obtain
+		if ( eCLI_OK == cli_if_aquire_mutex())
+		{
+	#endif
+			if ( NULL != p_cmd_table )
+			{
+				// Is there any space left for user tables?
+				if ( gu32_user_table_count < CLI_USER_CMD_TABLE_MAX_COUNT )
+				{
+					// User table defined OK
+					if ( true == cli_validate_user_table( p_cmd_table ))
+					{
+						// Store
+						gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
+						gu32_user_table_count++;
+					}
+
+					// User table definition error
+					else
+					{
+						CLI_DBG_PRINT( "CLI ERROR: Invalid definition of user table!");
+						CLI_ASSERT( 0 );
+						status = eCLI_ERROR;
+					}
+				}
 				else
 				{
-					CLI_DBG_PRINT( "CLI ERROR: Invalid definition of user table!");
-					CLI_ASSERT( 0 );
 					status = eCLI_ERROR;
 				}
 			}
@@ -1686,16 +1695,16 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 			{
 				status = eCLI_ERROR;
 			}
+		#if ( 1 == CLI_CFG_MUTEX_EN )
+
+			// Release mutex
+			cli_if_release_mutex();
 		}
 		else
 		{
 			status = eCLI_ERROR;
 		}
-	}
-	else
-	{
-		status = eCLI_ERROR_INIT;
-	}
+		#endif
 
 	return status;
 }
