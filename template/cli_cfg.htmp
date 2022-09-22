@@ -115,32 +115,6 @@
 #define CLI_CFG_MUTEX_EN						( 1 )
 
 /**
- * 		List of communication channels
- *
- * @note	Warning and error communication channels must
- * 			always be present!
- *
- * 	@note	Change code only between "USER_CODE_BEGIN" and
- * 			"USER_CODE_END" section!
- */
-typedef enum
-{
-	eCLI_CH_WAR = 0,		/**<Warning channel */
-	eCLI_CH_ERR,			/**<Error channel */
-
-	// USER_CODE_BEGIN
-
-	eCLI_CH_SCP,
-	eCLI_CH_SICP_SER,
-	eCLI_CH_SICP,
-	eCLI_CH_APP,
-
-	// USER_CODE_END
-
-	eCLI_CH_NUM_OF			/**<Leave unchange - Must be last! */
-} cli_ch_opt_t;
-
-/**
  * 	Enable/Disable parameters usage
  *
  * 	@brief	Usage of device parameters.
@@ -166,6 +140,32 @@ typedef enum
 #else
 	#define CLI_ASSERT(x)						{ ; }
 #endif
+
+/**
+ * 		List of communication channels
+ *
+ * @note	Warning and error communication channels must
+ * 			always be present!
+ *
+ * 	@note	Change code only between "USER_CODE_BEGIN" and
+ * 			"USER_CODE_END" section!
+ */
+typedef enum
+{
+	eCLI_CH_WAR = 0,		/**<Warning channel */
+	eCLI_CH_ERR,			/**<Error channel */
+
+	// USER_CODE_BEGIN
+
+	eCLI_CH_SCP,
+	eCLI_CH_SICP_SER,
+	eCLI_CH_SICP,
+	eCLI_CH_APP,
+
+	// USER_CODE_END
+
+	eCLI_CH_NUM_OF			/**<Leave unchange - Must be last! */
+} cli_ch_opt_t;
 
 // USER CODE END...
 
