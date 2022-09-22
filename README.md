@@ -4,9 +4,9 @@ Command Line Interface (CLI) is general purpose console based interpretor indepe
 
 CLI is build around command tables where command name, function and help message is specified. E.g.:
 ```C
-// -----------------------------------------------------------
+// -----------------------------------------------------------------------------
 // 	name			function		help string
-// -----------------------------------------------------------
+// -----------------------------------------------------------------------------
 { 	"help", 		cli_help, 		"Print all commands help" },
 { 	"reset", 		cli_reset,		"Reset device" 			  },
 ```
@@ -138,9 +138,9 @@ static volatile const cli_cmd_table_t my_table =
 	// List of commands
 	.cmd =
 	{
-		// -----------------------------------------------------------------------------
-		//     name            function            help string
-		// -----------------------------------------------------------------------------
+		// ----------------------------------------------------------------------
+		//     name         function            help string
+		// ----------------------------------------------------------------------
 		{ "test_1",         test_1,             "Test 1 Help" },
 		{ "test_2",         test_2,             "Test 2 Help" },
 		{ "test_3",         test_3,             "Test 3 Help" },
@@ -150,6 +150,12 @@ static volatile const cli_cmd_table_t my_table =
 	// Total number of listed commands
 	.num_of = 4
 };
+
+void register_my_cli_commands()
+{
+	// Register shell commands
+	cli_register_cmd_table((const cli_cmd_table_t*) &my_table );
+}
 ```
 
 ### **Defining communication channels**
