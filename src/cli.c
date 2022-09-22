@@ -1626,11 +1626,9 @@ cli_status_t cli_printf(char * p_format, ...)
 			vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
 			va_end(args);
 
-			// Add line termination and print message
-			strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
-
 			// Send string
 			status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+			status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
 		}
 		else
 		{
@@ -1644,6 +1642,53 @@ cli_status_t cli_printf(char * p_format, ...)
 
 	return status;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Print formated string within debug channel
+*
+* @param[in]	ch			- Debug channel
+* @param[in]	p_format	- Formated string
+* @return       status		- Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
+{
+	cli_status_t 	status = eCLI_OK;
+	va_list 		args;
+
+	CLI_ASSERT( NULL != p_format );
+
+	if ( true == gb_is_init )
+	{
+		if ( NULL != p_format )
+		{
+			// Taking args from stack
+			va_start(args, p_format);
+			vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+			va_end(args);
+
+			// Send channel name
+			status |= cli_send_str((const uint8_t*) cli_cfg_get_ch_name( ch ));
+			status |= cli_send_str((const uint8_t*) ": " );
+
+			// Send string
+			status |= cli_send_str((const uint8_t*) &gu8_tx_buffer );
+			status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
+		}
+		else
+		{
+			status = eCLI_ERROR;
+		}
+	}
+	else
+	{
+		status = eCLI_ERROR_INIT;
+	}
+
+	return status;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -1708,56 +1753,6 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 
 	return status;
 }
-
-#if ( 1 == CLI_CFG_CHANNEL_EN )
-
-	////////////////////////////////////////////////////////////////////////////////
-	/*!
-	* @brief        Print formated string within debug channel
-	*
-	* @param[in]	ch			- Debug channel
-	* @param[in]	p_format	- Formated string
-	* @return       status		- Status of initialization
-	*/
-	////////////////////////////////////////////////////////////////////////////////
-	cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
-	{
-		cli_status_t 	status = eCLI_OK;
-		va_list 		args;
-
-		CLI_ASSERT( NULL != p_format );
-
-		if ( true == gb_is_init )
-		{
-			if ( NULL != p_format )
-			{
-				// Taking args from stack
-				va_start(args, p_format);
-				vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
-				va_end(args);
-
-				// TODO: Append debug channel name...
-
-				// Add line termination and print message
-				strcat( (char*)gu8_tx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
-
-				// Send string
-				status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
-			}
-			else
-			{
-				status = eCLI_ERROR;
-			}
-		}
-		else
-		{
-			status = eCLI_ERROR_INIT;
-		}
-
-		return status;
-	}
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

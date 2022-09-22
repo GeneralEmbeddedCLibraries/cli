@@ -86,13 +86,8 @@ cli_status_t cli_deinit				(void);
 cli_status_t cli_is_init			(bool * const p_is_init);
 cli_status_t cli_hndl				(void);
 cli_status_t cli_printf				(char * p_format, ...);
+cli_status_t cli_printf_ch			(const cli_ch_opt_t ch, char * p_format, ...);
 cli_status_t cli_register_cmd_table (const cli_cmd_table_t * const p_cmd_table);
-
-
-#if ( 1 == CLI_CFG_CHANNEL_EN )
-	cli_status_t cli_ch_printf		(const cli_ch_opt_t ch, char * p_format, ...);
-#endif
-
 
 #endif // __CLI_H
 
