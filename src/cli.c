@@ -97,6 +97,8 @@ static void cli_reset	   	  	(const uint8_t * p_attr);
 static void cli_sw_version  	(const uint8_t * p_attr);
 static void cli_hw_version  	(const uint8_t * p_attr);
 static void cli_proj_info  		(const uint8_t * p_attr);
+static void cli_ch_info  		(const uint8_t * p_attr);
+static void cli_ch_en  			(const uint8_t * p_attr);
 static void cli_unknown	  		(const uint8_t * p_attr);
 
 #if ( 1 == CLI_CFG_CHANNEL_EN )
@@ -152,31 +154,33 @@ static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
  */
 static cli_cmd_t g_cli_basic_table[] =
 {
-	// ------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------
 	// 	name					function				help string
-	// ------------------------------------------------------------------------------------------
-	{ 	"help", 				cli_help, 				"Print all commands help" 				},
-	{ 	"reset", 				cli_reset, 				"Reset device" 							},
-	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 		},
-	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 		},
-	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 			},
+	// ------------------------------------------------------------------------------------------------------
+	{ 	"help", 				cli_help, 				"Print all commands help" 							},
+	{ 	"reset", 				cli_reset, 				"Reset device" 										},
+	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					},
+	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					},
+	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						},
+	{ 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					},
+	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel [chEnum][en]" 			},
 
 #if ( 1 == CLI_CFG_CHANNEL_EN )
-	{	"com_ch_info",			cli_ch_info,			"Show COM channels info"				},
-	{	"com_ch_enable",		cli_ch_enable,			"Enable COM channels [chID]"			},
-	{	"com_ch_disable",		cli_ch_disable,			"Disable COM channels [chID]"			},
+	{	"com_ch_info",			cli_ch_info,			"Show COM channels info"							},
+	{	"com_ch_enable",		cli_ch_enable,			"Enable COM channels [chID]"						},
+	{	"com_ch_disable",		cli_ch_disable,			"Disable COM channels [chID]"						},
 #endif
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-	{	"par_print",			cli_par_print,		    "Prints parameters"						},
-	{	"par_set", 				cli_par_set,			"Set parameter [parID,value]"			},
-	{	"par_get",				cli_par_get,		    "Get parameter [parID]"					},
-	{	"par_def",				cli_par_def,	    	"Set parameter to default [parID]"		},
-	{	"par_def_all",			cli_par_def_all,    	"Set all parameters to default"			},
-	{	"par_save",				cli_par_store,	    	"Save parameter to NVM"					},
-	{	"status_start", 		cli_status_start,		"Start data streaming"  			 	},
-	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 	},
-	{	"status_des",			cli_status_des,			"Status description"	  			 	},
+	{	"par_print",			cli_par_print,		    "Prints parameters"									},
+	{	"par_set", 				cli_par_set,			"Set parameter [parID,value]"						},
+	{	"par_get",				cli_par_get,		    "Get parameter [parID]"								},
+	{	"par_def",				cli_par_def,	    	"Set parameter to default [parID]"					},
+	{	"par_def_all",			cli_par_def_all,    	"Set all parameters to default"						},
+	{	"par_save",				cli_par_store,	    	"Save parameter to NVM"								},
+	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
+	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
+	{	"status_des",			cli_status_des,			"Status description"	  			 				},
 #endif
 };
 
@@ -659,6 +663,28 @@ static void cli_proj_info(const uint8_t * p_attr)
 	{
 		cli_unknown(NULL);
 	}
+}
+
+static void cli_ch_info(const uint8_t * p_attr)
+{
+	cli_printf( "--------------------------------------------------------" );
+	cli_printf( "        Communication Channels Info" );
+	cli_printf( "--------------------------------------------------------" );
+	cli_printf( "  %-25s%s", "Name", "State" );
+	cli_printf( " ---------------------------------" );
+
+	for (uint8_t ch = 0; ch < eCLI_CH_NUM_OF; ch++)
+	{
+		cli_printf("  %-25s%s", cli_cfg_get_ch_name(ch), (cli_cfg_get_ch_en(ch) ? ( "Enable" ) : ( "Disable" )));
+	}
+
+	cli_printf( "--------------------------------------------------------" );
+}
+
+
+static void cli_ch_en(const uint8_t * p_attr)
+{
+	cli_printf( "Needs to be defined..." );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
