@@ -4,16 +4,16 @@ Command Line Interface (CLI) is general purpose console based interpretor indepe
 
 CLI is build around command tables where command name, function and help message is specified. E.g.:
 ```C
-	// ------------------------------------------------------------------------------------------
-	// 	name					function				help string
-	// ------------------------------------------------------------------------------------------
-	{ 	"help", 				cli_help, 				"Print all commands help" 				},
-	{ 	"reset", 				cli_reset, 				"Reset device" 							},
+// -----------------------------------------------------------
+// 	name			function		help string
+// -----------------------------------------------------------
+{ 	"help", 		cli_help, 		"Print all commands help" },
+{ 	"reset", 		cli_reset,		"Reset device" 			  },
 ```
 
 CLI divides two types of command tables:
- - *BASIC COMMAND TABLE*: Is compile-time defined by CLI module itself and highly depends on user configurations of module. Commands inside basic table serves for PC tool interfacing with the embedded device.
- - *USER COMMAND TABLE*: Is run-time defined list of command defined by the user application purposes.
+ - ***BASIC COMMAND TABLE***: Is compile-time defined by CLI module itself and highly depends on user configurations of module. Commands inside basic table serves for PC tool interfacing with the embedded device.
+ - ***USER COMMAND TABLE***: Is run-time defined list of command defined by the user application purposes.
 
 
 ## **Dependencies**
@@ -51,15 +51,50 @@ root/middleware/cli/cli/"module_space"
 
 ## **Usage**
 
-
-### **Preparing files**
-**Put all user code between sections: USER CODE BEGIN & USER CODE END!**
+**GENERAL NOTICE: Put all user code between sections: USER CODE BEGIN & USER CODE END!**
 
 1. Copy template files to root directory of module.
+2. Configure CLI module for application needs. Configuration options are following:
+---
+| Configuration | Description |
+| --- | --- |
+| **CLI_CFG_INTRO_STRING_EN** 			| Enable/Disable introduction string at CLI initialization. |
+| **CLI_CFG_INTRO_PROJECT_NAME** 		| Project name string. Part of intro string. |
+| **CLI_CFG_INTRO_SW_VER** 				| Software version. Part of intro string. |
+| **CLI_CFG_INTRO_HW_VER** 				| Hardware version. Part of intro string. |
+| **CLI_CFG_INTRO_PROJ_INFO** 			| Project detailed info. Part of "revision" module. |
+| **CLI_CFG_TERMINATION_STRING** 		| String that will be send after each "cli_printf" and "cli_printf_ch". |
+| **CLI_CFG_PRINTF_BUF_SIZE** 			| Buffer size of transmitting buffer in bytes. |
+| **CLI_CFG_MAX_NUM_OF_COMMANDS** 		| Maximum number of user defined commands inside single table. |
+| **CLI_CFG_MAX_NUM_OF_USER_TABLES** 	| Maximum number of user define command tables. |
+| **CLI_CFG_MUTEX_EN** 					| Enable/Disable usage of mutex in order to protect low level communication driver. |
+| **CLI_CFG_DEBUG_EN** 					| Enable/Disable debugging mode. |
+| **CLI_CFG_ASSERT_EN** 				| Enable/Disable asserts. Shall be disabled in release build! |
+| **CLI_ASSERT** 						| Definition of assert |
 
-### **Configuration setup**
+3. Configure communication channels if needed. See **Defining communication channels** chapter bellow.
+4. Prepare interface files *cli_if.c* and *cli_if.h*. All examples are inside *template* folder.
+5. Initilize CLI module:
+	```C
+	// Initialize CLI
+	if ( eCLI_OK != cli_init())
+	{
+		// Initialization error...
+		// Furhter actions here...
+	}
+	```
+6. Register wanted cli commands. See **Registration of user command** chapter bellow.
+7. Make sure to call *cli_hndl()* at fixed period (e.g. 10ms):
+	```C
+	// 10 ms loop
+	if ( flags & SHELL_TIMER_EVENT_10_MS )
+	{
+		// Handle Command Line Interface
+		cli_hndl();
+	}
+	```
 
-### **Initialization and first run**
+
 
 ### **Registration of user command**
 
@@ -119,7 +154,7 @@ static volatile const cli_cmd_table_t my_table =
 
 ### **Defining communication channels**
 
-NOTICE: Change only code between ***USER CODE BEGIN** and ***USER CODE END*** sections:
+NOTICE: Change only code between ***USER CODE BEGIN*** and ***USER CODE END*** sections:
 
 1. Define communication channels enumerations inside *cli_cfg.h*. 
 	```C
@@ -180,7 +215,7 @@ NOTICE: Change only code between ***USER CODE BEGIN** and ***USER CODE END*** se
 
 ### **Using device parameters**
 
-1. Make sure to have [Device Parameter](https://github.com/GeneralEmbeddedCLibraries/parameters) up and running.
+1. Make sure to have [Device Parameter](https://github.com/GeneralEmbeddedCLibraries/parameters) up and running. It is mandatory to use *General Embedded C Libraries Ecosystem* path for parameters module (*root/middleware/parameters/parameters/*) !
 
 2. Enable following *CLI_CFG_PAR_USE_EN* macro by setting it to "1" inside *cli_cfg.h* file:
 	```C
