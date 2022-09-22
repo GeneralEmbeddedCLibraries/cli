@@ -101,12 +101,6 @@ static void cli_ch_info  		(const uint8_t * p_attr);
 static void cli_ch_en  			(const uint8_t * p_attr);
 static void cli_unknown	  		(const uint8_t * p_attr);
 
-#if ( 1 == CLI_CFG_CHANNEL_EN )
-	static void cli_ch_info		(const uint8_t * p_attr);
-	static void cli_ch_enable	(const uint8_t * p_attr);
-	static void cli_ch_disable	(const uint8_t * p_attr);
-#endif
-
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 	static void 		cli_par_print	  		(const uint8_t * p_attr);
 	static void 		cli_par_set		  		(const uint8_t * p_attr);
@@ -164,12 +158,6 @@ static cli_cmd_t g_cli_basic_table[] =
 	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						},
 	{ 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					},
 	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel [chEnum][en]" 			},
-
-#if ( 1 == CLI_CFG_CHANNEL_EN )
-	{	"com_ch_info",			cli_ch_info,			"Show COM channels info"							},
-	{	"com_ch_enable",		cli_ch_enable,			"Enable COM channels [chID]"						},
-	{	"com_ch_disable",		cli_ch_disable,			"Disable COM channels [chID]"						},
-#endif
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 	{	"par_print",			cli_par_print,		    "Prints parameters"									},
@@ -665,26 +653,75 @@ static void cli_proj_info(const uint8_t * p_attr)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show communication channel info
+*
+* @note			Command format: >>>cli_ch_info
+*
+* @param[in]	attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_ch_info(const uint8_t * p_attr)
 {
-	cli_printf( "--------------------------------------------------------" );
-	cli_printf( "        Communication Channels Info" );
-	cli_printf( "--------------------------------------------------------" );
-	cli_printf( "  %-25s%s", "Name", "State" );
-	cli_printf( " ---------------------------------" );
-
-	for (uint8_t ch = 0; ch < eCLI_CH_NUM_OF; ch++)
+	if ( NULL == p_attr )
 	{
-		cli_printf("  %-25s%s", cli_cfg_get_ch_name(ch), (cli_cfg_get_ch_en(ch) ? ( "Enable" ) : ( "Disable" )));
-	}
+		cli_printf( "--------------------------------------------------------" );
+		cli_printf( "        Communication Channels Info" );
+		cli_printf( "--------------------------------------------------------" );
+		cli_printf( "  %-8s%-20s%s", "chEnum", "Name", "State" );
+		cli_printf( " ------------------------------------" );
 
-	cli_printf( "--------------------------------------------------------" );
+		for (uint8_t ch = 0; ch < eCLI_CH_NUM_OF; ch++)
+		{
+			cli_printf("    %02d    %-20s%s", ch, cli_cfg_get_ch_name(ch), (cli_cfg_get_ch_en(ch) ? ( "Enable" ) : ( "Disable" )));
+		}
+
+		cli_printf( "--------------------------------------------------------" );
+	}
+	else
+	{
+		cli_unknown(NULL);
+	}
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Enable/Disable communication channel
+*
+*
+* @note			Command format: >>>cli_ch_en [chEnum,en]
+*
+* 				E.g.:	>>>cli_ch_en 0, 1	// Disable "WARNING" channel
+* 				E.g.:	>>>cli_ch_en 1, 0	// Enable "ERROR" channel
+*
+* @param[in]	attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_ch_en(const uint8_t * p_attr)
 {
-	cli_printf( "Needs to be defined..." );
+	static cli_ch_opt_t ch = 0;
+	bool en = false;
+
+	// Check input command
+	if ( 2U == sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&ch, (unsigned int*)&en ))
+	{
+		if ( ch < eCLI_CH_NUM_OF )
+		{
+			cli_cfg_set_ch_en( ch, en );
+			cli_printf( "OK, %s channel %s", (( true == en ) ? ("Enabling") : ("Disabling")), cli_cfg_get_ch_name( ch ));
+		}
+		else
+		{
+			cli_printf( "ERR, Invalid chEnum!" );
+		}
+	}
+	else
+	{
+		cli_unknown(NULL);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -699,58 +736,6 @@ static void cli_unknown(const uint8_t * p_attr)
 {
 	cli_printf( "ERR, Unknown command!" );
 }
-
-#if ( 1 == CLI_CFG_CHANNEL_EN )
-
-	////////////////////////////////////////////////////////////////////////////////
-	/*!
-	* @brief 		Print communication channels details
-	*
-	* @note			Command format: >>>com_ch_info
-	*
-	* @param[in] 	attr 	- Inputed command attributes
-	* @return 		void
-	*/
-	////////////////////////////////////////////////////////////////////////////////
-	static void cli_ch_info(const uint8_t * p_attr)
-	{
-		// TODO: ...
-		cli_printf("Needs to be defined...");
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-	/*!
-	* @brief 		Print communication channels details
-	*
-	* @note			Command format: >>>com_ch_enable [chID]
-	*
-	* @param[in] 	attr 	- Inputed command attributes
-	* @return 		void
-	*/
-	////////////////////////////////////////////////////////////////////////////////
-	static void cli_ch_enable(const uint8_t * p_attr)
-	{
-		// TODO: ...
-		cli_printf("Needs to be defined...");
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-	/*!
-	* @brief 		Print communication channels details
-	*
-	* @note			Command format: >>>com_ch_disable [chID]
-	*
-	* @param[in] 	attr 	- Inputed command attributes
-	* @return 		void
-	*/
-	////////////////////////////////////////////////////////////////////////////////
-	static void cli_ch_disable(const uint8_t * p_attr)
-	{
-		// TODO: ...
-		cli_printf("Needs to be defined...");
-	}
-
-#endif
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
@@ -1689,18 +1674,22 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 	{
 		if ( NULL != p_format )
 		{
-			// Taking args from stack
-			va_start(args, p_format);
-			vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
-			va_end(args);
+			// Is channel enabled
+			if ( true == cli_cfg_get_ch_en( ch ))
+			{
+				// Taking args from stack
+				va_start(args, p_format);
+				vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+				va_end(args);
 
-			// Send channel name
-			status |= cli_send_str((const uint8_t*) cli_cfg_get_ch_name( ch ));
-			status |= cli_send_str((const uint8_t*) ": " );
+				// Send channel name
+				status |= cli_send_str((const uint8_t*) cli_cfg_get_ch_name( ch ));
+				status |= cli_send_str((const uint8_t*) ": " );
 
-			// Send string
-			status |= cli_send_str((const uint8_t*) &gu8_tx_buffer );
-			status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
+				// Send string
+				status |= cli_send_str((const uint8_t*) &gu8_tx_buffer );
+				status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
+			}
 		}
 		else
 		{

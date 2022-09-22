@@ -133,6 +133,7 @@ typedef enum
 	eCLI_CH_SCP,
 	eCLI_CH_SICP_SER,
 	eCLI_CH_SICP,
+	eCLI_CH_APP,
 
 	// USER_CODE_END
 

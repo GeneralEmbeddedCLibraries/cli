@@ -74,6 +74,7 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 	[eCLI_CH_SCP] 		= {	.name = "SCP", 				.en = true 				},
 	[eCLI_CH_SICP_SER] 	= {	.name = "SICP_Serial", 		.en = true 				},
 	[eCLI_CH_SICP] 		= {	.name = "SICP", 			.en = true 				},
+	[eCLI_CH_APP] 		= {	.name = "APP", 				.en = true 				},
 
 	// USER_CODE_END
 };
@@ -126,9 +127,16 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 ////////////////////////////////////////////////////////////////////////////////
 const char* cli_cfg_get_ch_name(const cli_ch_opt_t ch)
 {
+	const char * name = NULL;
+
 	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
 
-	return g_cli_ch[ch].name;
+	if ( ch < eCLI_CH_NUM_OF )
+	{
+		name = g_cli_ch[ch].name;
+	}
+
+	return name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,9 +149,16 @@ const char* cli_cfg_get_ch_name(const cli_ch_opt_t ch)
 ////////////////////////////////////////////////////////////////////////////////
 const bool cli_cfg_get_ch_en(const cli_ch_opt_t ch)
 {
+	bool en = false;
+
 	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
 
-	return g_cli_ch[ch].en;
+	if ( ch < eCLI_CH_NUM_OF )
+	{
+		en = g_cli_ch[ch].en;
+	}
+
+	return en;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +174,10 @@ void cli_cfg_set_ch_en(const cli_ch_opt_t ch, const bool en)
 {
 	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
 
-	g_cli_ch[ch].en = en;
+	if ( ch < eCLI_CH_NUM_OF )
+	{
+		g_cli_ch[ch].en = en;
+	}
 }
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
