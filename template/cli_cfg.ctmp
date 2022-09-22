@@ -25,6 +25,8 @@
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
 #include <stdint.h>
+#include <stdbool.h>
+
 #include "cli_cfg.h"
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
@@ -52,6 +54,29 @@
 // Variables
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * 		Communication channels names and default active
+ * 		state definition
+ *
+ * 	@note	Change code only between "USER_CODE_BEGIN" and
+ * 			"USER_CODE_END" section!
+ */
+static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
+{
+	// --------------------------------------------------------------------------
+	//						Name of channel				Default state of channel
+	// --------------------------------------------------------------------------
+	[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = true 				},
+	[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = true 				},
+
+	// USER_CODE_BEGIN
+
+	[eCLI_CH_SCP] 		= {	.name = "SCP", 				.en = true 				},
+	[eCLI_CH_SICP_SER] 	= {	.name = "SICP_Serial", 		.en = true 				},
+	[eCLI_CH_SICP] 		= {	.name = "SICP", 			.en = true 				},
+
+	// USER_CODE_END
+};
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
@@ -90,6 +115,52 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief 		Get communication channel name
+*
+* @param[in]	ch		- Communication channel
+* @return 		name	- Name of com channel
+*/
+////////////////////////////////////////////////////////////////////////////////
+const char* cli_cfg_get_ch_name(const cli_ch_opt_t ch)
+{
+	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
+
+	return g_cli_ch[ch].name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief 		Get communication channel enable flag
+*
+* @param[in]	ch	- Communication channel
+* @return 		en	- Active state
+*/
+////////////////////////////////////////////////////////////////////////////////
+const bool cli_cfg_get_ch_en(const cli_ch_opt_t ch)
+{
+	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
+
+	return g_cli_ch[ch].en;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief 		Set communication channel enable flag
+*
+* @param[in]	ch	- Communication channel
+* @param[in]	en	- Active state
+* @return 		void
+*/
+////////////////////////////////////////////////////////////////////////////////
+void cli_cfg_set_ch_en(const cli_ch_opt_t ch, const bool en)
+{
+	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
+
+	g_cli_ch[ch].en = en;
+}
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
