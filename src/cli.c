@@ -1110,14 +1110,48 @@ static void cli_unknown(const uint8_t * p_attr)
 		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Start live watch streaming
+	*
+	* @note			Command format: >>>status_start
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_status_start(const uint8_t * p_attr)
 	{
-		g_cli_live_watch.active = true;
+		if ( NULL == p_attr )
+		{
+			g_cli_live_watch.active = true;
+		}
+		else
+		{
+			cli_unknown(NULL);
+		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Stop live watch streaming
+	*
+	* @note			Command format: >>>status_stop
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_status_stop(const uint8_t * p_attr)
 	{
-		g_cli_live_watch.active = false;
+		if ( NULL == p_attr )
+		{
+			g_cli_live_watch.active = false;
+		}
+		else
+		{
+			cli_unknown(NULL);
+		}
 	}
 
 
@@ -1231,6 +1265,16 @@ static void cli_unknown(const uint8_t * p_attr)
 		return f32_par_val;
 	}
 
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Parameter live watch handler
+	*
+	*				Executes in main "cli_hndl()" and streams parameters inside
+	*				live watch queue if live watch is enabled.
+	*
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void	cli_par_live_watch_hndl(void)
 	{
 		par_type_t 	par_val	= { .u32 = 0UL };
