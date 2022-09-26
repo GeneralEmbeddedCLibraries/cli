@@ -75,10 +75,22 @@
 #define CLI_MAX(a,b) 						((a >= b) ? (a) : (b))
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
+
 	/**
 	 * 	Maxumum allowed live watch
 	 */
 	#define CLI_PAR_MAX_IN_LIVE_WATCH		( 16 )
+
+	/**
+	 * 	Live watch data
+	 */
+	typedef struct
+	{
+		par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
+		uint8_t		num_of;									/**<Number of parameters inside live watch */
+		bool 		active;									/**<Active flag */
+	} cli_live_watch_t;
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,13 +200,12 @@ static cli_cmd_table_t * gp_cli_user_tables[CLI_USER_CMD_TABLE_MAX_COUNT] = { NU
 static uint32_t	gu32_user_table_count = 0;
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
+
 	/**
-	 * 	Live watch variables
+	 * 	Live watch data
 	 */
-	// TODO: Put that into structure!!!
-	static bool		gb_live_watch_active								= false;
-	static uint8_t 	gu8_live_watch_num_of 								= 0;
-	static uint16_t	gu16_live_watch_par_id[CLI_PAR_MAX_IN_LIVE_WATCH]	= {0};
+	static cli_live_watch_t g_cli_live_watch = { .active = false, .num_of = 0, .par_list = {0} };
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1018,18 +1029,23 @@ static void cli_unknown(const uint8_t * p_attr)
 		// Check input command
 		if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
 		{
-			// Get parameter number from ID
-			par_get_num_by_id( par_id, &par_num );
+			// Check if parameter exist
+			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+			{
+				// Set to default
+				par_set_to_default( par_num );
 
-			// Set to default
-			par_set_to_default( par_num );
-
-			// Rtn msg
-			cli_printf( "OK, Parameter %u set to default", par_id );
+				// Rtn msg
+				cli_printf( "OK, Parameter %u set to default", par_id );
+			}
+			else
+			{
+				cli_printf( "ERR, Wrong parameter ID!" );
+			}
 		}
 		else
 		{
-			cli_printf( "ERR, Invalid Input" );
+			cli_printf( "ERR, Wrong command!" );
 		}
 	}
 
@@ -1085,7 +1101,7 @@ static void cli_unknown(const uint8_t * p_attr)
 				}
 
 			#else
-				cli_printf( "ERR, Storing to NVM not supported" );
+				cli_printf( "ERR, Storing to NVM not supported!" );
 			#endif
 		}
 		else
@@ -1096,12 +1112,12 @@ static void cli_unknown(const uint8_t * p_attr)
 
 	static void cli_status_start(const uint8_t * p_attr)
 	{
-		gb_live_watch_active = true;
+		g_cli_live_watch.active = true;
 	}
 
 	static void cli_status_stop(const uint8_t * p_attr)
 	{
-		gb_live_watch_active = false;
+		g_cli_live_watch.active = false;
 	}
 
 
@@ -1112,51 +1128,54 @@ static void cli_unknown(const uint8_t * p_attr)
 
 		// CLI_CFG_HNDL_PERIOD_MS
 
-/*			uint32_t 	ch_cnt	= 0;
+		uint32_t 	ch_cnt	= 0;
 		static par_num_t 	par_num = 0;
 		uint32_t 	par_id	= 0;
 		par_cfg_t	par_cfg = {0};
 
 		par_num = 0;
 
-		sscanf(pc_line, "%n", (int*)&ch_cnt);
+		sscanf((const char*) p_attr, "%n", (int*)&ch_cnt);
 		p_attr += ch_cnt;
 
-		while( par_num < CLI_PAR_MAX_IN_LIVE_WATCH && 1 == sscanf(p_attr, "%d%n", (int*)&par_id, (int*)&ch_cnt) )
+		while(( par_num < CLI_PAR_MAX_IN_LIVE_WATCH ) && 1 == sscanf((const char*) p_attr, "%d%n", (int*)&par_id, (int*)&ch_cnt) )
 		{
-			streaming_pars[par_num++] = par_id;
-			pc_line += ch_cnt;
+			g_cli_live_watch.par_list[par_num++] = par_id;
+			p_attr += ch_cnt;
 
 			// skipp comma
-			if( *pc_line == ',' )
+			if( *p_attr == ',' )
 			{
-				pc_line++;
+				p_attr++;
 			}
 		}
 
 		if( par_num > 0)
 		{
-			streaming_pars_num = par_num;
+			g_cli_live_watch.num_of = par_num;
 		}
 
 		// Send sample time
-		snprintf( gs_output_buffer, SHELL_OUTPUT_LINE_SIZE, "OK,%g", (STREAMING_PERIOD / 1000.0f) );
-		shell_write(gs_output_buffer);
+		snprintf((char*) &gu8_tx_buffer, CLI_CFG_PRINTF_BUF_SIZE, "OK,%g", ( CLI_CFG_HNDL_PERIOD_MS / 1000.0f ));
+		cli_send_str( gu8_tx_buffer );
 
 		// Print streaming parameters/variables
-		for(int i = 0; i < streaming_pars_num; i++)
+		for(uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++)
 		{
 			// Get parameter number from streaming list
-			par_get_num_by_id( streaming_pars[i], &par_num );
+			par_get_num_by_id( g_cli_live_watch.par_list[par_idx], &par_num );
 
 			// Get parameter configurations
 			par_get_config( par_num, &par_cfg );
 
-			sprintf( gs_output_buffer, ",%s,d,1", par_cfg.name );
-			shell_write( gs_output_buffer );
+			sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
+
+
+			cli_send_str( gu8_tx_buffer );
 		}
 
-		shell_write("\r");*/
+		// Terminate line
+		cli_printf("");
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -1214,31 +1233,26 @@ static void cli_unknown(const uint8_t * p_attr)
 
 	static void	cli_par_live_watch_hndl(void)
 	{
-		par_type_list_t par_type 	= ePAR_TYPE_U8;
-		par_type_t 		par_val		= { .u32 = 0UL };
-		par_num_t 		par_num 	= 0;
-		par_cfg_t		par_cfg		= {0};
+		par_type_t 	par_val	= { .u32 = 0UL };
+		par_cfg_t	par_cfg	= {0};
 
 		// Stream data only if:
 		//		1. Live watch is active
 		//	AND	2. Any parameter to stream
-		if 	(	( true == gb_live_watch_active )
-			&& 	( gu8_live_watch_num_of > 0 ))
+		if 	(	( true == g_cli_live_watch.active )
+			&& 	( g_cli_live_watch.num_of > 0 ))
 		{
 			// Loop thru streaming parameters
-			for(uint32_t par_idx = 0; par_idx < gu8_live_watch_num_of; par_idx++)
+			for(uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++)
 			{
-				// Get parameter number from streaming list
-				par_get_num_by_id( gu16_live_watch_par_id[par_idx], &par_num );
-
 				// Get parameter data type
-				par_get_config( par_num, &par_cfg );
-				par_type = par_cfg.type;
+				par_get_config( g_cli_live_watch.par_list[par_idx], &par_cfg );
 
 				// Get parameter
-				par_get( par_num, &par_val.u32 );
+				par_get( g_cli_live_watch.par_list[par_idx], &par_val.u32 );
 
-				switch ( par_type )
+				// Based on type fill streaming buffer
+				switch ( par_cfg.type )
 				{
 					case ePAR_TYPE_U8:
 						sprintf((char*) &gu8_tx_buffer, "%d,", (int)par_val.u8 );
