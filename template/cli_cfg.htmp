@@ -44,6 +44,13 @@
 // USER CODE BEGIN...
 
 /**
+ *	Time period of "cli_hndl()" function call
+ *
+ *	Unit: ms
+ */
+#define CLI_CFG_HNDL_PERIOD_MS					( 10UL )
+
+/**
  * 	Enable/Disable intro string
  *
  * 	@brief	Intro string will be transmitted at "cli_init()" function call,
@@ -56,7 +63,7 @@
 	/**
 	 * 	Intro strings
 	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "Evaluation of Inter-COM" )
+	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "Cineline Pedal Adapter" )
 	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
 	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
 	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
@@ -112,7 +119,7 @@
 /**
  * 	Enable/Disable multiple access protection
  */
-#define CLI_CFG_MUTEX_EN						( 1 )
+#define CLI_CFG_MUTEX_EN						( 0 )
 
 /**
  * 	Enable/Disable parameters usage
@@ -120,7 +127,7 @@
  * 	@brief	Usage of device parameters.
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
-#define CLI_CFG_PAR_USE_EN						( 0 )
+#define CLI_CFG_PAR_USE_EN						( 1 )
 
 /**
  * 	Enable/Disable debug mode
@@ -157,9 +164,6 @@ typedef enum
 
 	// USER_CODE_BEGIN
 
-	eCLI_CH_SCP,
-	eCLI_CH_SICP_SER,
-	eCLI_CH_SICP,
 	eCLI_CH_APP,
 
 	// USER_CODE_END
