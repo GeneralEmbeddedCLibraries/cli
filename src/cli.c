@@ -1154,39 +1154,42 @@ static void cli_unknown(const uint8_t * p_attr)
 		}
 	}
 
-
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Put parameters to live watch
+	*
+	* @note			Command format: >>>status_des [parID1,parID2,..parIDn]
+	*
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 	static void cli_status_des(const uint8_t * p_attr)
 	{
-		// TODO:
-
-
-		// CLI_CFG_HNDL_PERIOD_MS
-
 		uint32_t 	ch_cnt	= 0;
-		static par_num_t 	par_num = 0;
 		uint32_t 	par_id	= 0;
 		par_cfg_t	par_cfg = {0};
 
-		par_num = 0;
+		// Reset counts
+		g_cli_live_watch.num_of = 0;
 
-		sscanf((const char*) p_attr, "%n", (int*)&ch_cnt);
-		p_attr += ch_cnt;
-
-		while(( par_num < CLI_PAR_MAX_IN_LIVE_WATCH ) && 1 == sscanf((const char*) p_attr, "%d%n", (int*)&par_id, (int*)&ch_cnt) )
+		// Parse live watch request command
+		while(		( g_cli_live_watch.num_of < CLI_PAR_MAX_IN_LIVE_WATCH )
+				&& 	( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
 		{
-			g_cli_live_watch.par_list[par_num++] = par_id;
+			// Add new parameter to streaming list
+			g_cli_live_watch.par_list[ g_cli_live_watch.num_of ] = par_id;
+			g_cli_live_watch.num_of++;
+
+			// Increment attribute cursor
 			p_attr += ch_cnt;
 
-			// skipp comma
-			if( *p_attr == ',' )
+			// Skip comma
+			if ( ',' == *p_attr )
 			{
 				p_attr++;
 			}
-		}
-
-		if( par_num > 0)
-		{
-			g_cli_live_watch.num_of = par_num;
 		}
 
 		// Send sample time
@@ -1194,17 +1197,15 @@ static void cli_unknown(const uint8_t * p_attr)
 		cli_send_str( gu8_tx_buffer );
 
 		// Print streaming parameters/variables
-		for(uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++)
+		for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
 		{
-			// Get parameter number from streaming list
-			par_get_num_by_id( g_cli_live_watch.par_list[par_idx], &par_num );
-
 			// Get parameter configurations
-			par_get_config( par_num, &par_cfg );
+			par_get_config( g_cli_live_watch.par_list[par_idx], &par_cfg );
 
+			// Format string with parameters info
 			sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
 
-
+			// Send
 			cli_send_str( gu8_tx_buffer );
 		}
 
