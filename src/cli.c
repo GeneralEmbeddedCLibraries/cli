@@ -788,8 +788,8 @@ static void cli_unknown(const uint8_t * p_attr)
 				// Print group name
 				cli_par_group_print( par_num );
 
-				// TODO: Needs to redefine par print...
-				if ( NULL != par_cfg.unit )
+				// Parameter has description
+				if ( NULL != par_cfg.desc )
 				{
 					// Par info response
 					cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4",
@@ -799,7 +799,7 @@ static void cli_unknown(const uint8_t * p_attr)
 							cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
 							cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
 							cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ),
-							par_cfg.unit );
+							par_cfg.desc );
 				}
 				else
 				{
