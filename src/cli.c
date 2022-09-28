@@ -34,12 +34,12 @@
 	#include "middleware/parameters/parameters/src/par.h"
 
 	/**
-	 * 	Compatibility check with RING_BUFFER
+	 * 	Compatibility check with Parameters module
 	 *
-	 * 	Support version V1.2.x
+	 * 	Support version V1.3.x
 	 */
 	static_assert( 1 == PAR_VER_MAJOR );
-	static_assert( 2 == PAR_VER_MINOR );
+	static_assert( 3 <= PAR_VER_MINOR );
 
 #endif
 
