@@ -48,18 +48,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * 		Working buffer size
- *
- * 	Unit: byte
- */
-#define CLI_PARSER_BUF_SIZE					( 256 )
-
-/**
- * 		Maximum number of user defined tables
- */
-#define CLI_USER_CMD_TABLE_MAX_COUNT		( 8 )
-
-/**
  * 	Debug communication port macros
  */
 #if ( 1 == CLI_CFG_DEBUG_EN )
@@ -148,12 +136,12 @@ static bool gb_is_init = false;
 /**
  * 		Transmit buffer for printf
  */
-static uint8_t gu8_tx_buffer[CLI_CFG_PRINTF_BUF_SIZE] = {0};
+static uint8_t gu8_tx_buffer[CLI_CFG_TX_BUF_SIZE] = {0};
 
 /**
- * 		Parser data
+ * 		Reception buffer for parsing purposes
  */
-static uint8_t gu8_parser_buffer[CLI_PARSER_BUF_SIZE] = {0};
+static uint8_t gu8_rx_buffer[CLI_CFG_RX_BUF_SIZE] = {0};
 
 /**
  * 		Basic CLI commands
@@ -192,7 +180,7 @@ static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_t
 /**
  * 	Pointer array to user defined tables
  */
-static cli_cmd_table_t * gp_cli_user_tables[CLI_USER_CMD_TABLE_MAX_COUNT] = { NULL };
+static cli_cmd_table_t * gp_cli_user_tables[CLI_CFG_MAX_NUM_OF_USER_TABLES] = { NULL };
 
 /**
  * 	User defined table counts
@@ -263,26 +251,26 @@ static cli_status_t cli_parser_hndl(void)
 	static 	uint32_t  		buf_idx	= 0;
 
 	// Take all data from reception buffer
-	while ( eCLI_OK == cli_if_receive( &gu8_parser_buffer[buf_idx] ))
+	while ( eCLI_OK == cli_if_receive( &gu8_rx_buffer[buf_idx] ))
 	{
 		// Check for termination character
-		if 	(	( '\r' == gu8_parser_buffer[buf_idx] )
-			||	( '\n' == gu8_parser_buffer[buf_idx] ))
+		if 	(	( '\r' == gu8_rx_buffer[buf_idx] )
+			||	( '\n' == gu8_rx_buffer[buf_idx] ))
 		{
 			// Replace end termination with NULL
-			gu8_parser_buffer[buf_idx] = '\0';
+			gu8_rx_buffer[buf_idx] = '\0';
 
 			// Reset buffer index
 			buf_idx = 0;
 
 			// Execute command
-			cli_execute_cmd( gu8_parser_buffer );
+			cli_execute_cmd( gu8_rx_buffer );
 
 			break;
 		}
 
 		// Still size in buffer?
-		else if ( buf_idx < ( CLI_PARSER_BUF_SIZE - 2 ))
+		else if ( buf_idx < ( CLI_CFG_RX_BUF_SIZE - 2 ))
 		{
 			buf_idx++;
 		}
@@ -344,7 +332,7 @@ static void cli_execute_cmd(const uint8_t * const p_cmd)
 	bool cmd_found = false;
 
 	// Get command options
-	const char * attr = cli_find_char((const char * const) p_cmd, ' ', CLI_PARSER_BUF_SIZE );
+	const char * attr = cli_find_char((const char * const) p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
 
 	// Calculate size of command string
 	const uint32_t cmd_size = cli_calc_cmd_size((const char*) p_cmd, (const char*) attr );
@@ -449,7 +437,7 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_
 	bool 		cmd_found 		= false;
 
 	// Search thru user defined tables
-	for ( table_idx = 0; table_idx < CLI_USER_CMD_TABLE_MAX_COUNT; table_idx++ )
+	for ( table_idx = 0; table_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; table_idx++ )
 	{
 		// Check if registered
 		if ( NULL != gp_cli_user_tables[table_idx] )
@@ -512,7 +500,7 @@ static uint32_t	cli_calc_cmd_size(const char * p_cmd, const char * attr)
     // Combined command - must have a empty space
     else
     {
-    	size = cli_find_char_pos( p_cmd, ' ', CLI_PARSER_BUF_SIZE );
+    	size = cli_find_char_pos( p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
     }
 
 	return size;
@@ -550,7 +538,7 @@ static void cli_help(const uint8_t * p_attr)
 		}
 
 		// User defined tables
-		for ( cmd_idx = 0; cmd_idx < CLI_USER_CMD_TABLE_MAX_COUNT; cmd_idx++ )
+		for ( cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
 		{
 			// Check if registered
 			if ( NULL != gp_cli_user_tables[cmd_idx] )
@@ -1193,7 +1181,7 @@ static void cli_unknown(const uint8_t * p_attr)
 		}
 
 		// Send sample time
-		snprintf((char*) &gu8_tx_buffer, CLI_CFG_PRINTF_BUF_SIZE, "OK,%g", ( CLI_CFG_HNDL_PERIOD_MS / 1000.0f ));
+		snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( CLI_CFG_HNDL_PERIOD_MS / 1000.0f ));
 		cli_send_str( gu8_tx_buffer );
 
 		// Print streaming parameters/variables
@@ -1764,7 +1752,7 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 			if ( NULL != p_cmd_table )
 			{
 				// Is there any space left for user tables?
-				if ( gu32_user_table_count < CLI_USER_CMD_TABLE_MAX_COUNT )
+				if ( gu32_user_table_count < CLI_CFG_MAX_NUM_OF_USER_TABLES )
 				{
 					// User table defined OK
 					if ( true == cli_validate_user_table( p_cmd_table ))
