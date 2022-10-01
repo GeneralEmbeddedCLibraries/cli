@@ -1158,6 +1158,7 @@ static void cli_unknown(const uint8_t * p_attr)
 		uint32_t 	ch_cnt	= 0;
 		uint32_t 	par_id	= 0;
 		par_cfg_t	par_cfg = {0};
+		par_num_t	par_num = 0;
 
 		// Reset counts
 		g_cli_live_watch.num_of = 0;
@@ -1187,8 +1188,11 @@ static void cli_unknown(const uint8_t * p_attr)
 		// Print streaming parameters/variables
 		for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
 		{
+			// Get parameter ID by number
+			par_get_num_by_id( g_cli_live_watch.par_list[par_idx], &par_num );
+
 			// Get parameter configurations
-			par_get_config( g_cli_live_watch.par_list[par_idx], &par_cfg );
+			par_get_config( par_num, &par_cfg );
 
 			// Format string with parameters info
 			sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
@@ -1268,6 +1272,7 @@ static void cli_unknown(const uint8_t * p_attr)
 	{
 		par_type_t 	par_val	= { .u32 = 0UL };
 		par_cfg_t	par_cfg	= {0};
+		par_num_t	par_num = 0;
 
 		// Stream data only if:
 		//		1. Live watch is active
@@ -1278,11 +1283,14 @@ static void cli_unknown(const uint8_t * p_attr)
 			// Loop thru streaming parameters
 			for(uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++)
 			{
+				// Get par num by id
+				par_get_num_by_id( g_cli_live_watch.par_list[par_idx], &par_num );
+
 				// Get parameter data type
-				par_get_config( g_cli_live_watch.par_list[par_idx], &par_cfg );
+				par_get_config( par_num, &par_cfg );
 
 				// Get parameter
-				par_get( g_cli_live_watch.par_list[par_idx], &par_val.u32 );
+				par_get( par_num, &par_val.u32 );
 
 				// Based on type fill streaming buffer
 				switch ( par_cfg.type )
