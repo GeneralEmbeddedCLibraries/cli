@@ -190,7 +190,9 @@ static uint32_t	gu32_user_table_count = 0;
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
 	/**
-	 * 	Live watch data
+	 * 		Live watch data
+	 *
+	 * 	Inside "par_list" there is parameter enumeration number not parameter ID!
 	 */
 	static cli_live_watch_t g_cli_live_watch = { .active = false, .num_of = 0, .par_list = {0} };
 
@@ -1167,42 +1169,58 @@ static void cli_unknown(const uint8_t * p_attr)
 		while(		( g_cli_live_watch.num_of < CLI_PAR_MAX_IN_LIVE_WATCH )
 				&& 	( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
 		{
-			// Add new parameter to streaming list
-			g_cli_live_watch.par_list[ g_cli_live_watch.num_of ] = par_id;
-			g_cli_live_watch.num_of++;
-
-			// Increment attribute cursor
-			p_attr += ch_cnt;
-
-			// Skip comma
-			if ( ',' == *p_attr )
+			// Get parameter ID by number
+			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
 			{
-				p_attr++;
+				// Add new parameter to streaming list
+				g_cli_live_watch.par_list[ g_cli_live_watch.num_of ] = par_num;
+				g_cli_live_watch.num_of++;
+
+				// Increment attribute cursor
+				p_attr += ch_cnt;
+
+				// Skip comma
+				if ( ',' == *p_attr )
+				{
+					p_attr++;
+				}
+			}
+
+			// Invalid parameter ID
+			else
+			{
+				// Reset watch list
+				g_cli_live_watch.num_of = 0;
+
+				cli_printf( "ERR, Wrong parameter ID!" );
+
+				// Exit reading command
+				break;
 			}
 		}
 
-		// Send sample time
-		snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( CLI_CFG_HNDL_PERIOD_MS / 1000.0f ));
-		cli_send_str( gu8_tx_buffer );
-
-		// Print streaming parameters/variables
-		for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
+		if ( g_cli_live_watch.num_of > 0 )
 		{
-			// Get parameter ID by number
-			par_get_num_by_id( g_cli_live_watch.par_list[par_idx], &par_num );
-
-			// Get parameter configurations
-			par_get_config( par_num, &par_cfg );
-
-			// Format string with parameters info
-			sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
-
-			// Send
+			// Send sample time
+			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( CLI_CFG_HNDL_PERIOD_MS / 1000.0f ));
 			cli_send_str( gu8_tx_buffer );
-		}
 
-		// Terminate line
-		cli_printf("");
+			// Print streaming parameters/variables
+			for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
+			{
+				// Get parameter configurations
+				par_get_config( g_cli_live_watch.par_list[ par_idx ], &par_cfg );
+
+				// Format string with parameters info
+				sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
+
+				// Send
+				cli_send_str( gu8_tx_buffer );
+			}
+
+			// Terminate line
+			cli_printf("");
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -1283,14 +1301,11 @@ static void cli_unknown(const uint8_t * p_attr)
 			// Loop thru streaming parameters
 			for(uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++)
 			{
-				// Get par num by id
-				par_get_num_by_id( g_cli_live_watch.par_list[par_idx], &par_num );
-
 				// Get parameter data type
-				par_get_config( par_num, &par_cfg );
+				par_get_config( g_cli_live_watch.par_list[par_idx], &par_cfg );
 
 				// Get parameter
-				par_get( par_num, &par_val.u32 );
+				par_get( g_cli_live_watch.par_list[par_idx], &par_val.u32 );
 
 				// Based on type fill streaming buffer
 				switch ( par_cfg.type )
