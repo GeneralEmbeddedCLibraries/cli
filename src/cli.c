@@ -114,6 +114,10 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static float32_t 	cli_par_val_to_float	(const par_type_list_t par_type, const void * p_val);
 	static void			cli_par_live_watch_hndl	(void);
 	static void 		cli_par_group_print		(const par_num_t par_num);
+
+	#if ( 1 == CLI_CFG_DEBUG_EN )
+		static void 		cli_par_store_reset		(const uint8_t * p_attr);
+	#endif
 #endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
@@ -166,6 +170,9 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"par_def",				cli_par_def,	    	"Set parameter to default [parID]"					},
 	{	"par_def_all",			cli_par_def_all,    	"Set all parameters to default"						},
 	{	"par_save",				cli_par_store,	    	"Save parameter to NVM"								},
+	#if ( 1 == CLI_CFG_DEBUG_EN )
+		{	"par_save_clean",		cli_par_store_reset,	"Clean saved parameters space in NVM"				},
+	#endif
 	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
@@ -1100,6 +1107,41 @@ static void cli_unknown(const uint8_t * p_attr)
 		}
 	}
 
+
+	#if ( 1 == CLI_CFG_DEBUG_EN )
+
+		////////////////////////////////////////////////////////////////////////////////
+		/*!
+		* @brief 		Clean parameter NVM region
+		*
+		* @note			Command format: >>>par_save_clean
+		*
+		* @param[in] 	attr 	- Inputed command attributes
+		* @return 		void
+		*/
+		////////////////////////////////////////////////////////////////////////////////
+		static void cli_par_store_reset(const uint8_t * p_attr)
+		{
+			if ( NULL == p_attr )
+			{
+				if ( ePAR_OK == par_save_clean())
+				{
+					cli_printf( "OK, Parameter NVM region successfully cleaned" );
+				}
+				else
+				{
+					cli_printf( "ERR, Error while cleaning parameter space in NVM" );
+				}
+			}
+			else
+			{
+				cli_unknown(NULL);
+			}
+		}
+
+	#endif
+
+
 	////////////////////////////////////////////////////////////////////////////////
 	/*!
 	* @brief        Start live watch streaming
@@ -1290,7 +1332,6 @@ static void cli_unknown(const uint8_t * p_attr)
 	{
 		par_type_t 	par_val	= { .u32 = 0UL };
 		par_cfg_t	par_cfg	= {0};
-		par_num_t	par_num = 0;
 
 		// Stream data only if:
 		//		1. Live watch is active
