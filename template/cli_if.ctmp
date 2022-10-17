@@ -7,12 +7,16 @@
 *@brief     Interface with Command Line Interface
 *@author    Ziga Miklosic
 *@date      11.09.2022
-*@version   V0.0.1
+*@version   V1.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @addtogroup CLI_IF
 * @{ <!-- BEGIN GROUP -->
+*
+*
+* 	@note	Change code only between "USER_CODE_BEGIN" and
+* 			"USER_CODE_END" section!
 */
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -7,7 +7,7 @@
 *@brief     Command Line Interface Configuration
 *@author    Ziga Miklosic
 *@date      11.09.2022
-*@version   V0.0.1
+*@version   V1.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -15,9 +15,8 @@
 * @{ <!-- BEGIN GROUP -->
 *
 *
-* 	User shall put code inside inside code block start with
-* 	"USER_CODE_BEGIN" and with end of "USER_CODE_END".
-*
+* 	@note	Change code only between "USER_CODE_BEGIN" and
+* 			"USER_CODE_END" section!
 */
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,8 +71,8 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 	// USER_CODE_BEGIN
 
 	[eCLI_CH_SCP] 		= {	.name = "SCP", 				.en = true 				},
-	[eCLI_CH_SICP_SER] 	= {	.name = "SICP_Serial", 		.en = true 				},
-	[eCLI_CH_SICP] 		= {	.name = "SICP", 			.en = true 				},
+	[eCLI_CH_STPS] 		= {	.name = "STPS", 			.en = true 				},
+	[eCLI_CH_SIC] 		= {	.name = "SIC", 				.en = true 				},
 	[eCLI_CH_APP] 		= {	.name = "APP", 				.en = true 				},
 
 	// USER_CODE_END
