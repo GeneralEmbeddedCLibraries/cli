@@ -38,8 +38,8 @@
 	 *
 	 * 	Support version V1.3.x
 	 */
-	static_assert( 1 == PAR_VER_MAJOR );
-	static_assert( 3 <= PAR_VER_MINOR );
+	//static_assert( 1 == PAR_VER_MAJOR );
+	//static_assert( 3 <= PAR_VER_MINOR );
 
 #endif
 
@@ -170,7 +170,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"par_def",				cli_par_def,	    	"Set parameter to default [parID]"					},
 	{	"par_def_all",			cli_par_def_all,    	"Set all parameters to default"						},
 	{	"par_save",				cli_par_store,	    	"Save parameter to NVM"								},
-	#if ( 1 == CLI_CFG_DEBUG_EN )
+	#if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
 		{	"par_save_clean",		cli_par_store_reset,	"Clean saved parameters space in NVM"				},
 	#endif
 	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
@@ -1127,7 +1127,7 @@ static void cli_unknown(const uint8_t * p_attr)
 	}
 
 
-	#if ( 1 == CLI_CFG_DEBUG_EN )
+	#if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
 
 		////////////////////////////////////////////////////////////////////////////////
 		/*!
