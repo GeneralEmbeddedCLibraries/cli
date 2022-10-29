@@ -613,7 +613,11 @@ static void cli_sw_version(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
+		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+			cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
+		#else
+			cli_printf( "WAR, Not used..." );
+		#endif
 	}
 	else
 	{
@@ -633,7 +637,11 @@ static void cli_hw_version(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
+		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+			cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
+		#else
+			cli_printf( "WAR, Not used..." );
+		#endif
 	}
 	else
 	{
@@ -653,7 +661,11 @@ static void cli_proj_info(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
+		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+			cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
+		#else
+			cli_printf( "WAR, Not used..." );
+		#endif
 	}
 	else
 	{
