@@ -725,17 +725,24 @@ static void cli_ch_en(const uint8_t * p_attr)
 	static cli_ch_opt_t ch = 0;
 	bool en = false;
 
-	// Check input command
-	if ( 2U == sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&ch, (unsigned int*)&en ))
+	if ( NULL != p_attr )
 	{
-		if ( ch < eCLI_CH_NUM_OF )
+		// Check input command
+		if ( 2U == sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&ch, (unsigned int*)&en ))
 		{
-			cli_cfg_set_ch_en( ch, en );
-			cli_printf( "OK, %s channel %s", (( true == en ) ? ("Enabling") : ("Disabling")), cli_cfg_get_ch_name( ch ));
+			if ( ch < eCLI_CH_NUM_OF )
+			{
+				cli_cfg_set_ch_en( ch, en );
+				cli_printf( "OK, %s channel %s", (( true == en ) ? ("Enabling") : ("Disabling")), cli_cfg_get_ch_name( ch ));
+			}
+			else
+			{
+				cli_printf( "ERR, Invalid chEnum!" );
+			}
 		}
 		else
 		{
-			cli_printf( "ERR, Invalid chEnum!" );
+			cli_unknown(NULL);
 		}
 	}
 	else
