@@ -19,16 +19,9 @@ CLI divides two types of command tables:
 ## **Dependencies**
 --- 
 
-1. Definition of ***float32_t*** must be provided by user. In current implementation it is defined in "*project_config.h*". Just add following statement to your code where it suits the best.
+1. CLI module uses "_Static_assert()" function defined in <assert.h>.
 
-```C
-// Define float
-typedef float float32_t;
-```
-
-2. CLI module uses "static_assert()" function defined in <assert.h>.
-
-3. In case of using device parameters (CLI_CFG_PAR_USE_EN = 1) it is mandatory to use [Parameters module](https://github.com/GeneralEmbeddedCLibraries/parameters).
+2. In case of using device parameters (CLI_CFG_PAR_USE_EN = 1) it is mandatory to use [Parameters module](https://github.com/GeneralEmbeddedCLibraries/parameters).
 
 ## **General Embedded C Libraries Ecosystem**
 In order to be part of *General Embedded C Libraries Ecosystem* this module must be placed in following path: 

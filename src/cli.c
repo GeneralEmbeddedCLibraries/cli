@@ -38,8 +38,8 @@
 	 *
 	 * 	Support version V1.3.x
 	 */
-	//static_assert( 1 == PAR_VER_MAJOR );
-	//static_assert( 3 <= PAR_VER_MINOR );
+	_Static_assert( 1 == PAR_VER_MAJOR );
+	_Static_assert( 3 <= PAR_VER_MINOR );
 
 #endif
 
