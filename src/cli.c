@@ -1126,7 +1126,6 @@ static void cli_unknown(const uint8_t * p_attr)
 		}
 	}
 
-
 	#if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
 
 		////////////////////////////////////////////////////////////////////////////////
@@ -1159,7 +1158,6 @@ static void cli_unknown(const uint8_t * p_attr)
 		}
 
 	#endif
-
 
 	////////////////////////////////////////////////////////////////////////////////
 	/*!
@@ -1810,7 +1808,6 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 
 	return status;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
