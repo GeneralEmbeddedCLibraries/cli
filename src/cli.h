@@ -6,8 +6,8 @@
 *@file      cli.h
 *@brief     Command Line Interface API
 *@author    Ziga Miklosic
-*@date      11.09.2022
-*@version   V0.0.1
+*@date      04.11.2022
+*@version   V1.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -35,9 +35,9 @@
 /**
  * 	Module version
  */
-#define CLI_VER_MAJOR		( 0 )
+#define CLI_VER_MAJOR		( 1 )
 #define CLI_VER_MINOR		( 0 )
-#define CLI_VER_DEVELOP		( 1 )
+#define CLI_VER_DEVELOP		( 0 )
 
 /**
  * 	CLI Status

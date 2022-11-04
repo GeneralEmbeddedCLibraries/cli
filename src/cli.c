@@ -6,8 +6,8 @@
 *@file      cli.c
 *@brief     Command Line Interface
 *@author    Ziga Miklosic
-*@date      11.09.2022
-*@version   V0.0.1
+*@date      04.11.2022
+*@version   V1.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
