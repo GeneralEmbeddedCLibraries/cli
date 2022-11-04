@@ -1,0 +1,217 @@
+// Copyright (c) 2022 Ziga Miklosic
+// All Rights Reserved
+// This software is under MIT licence (https://opensource.org/licenses/MIT)
+////////////////////////////////////////////////////////////////////////////////
+/**
+*@file      cli_cfg.c
+*@brief     Command Line Interface Configuration
+*@author    Ziga Miklosic
+*@date      04.11.2022
+*@version   V1.0.0
+*/
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @addtogroup CLI_CFG
+* @{ <!-- BEGIN GROUP -->
+*
+*
+* 	@note	Change code only between "USER_CODE_BEGIN" and
+* 			"USER_CODE_END" section!
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Includes
+////////////////////////////////////////////////////////////////////////////////
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "cli_cfg.h"
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+	#include "middleware/parameters/parameters/src/par.h"
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+// Definitions
+////////////////////////////////////////////////////////////////////////////////
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+	/**
+	 * 	Device parameter group name
+	 */
+	typedef struct
+	{
+		par_num_t 	par_num;
+		char * 		name;
+	} cli_cfg_par_group_t;
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+// Variables
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * 		Communication channels names and default active
+ * 		state definition
+ *
+ * 	@note	Change code only between "USER_CODE_BEGIN" and
+ * 			"USER_CODE_END" section!
+ */
+static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
+{
+	// --------------------------------------------------------------------------
+	//						Name of channel				Default state of channel
+	// --------------------------------------------------------------------------
+	[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = true 				},
+	[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = true 				},
+
+	// USER_CODE_BEGIN
+
+	[eCLI_CH_SCP] 		= {	.name = "SCP", 				.en = true 				},
+	[eCLI_CH_STPS] 		= {	.name = "STPS", 			.en = true 				},
+	[eCLI_CH_SIC] 		= {	.name = "SIC", 				.en = true 				},
+	[eCLI_CH_APP] 		= {	.name = "APP", 				.en = true 				},
+
+	// USER_CODE_END
+};
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+	/**
+	 * 		Parameter group name definitions
+	 *
+	 *
+	 * @note	First parameter in group is defining name of the group!
+	 *
+	 * 	@note	Change code only between "USER_CODE_BEGIN" and
+	 * 			"USER_CODE_END" section!
+	 */
+	static const cli_cfg_par_group_t g_par_groups[] =
+	{
+		// USER CODE BEGIN...
+
+		// --------------------------------------------------------------------------------------------
+		//	Group start parameter						Group name
+		// --------------------------------------------------------------------------------------------
+		{ 	.par_num = ePAR_POT_VOLT, 					.name="POTENCIOMETER" 						},
+		{ 	.par_num = ePAR_PPM_SYNC_WIDTH, 			.name="PPM SETTINGS" 						},
+		{ 	.par_num = ePAR_PPM_TX_CNT, 				.name="PPM STATUS" 							},
+		{ 	.par_num = ePAR_COM_PPM_FRAME_PERIOD, 		.name="COMMUNICATION SETTINGS" 				},
+		{ 	.par_num = ePAR_SYS_STATUS, 				.name="SYSTEM STATUS" 						},
+
+		// USER CODE END
+	};
+
+	/**
+	 * 	Number of device parameter groups
+	 */
+	static const uint32_t gu32_par_group_num_of = (uint32_t)( sizeof(g_par_groups) / sizeof(cli_cfg_par_group_t));
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+// Functions
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief 		Get communication channel name
+*
+* @param[in]	ch		- Communication channel
+* @return 		name	- Name of com channel
+*/
+////////////////////////////////////////////////////////////////////////////////
+const char* cli_cfg_get_ch_name(const cli_ch_opt_t ch)
+{
+	const char * name = NULL;
+
+	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
+
+	if ( ch < eCLI_CH_NUM_OF )
+	{
+		name = g_cli_ch[ch].name;
+	}
+
+	return name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief 		Get communication channel enable flag
+*
+* @param[in]	ch	- Communication channel
+* @return 		en	- Active state
+*/
+////////////////////////////////////////////////////////////////////////////////
+const bool cli_cfg_get_ch_en(const cli_ch_opt_t ch)
+{
+	bool en = false;
+
+	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
+
+	if ( ch < eCLI_CH_NUM_OF )
+	{
+		en = g_cli_ch[ch].en;
+	}
+
+	return en;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief 		Set communication channel enable flag
+*
+* @param[in]	ch	- Communication channel
+* @param[in]	en	- Active state
+* @return 		void
+*/
+////////////////////////////////////////////////////////////////////////////////
+void cli_cfg_set_ch_en(const cli_ch_opt_t ch, const bool en)
+{
+	CLI_ASSERT( ch < eCLI_CH_NUM_OF );
+
+	if ( ch < eCLI_CH_NUM_OF )
+	{
+		g_cli_ch[ch].en = en;
+	}
+}
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief 		Get parameter groupe name
+	*
+	* @note			If parameter number is not assosited with group name it
+	* 				will return NULL!
+	*
+	* @param[in]	par_num		- Parameter enumeration
+	* @return 		group_name	- Name of the groupe
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+	const char * cli_cfg_get_par_groupe_str(const uint32_t par_num)
+	{
+		char * group_name = NULL;
+
+		for (uint32_t par_idx = 0; par_idx < gu32_par_group_num_of; par_idx++)
+		{
+			if ( g_par_groups[par_idx].par_num == par_num )
+			{
+				group_name = (char*) g_par_groups[par_idx].name;
+				break;
+			}
+		}
+
+		return group_name;
+	}
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+* @} <!-- END GROUP -->
+*/
+////////////////////////////////////////////////////////////////////////////////

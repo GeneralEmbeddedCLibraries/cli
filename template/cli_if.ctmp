@@ -1,0 +1,274 @@
+// Copyright (c) 2022 Ziga Miklosic
+// All Rights Reserved
+// This software is under MIT licence (https://opensource.org/licenses/MIT)
+////////////////////////////////////////////////////////////////////////////////
+/**
+*@file      cli_if.c
+*@brief     Interface with Command Line Interface
+*@author    Ziga Miklosic
+*@date      04.11.2022
+*@version   V1.0.0
+*/
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @addtogroup CLI_IF
+* @{ <!-- BEGIN GROUP -->
+*
+*
+* 	@note	Change code only between "USER_CODE_BEGIN" and
+* 			"USER_CODE_END" section!
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Includes
+////////////////////////////////////////////////////////////////////////////////
+#include "cli_if.h"
+#include "cli_cfg.h"
+
+// USER CODE BEGIN...
+
+#include "stm32l4xx_hal.h"
+#include "drivers/peripheral/usart/uart_dbg.h"
+
+// ThreadX
+#include "tx_api.h"
+
+// USER CODE END...
+
+////////////////////////////////////////////////////////////////////////////////
+// Definitions
+////////////////////////////////////////////////////////////////////////////////
+
+// USER CODE BEGIN..
+
+/**
+ *      Mutex Timeout
+ *
+ *  @note   Refer to "TX_TIMER_TICKS_PER_SECOND" macro for unit.
+ */
+#define CLI_IF_MUTEX_TIMEOUT_TICK           ( 10 )
+
+// USER CODE END...
+
+////////////////////////////////////////////////////////////////////////////////
+// Variables
+////////////////////////////////////////////////////////////////////////////////
+
+// USER CODE BEGIN...
+
+/**
+ * 		Mutex object
+ */
+static TX_MUTEX g_cli_port_mutex = {0};
+
+// USER CODE END...
+
+////////////////////////////////////////////////////////////////////////////////
+// Function prototypes
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Functions
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Initialize Command Line Interface communication port
+*
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_init(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	if ( eUART_DBG_OK != uart_dbg_init())
+	{
+		status = eCLI_ERROR_INIT;
+	}
+
+	#if ( 1 == CLI_CFG_MUTEX_EN )
+
+		// Create mutex
+		if ( TX_SUCCESS != tx_mutex_create( &g_cli_port_mutex, "Cli Mutex", TX_INHERIT ))
+		{
+			status = eCLI_ERROR_INIT;
+		}
+
+	#endif
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		De-initialize Command Line Interface communication port
+*
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_deinit(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	// TODO: De-init debug UART!!!
+
+	#if ( 1 == CLI_CFG_MUTEX_EN )
+
+		// Delete mutex as is no longer needed!
+		if ( TX_SUCCESS != tx_mutex_delete( &g_cli_port_mutex ))
+		{
+			status = eCLI_ERROR_INIT;
+		}
+
+	#endif
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Receive data
+*
+* @param[out]	p_data	- Pointer to received data
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_receive(uint8_t * const p_data)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	if ( eUART_DBG_OK != uart_dbg_get((char*) p_data))
+	{
+		status = eCLI_ERROR;
+	}
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Transmit data
+*
+* @param[in]	p_data	- Pointer to transmit data
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_transmit(const uint8_t * const p_data)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	if ( eUART_DBG_OK != uart_dbg_write((const char*) p_data))
+	{
+		status = eCLI_ERROR;
+	}
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Acquire mutex
+*
+* @note	User shall provide definition of that function based on used platform!
+*
+*		If not being used leave empty.
+*
+*		This function does not have an affect if "CLI_CFG_MUTEX_EN"
+* 		is set to 0.
+*
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_aquire_mutex(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	if ( TX_SUCCESS != tx_mutex_get( &g_cli_port_mutex, CLI_IF_MUTEX_TIMEOUT_TICK ))
+	{
+		status = eCLI_ERROR;
+	}
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Release mutex
+*
+* @note	User shall provide definition of that function based on used platform!
+*
+*		If not being used leave empty.
+*
+*		This function does not have an affect if "CLI_CFG_MUTEX_EN"
+* 		is set to 0.
+*
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_release_mutex(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	// Release mutex
+	tx_mutex_put( &g_cli_port_mutex );
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Reset device
+*
+* @note	User shall provide definition of that function based on used platform!
+*
+*		If not being used leave empty.
+*
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_device_reset(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	// Reset device
+	HAL_NVIC_SystemReset();
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+* @} <!-- END GROUP -->
+*/
+////////////////////////////////////////////////////////////////////////////////
