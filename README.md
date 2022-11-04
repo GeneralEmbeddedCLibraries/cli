@@ -17,11 +17,16 @@ CLI divides two types of command tables:
 
 
 ## **Dependencies**
---- 
 
-1. CLI module uses "_Static_assert()" function defined in <assert.h>.
+### **1. Static assert**
+CLI module uses "_Static_assert()" function defined in <assert.h>.
 
-2. In case of using device parameters (CLI_CFG_PAR_USE_EN = 1) it is mandatory to use [Parameters module](https://github.com/GeneralEmbeddedCLibraries/parameters).
+### **2. Device Parameters**
+In case of using parameters *CLI_CFG_PAR_USE_EN = 1*, then [Device Parameters](https://github.com/GeneralEmbeddedCLibraries/parameters) must pe part of project. 
+Device Parameters module must take following path:
+```
+"root/middleware/parameters/parameters/src/par.h"
+```
 
 ## **General Embedded C Libraries Ecosystem**
 In order to be part of *General Embedded C Libraries Ecosystem* this module must be placed in following path: 
@@ -30,7 +35,6 @@ root/middleware/cli/cli/"module_space"
 ```
 
 ## **API**
----
 | API Functions | Description | Prototype |
 | --- | ----------- | ----- |
 | **cli_init** | Initialization of CLI module | cli_status_t cli_init(void) |
