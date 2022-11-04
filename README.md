@@ -18,10 +18,7 @@ CLI divides two types of command tables:
 
 ## **Dependencies**
 
-### **1. Static assert**
-CLI module uses "_Static_assert()" function defined in <assert.h>.
-
-### **2. Device Parameters**
+### **1. Device Parameters**
 In case of using parameters *CLI_CFG_PAR_USE_EN = 1*, then [Device Parameters](https://github.com/GeneralEmbeddedCLibraries/parameters) must pe part of project. 
 Device Parameters module must take following path:
 ```
@@ -30,6 +27,7 @@ Device Parameters module must take following path:
 
 ## **General Embedded C Libraries Ecosystem**
 In order to be part of *General Embedded C Libraries Ecosystem* this module must be placed in following path: 
+
 ```
 root/middleware/cli/cli/"module_space"
 ```
@@ -52,7 +50,7 @@ root/middleware/cli/cli/"module_space"
 
 1. Copy template files to root directory of module.
 2. Configure CLI module for application needs. Configuration options are following:
----
+
 | Configuration | Description |
 | --- | --- |
 | **CLI_CFG_INTRO_STRING_EN** 			| Enable/Disable introduction string at CLI initialization. |
