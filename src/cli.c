@@ -722,8 +722,8 @@ static void cli_ch_info(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_ch_en(const uint8_t * p_attr)
 {
-	static cli_ch_opt_t ch = 0;
-	bool en = false;
+	uint32_t ch;
+	uint32_t en;
 
 	if ( NULL != p_attr )
 	{
