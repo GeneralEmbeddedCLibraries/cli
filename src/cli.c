@@ -1454,25 +1454,25 @@ static void cli_unknown(const uint8_t * p_attr)
 				switch ( par_cfg.type )
 				{
 					case ePAR_TYPE_U8:
-						sprintf((char*) &gu8_tx_buffer, "%d,", (int)par_val.u8 );
+						sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u8 );
 						break;
 					case ePAR_TYPE_U16:
-						sprintf((char*) &gu8_tx_buffer, "%d,", (int)par_val.u16 );
+						sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u16 );
 					break;
 					case ePAR_TYPE_U32:
-						sprintf((char*) &gu8_tx_buffer, "%d,", (int)par_val.u32 );
+						sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u32 );
 					break;
 					case ePAR_TYPE_I8:
-						sprintf((char*) &gu8_tx_buffer, "%i,", (int)par_val.i8 );
+						sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i8 );
 						break;
 					case ePAR_TYPE_I16:
-						sprintf((char*) &gu8_tx_buffer, "%i,", (int)par_val.i16 );
+						sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i16 );
 					break;
 					case ePAR_TYPE_I32:
-						sprintf((char*) &gu8_tx_buffer, "%i,", (int)par_val.i32 );
+						sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i32 );
 					break;
 					case ePAR_TYPE_F32:
-						sprintf((char*) &gu8_tx_buffer, "%g,", par_val.f32 );
+						sprintf((char*) &gu8_tx_buffer, "%g", par_val.f32 );
 					break;
 
 					default:
@@ -1482,6 +1482,12 @@ static void cli_unknown(const uint8_t * p_attr)
 
 				// Send
 				cli_send_str( gu8_tx_buffer );
+
+                // If not last -> send delimiter
+                if ( par_idx < ( g_cli_live_watch.num_of - 1 ))
+                {
+                    cli_send_str( "," );
+                }
 			}
 
 			// Terminate line
