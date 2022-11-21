@@ -74,6 +74,8 @@
 	 */
 	typedef struct
 	{
+        uint32_t    period;                                 /**<Period of streaming in ms */
+        uint32_t    period_cnt;                             /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
 		par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
 		uint8_t		num_of;									/**<Number of parameters inside live watch */
 		bool 		active;									/**<Active flag */
@@ -111,6 +113,7 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static void 		cli_status_start  		(const uint8_t * p_attr);
 	static void 		cli_status_stop  		(const uint8_t * p_attr);
 	static void 		cli_status_des  		(const uint8_t * p_attr);
+	static void 		cli_status_rate  		(const uint8_t * p_attr);
 	static float32_t 	cli_par_val_to_float	(const par_type_list_t par_type, const void * p_val);
 	static void			cli_par_live_watch_hndl	(void);
 	static void 		cli_par_group_print		(const par_num_t par_num);
@@ -176,6 +179,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
+	{	"status_rate",			cli_status_rate,		"Change data streaming period [miliseconds]"        },
 #endif
 };
 
@@ -201,7 +205,7 @@ static uint32_t	gu32_user_table_count = 0;
 	 *
 	 * 	Inside "par_list" there is parameter enumeration number not parameter ID!
 	 */
-	static cli_live_watch_t g_cli_live_watch = { .active = false, .num_of = 0, .par_list = {0} };
+	static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_HNDL_PERIOD_MS, .period_cnt = 1, .active = false, .num_of = 0, .par_list = {0} };
 
 #endif
 
@@ -1284,7 +1288,7 @@ static void cli_unknown(const uint8_t * p_attr)
     		if ( g_cli_live_watch.num_of > 0 )
     		{
     			// Send sample time
-    			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( CLI_CFG_HNDL_PERIOD_MS / 1000.0f ));
+    			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
     			cli_send_str( gu8_tx_buffer );
 
     			// Print streaming parameters/variables
@@ -1309,6 +1313,59 @@ static void cli_unknown(const uint8_t * p_attr)
 			cli_unknown(NULL);
 		}
 	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Change rate of live watch streaming period
+	*
+	* @note			Command format: >>>status_rate [period_in_ms]
+    *
+	* @example      >>>status_rate 100 --> Will change period to 100 ms
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+    static void cli_status_rate(const uint8_t * p_attr)
+    {
+        uint32_t period;
+
+        if ( NULL != p_attr )
+        {
+            if ( 1U == sscanf((const char*) p_attr, "%d", (int*) &period ))
+            {
+                // Check if within wanted range
+                if  (   ( period >= CLI_CFG_HNDL_PERIOD_MS )
+                    &&  ( period <= 60000UL ))
+                {
+                    // Check if multiple of defined period
+                    if (( period % CLI_CFG_HNDL_PERIOD_MS ) == 0 )
+                    {
+                        g_cli_live_watch.period = period;
+                        g_cli_live_watch.period_cnt = (uint32_t) ( g_cli_live_watch.period / CLI_CFG_HNDL_PERIOD_MS );
+
+                        cli_printf( "OK, Period changed to %d ms", g_cli_live_watch.period );
+                    }
+                    else
+                    {
+                        cli_printf( "ERR, Wanted period is not multiple of \"CLI_CFG_HNDL_PERIOD_MS\"!" );
+                    }
+                }
+                else
+                {
+                    cli_printf( "ERR, Period out of valid range!" );
+                }
+            }
+            else
+    		{
+    			cli_printf( "ERR, Wrong command!" );
+    		}
+        }
+        else
+		{
+			cli_unknown(NULL);
+		}
+    }
 
 	////////////////////////////////////////////////////////////////////////////////
 	/*!
@@ -1740,7 +1797,23 @@ cli_status_t cli_hndl(void)
 
 	// Data streaming
 	#if ( 1 == CLI_CFG_PAR_USE_EN )
-		cli_par_live_watch_hndl();
+
+        static uint32_t loop_cnt = 0;
+        
+        // Count main handler loops
+        if ( loop_cnt >= ( g_cli_live_watch.period_cnt - 1 ))
+        {
+            loop_cnt = 0;
+            
+            // Handle streaming
+            cli_par_live_watch_hndl();
+        }
+        else
+        {
+            loop_cnt++;
+        }
+
+		
 	#endif
 
 	return status;
