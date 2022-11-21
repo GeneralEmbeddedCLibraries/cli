@@ -179,7 +179,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
-	{	"status_rate",			cli_status_rate,		"Change data streaming period. NOTE: Must be multiple of \"CLI_CFG_HNDL_PERIOD_MS\"!"   },
+	{	"status_rate",			cli_status_rate,		"Change data streaming period [miliseconds]"        },
 #endif
 };
 
