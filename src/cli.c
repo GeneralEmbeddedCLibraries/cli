@@ -67,16 +67,16 @@
 	/**
 	 * 	Maxumum allowed live watch
 	 */
-	#define CLI_PAR_MAX_IN_LIVE_WATCH		( 16 )
+	#define CLI_PAR_MAX_IN_LIVE_WATCH		( 32 )
 
 	/**
 	 * 	Live watch data
 	 */
 	typedef struct
 	{
+    	par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
         uint32_t    period;                                 /**<Period of streaming in ms */
         uint32_t    period_cnt;                             /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
-		par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
 		uint8_t		num_of;									/**<Number of parameters inside live watch */
 		bool 		active;									/**<Active flag */
 	} cli_live_watch_t;
