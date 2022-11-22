@@ -267,11 +267,17 @@ static cli_status_t cli_parser_hndl(void)
 	while ( eCLI_OK == cli_if_receive( &gu8_rx_buffer[buf_idx] ))
 	{
 		// Check for termination character
-		if 	(	( '\r' == gu8_rx_buffer[buf_idx] )
-			||	( '\n' == gu8_rx_buffer[buf_idx] ))
+		//if 	(	( '\r' == gu8_rx_buffer[buf_idx] )
+		//	||	( '\n' == gu8_rx_buffer[buf_idx] ))
+
+        char * p_term_str_start = strstr((char*) &gu8_rx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
+
+        if ( NULL != p_term_str_start )
 		{
 			// Replace end termination with NULL
-			gu8_rx_buffer[buf_idx] = '\0';
+			//gu8_rx_buffer[buf_idx] = '\0';
+            //*p_term_str_start = '\0';
+            memset((char*) p_term_str_start, 0, strlen( CLI_CFG_TERMINATION_STRING ));
 
 			// Reset buffer index
 			buf_idx = 0;
