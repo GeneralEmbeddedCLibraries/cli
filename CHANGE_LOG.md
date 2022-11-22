@@ -8,7 +8,8 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 ## V1.1.0 - xx.xx.2022
 
 ### Added
-- Ability to change live watch time period. Added "status_rate" command to basic table
+ - Ability to change live watch time period. Added "status_rate" command to basic table
+ - Streaming CLI commands feedback
 
 ### Fixed
  - Checking for NULL pointers at basic commands
