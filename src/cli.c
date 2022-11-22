@@ -1203,7 +1203,16 @@ static void cli_unknown(const uint8_t * p_attr)
 	{
 		if ( NULL == p_attr )
 		{
-			g_cli_live_watch.active = true;
+            if ( g_cli_live_watch.num_of > 0 )
+            {
+                g_cli_live_watch.active = true;
+
+                cli_printf( "OK, Streaming started!" );
+            }
+            else
+            {
+               cli_printf( "ERR, Streaming parameter list empty!" ); 
+            }
 		}
 		else
 		{
@@ -1226,6 +1235,8 @@ static void cli_unknown(const uint8_t * p_attr)
 		if ( NULL == p_attr )
 		{
 			g_cli_live_watch.active = false;
+
+            cli_printf( "OK, Streaming stopped!" );
 		}
 		else
 		{
