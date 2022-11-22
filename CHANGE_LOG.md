@@ -12,6 +12,8 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 
 ### Fixed
  - Checking for NULL pointers at basic commands
+ - Parsing inputed string termination was fixed to "\r" or "\n". Solved to search for CLI_CFG_TERMIANTION_STRING as defined in config file
+ - Inifinite loop escape check
 
 ---
 ## V1.0.0 - 04.11.2022
