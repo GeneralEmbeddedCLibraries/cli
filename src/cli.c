@@ -260,23 +260,21 @@ static cli_status_t cli_send_str(const uint8_t * const p_str)
 ////////////////////////////////////////////////////////////////////////////////
 static cli_status_t cli_parser_hndl(void)
 {
-			cli_status_t 	status 	= eCLI_OK;
-	static 	uint32_t  		buf_idx	= 0;
+			cli_status_t 	status      = eCLI_OK;
+	static 	uint32_t  		buf_idx 	= 0;
+            uint32_t        escape_cnt  = 0;
 
 	// Take all data from reception buffer
-	while ( eCLI_OK == cli_if_receive( &gu8_rx_buffer[buf_idx] ))
+	while   (   ( eCLI_OK == cli_if_receive( &gu8_rx_buffer[buf_idx] ))
+            &&  ( escape_cnt < 10000UL ))
 	{
-		// Check for termination character
-		//if 	(	( '\r' == gu8_rx_buffer[buf_idx] )
-		//	||	( '\n' == gu8_rx_buffer[buf_idx] ))
-
+		// Find termination character
         char * p_term_str_start = strstr((char*) &gu8_rx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
-
+        
+        // Termination string found
         if ( NULL != p_term_str_start )
 		{
-			// Replace end termination with NULL
-			//gu8_rx_buffer[buf_idx] = '\0';
-            //*p_term_str_start = '\0';
+			// Replace all termination character with NULL
             memset((char*) p_term_str_start, 0, strlen( CLI_CFG_TERMINATION_STRING ));
 
 			// Reset buffer index
@@ -308,7 +306,8 @@ static cli_status_t cli_parser_hndl(void)
 			break;
 		}
 
-		// TODO: Implement protection again infinite loop!
+		// Increment escape count in order to prevent infinite loop
+        escape_cnt++;
 	}
 
 	return status;
