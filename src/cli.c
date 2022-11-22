@@ -1257,10 +1257,11 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_status_des(const uint8_t * p_attr)
 	{
-		uint32_t 	ch_cnt	= 0;
-		uint32_t 	par_id	= 0;
-		par_cfg_t	par_cfg = {0};
-		par_num_t	par_num = 0;
+		uint32_t 	ch_cnt      = 0;
+		uint32_t 	par_id      = 0;
+		par_cfg_t	par_cfg     = {0};
+		par_num_t	par_num     = 0;
+        bool        invalid_par = false;
 
         if ( NULL != p_attr )
         {
@@ -1293,8 +1294,11 @@ static void cli_unknown(const uint8_t * p_attr)
     			{
     				// Reset watch list
     				g_cli_live_watch.num_of = 0;
+                    
+                    // Raise invalid parameter flag
+                    invalid_par = true;
 
-    				cli_printf( "ERR, Wrong parameter ID!" );
+    				cli_printf( "ERR, Wrong parameter ID! ID: %d does not exsist!", par_id );
 
     				// Exit reading command
     				break;
@@ -1325,9 +1329,16 @@ static void cli_unknown(const uint8_t * p_attr)
     			// Terminate line
     			cli_printf("");
     		}
-            else
+
+            // Raise error only if all valid parameters
+            else if ( false == invalid_par )
             {
                 cli_printf( "ERR, Invalid number of streaming parameter!" );
+            }
+
+            else
+            {
+                // No actions...
             }
         }
         else
