@@ -1268,7 +1268,7 @@ static void cli_unknown(const uint8_t * p_attr)
     		g_cli_live_watch.num_of = 0;
 
     		// Parse live watch request command
-    		while(		( g_cli_live_watch.num_of < CLI_PAR_MAX_IN_LIVE_WATCH )
+    		while(		( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH )
     				&& 	( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
     		{
     			// Get parameter ID by number
@@ -1300,8 +1300,10 @@ static void cli_unknown(const uint8_t * p_attr)
     				break;
     			}
     		}
-
-    		if ( g_cli_live_watch.num_of > 0 )
+            
+            // Check requested live watch paramter list
+    		if  (   ( g_cli_live_watch.num_of > 0 ) 
+                &&  ( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH ))
     		{
     			// Send sample time
     			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
@@ -1323,6 +1325,10 @@ static void cli_unknown(const uint8_t * p_attr)
     			// Terminate line
     			cli_printf("");
     		}
+            else
+            {
+                cli_printf( "ERR, Invalid number of streaming parameter!" );
+            }
         }
         else
 		{
