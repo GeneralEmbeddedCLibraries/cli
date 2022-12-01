@@ -6,8 +6,8 @@
 *@file      cli_cfg.c
 *@brief     Command Line Interface Configuration
 *@author    Ziga Miklosic
-*@date      04.11.2022
-*@version   V1.0.0
+*@date      11.09.2022
+*@version   V1.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -25,6 +25,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "cli_cfg.h"
 
@@ -67,13 +68,10 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 	// --------------------------------------------------------------------------
 	[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = true 				},
 	[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = true 				},
+	[eCLI_CH_APP] 		= {	.name = "APP",				.en = true 				},
 
 	// USER_CODE_BEGIN
 
-	[eCLI_CH_SCP] 		= {	.name = "SCP", 				.en = true 				},
-	[eCLI_CH_STPS] 		= {	.name = "STPS", 			.en = true 				},
-	[eCLI_CH_SIC] 		= {	.name = "SIC", 				.en = true 				},
-	[eCLI_CH_APP] 		= {	.name = "APP", 				.en = true 				},
 
 	// USER_CODE_END
 };
@@ -96,11 +94,14 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 		// --------------------------------------------------------------------------------------------
 		//	Group start parameter						Group name
 		// --------------------------------------------------------------------------------------------
-		{ 	.par_num = ePAR_POT_VOLT, 					.name="POTENCIOMETER" 						},
-		{ 	.par_num = ePAR_PPM_SYNC_WIDTH, 			.name="PPM SETTINGS" 						},
-		{ 	.par_num = ePAR_PPM_TX_CNT, 				.name="PPM STATUS" 							},
-		{ 	.par_num = ePAR_COM_PPM_FRAME_PERIOD, 		.name="COMMUNICATION SETTINGS" 				},
-		{ 	.par_num = ePAR_SYS_STATUS, 				.name="SYSTEM STATUS" 						},
+		
+		{ 	.par_num = ePAR_BTN_PWR,					.name="BUTTON STATES" 						},
+		{ 	.par_num = ePAR_ADC_TEMP_INT,				.name="RAW ADC MEASUREMENTS"				},
+		{ 	.par_num = ePAR_TEMP_INT_LPF_FC,            .name="TEMPERATURE FILTER SETTINGS"         },
+		{ 	.par_num = ePAR_TEMP_INT,                   .name="TEMPERATURE MEASUREMENTS"            },
+		{ 	.par_num = ePAR_BAT_VOL,                    .name="BATTERY MEASUREMENTS"                },
+		{ 	.par_num = ePAR_RELAY_STATE,                .name="RELAY CONTROL"                       },
+		{ 	.par_num = ePAR_BUZZER_EN,					.name="HMI SETTINGS"				        },
 
 		// USER CODE END
 	};

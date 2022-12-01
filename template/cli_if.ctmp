@@ -6,8 +6,8 @@
 *@file      cli_if.c
 *@brief     Interface with Command Line Interface
 *@author    Ziga Miklosic
-*@date      04.11.2022
-*@version   V1.0.0
+*@date      11.09.2022
+*@version   V1.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -28,11 +28,11 @@
 
 // USER CODE BEGIN...
 
-#include "stm32l4xx_hal.h"
-#include "drivers/peripheral/usart/uart_dbg.h"
+// Communication driver
+#include "drivers/peripheral/usb_cdc/usb_cdc.h""
 
-// ThreadX
-#include "tx_api.h"
+// For reset
+#include "nrf_nvic.h"
 
 // USER CODE END...
 
@@ -42,12 +42,6 @@
 
 // USER CODE BEGIN..
 
-/**
- *      Mutex Timeout
- *
- *  @note   Refer to "TX_TIMER_TICKS_PER_SECOND" macro for unit.
- */
-#define CLI_IF_MUTEX_TIMEOUT_TICK           ( 10 )
 
 // USER CODE END...
 
@@ -57,10 +51,6 @@
 
 // USER CODE BEGIN...
 
-/**
- * 		Mutex object
- */
-static TX_MUTEX g_cli_port_mutex = {0};
 
 // USER CODE END...
 
@@ -86,20 +76,10 @@ cli_status_t cli_if_init(void)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_init())
+	if ( eUSB_CDC_OK != usb_cdc_init())
 	{
 		status = eCLI_ERROR_INIT;
 	}
-
-	#if ( 1 == CLI_CFG_MUTEX_EN )
-
-		// Create mutex
-		if ( TX_SUCCESS != tx_mutex_create( &g_cli_port_mutex, "Cli Mutex", TX_INHERIT ))
-		{
-			status = eCLI_ERROR_INIT;
-		}
-
-	#endif
 
 	// USER CODE END...
 
@@ -119,17 +99,6 @@ cli_status_t cli_if_deinit(void)
 
 	// USER CODE BEGIN...
 
-	// TODO: De-init debug UART!!!
-
-	#if ( 1 == CLI_CFG_MUTEX_EN )
-
-		// Delete mutex as is no longer needed!
-		if ( TX_SUCCESS != tx_mutex_delete( &g_cli_port_mutex ))
-		{
-			status = eCLI_ERROR_INIT;
-		}
-
-	#endif
 
 	// USER CODE END...
 
@@ -150,7 +119,7 @@ cli_status_t cli_if_receive(uint8_t * const p_data)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_get((char*) p_data))
+	if ( eUSB_CDC_OK != usb_cdc_get((char*) p_data))
 	{
 		status = eCLI_ERROR;
 	}
@@ -174,7 +143,7 @@ cli_status_t cli_if_transmit(const uint8_t * const p_data)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_write((const char*) p_data))
+	if ( eUSB_CDC_OK != usb_cdc_write((const char*) p_data))
 	{
 		status = eCLI_ERROR;
 	}
@@ -204,10 +173,6 @@ cli_status_t cli_if_aquire_mutex(void)
 
 	// USER CODE BEGIN...
 
-	if ( TX_SUCCESS != tx_mutex_get( &g_cli_port_mutex, CLI_IF_MUTEX_TIMEOUT_TICK ))
-	{
-		status = eCLI_ERROR;
-	}
 
 	// USER CODE END...
 
@@ -234,9 +199,6 @@ cli_status_t cli_if_release_mutex(void)
 
 	// USER CODE BEGIN...
 
-	// Release mutex
-	tx_mutex_put( &g_cli_port_mutex );
-
 	// USER CODE END...
 
 	return status;
@@ -260,7 +222,8 @@ cli_status_t cli_if_device_reset(void)
 	// USER CODE BEGIN...
 
 	// Reset device
-	HAL_NVIC_SystemReset();
+	NVIC_SystemReset();
+
 
 	// USER CODE END...
 

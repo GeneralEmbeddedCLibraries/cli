@@ -6,8 +6,8 @@
 *@file      cli_cfg.h
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
-*@date      04.11.2022
-*@version   V1.0.0
+*@date      11.09.2022
+*@version   V1.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -56,7 +56,7 @@
 	/**
 	 * 	Intro strings
 	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "Evaluation of Inter-COM" )
+	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "RND Thermal Modeling" )
 	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
 	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
 	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
@@ -115,7 +115,7 @@
 /**
  * 	Enable/Disable multiple access protection
  */
-#define CLI_CFG_MUTEX_EN						( 1 )
+#define CLI_CFG_MUTEX_EN						( 0 )
 
 /**
  * 	Enable/Disable parameters usage
@@ -123,7 +123,7 @@
  * 	@brief	Usage of device parameters.
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
-#define CLI_CFG_PAR_USE_EN						( 0 )
+#define CLI_CFG_PAR_USE_EN						( 1 )
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
@@ -173,9 +173,6 @@ typedef enum
 
 	// USER_CODE_BEGIN
 
-	eCLI_CH_SCP,
-	eCLI_CH_STPS,
-	eCLI_CH_SIC,
 	eCLI_CH_APP,
 
 	// USER_CODE_END
