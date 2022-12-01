@@ -7,7 +7,7 @@
 *@brief     Command Line Interface
 *@author    Ziga Miklosic
 *@date      04.11.2022
-*@version   V1.0.0
+*@version   V1.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
