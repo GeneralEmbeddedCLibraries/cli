@@ -7,7 +7,7 @@
 *@brief     Command Line Interface
 *@author    Ziga Miklosic
 *@date      04.11.2022
-*@version   V1.0.0
+*@version   V1.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -67,14 +67,16 @@
 	/**
 	 * 	Maxumum allowed live watch
 	 */
-	#define CLI_PAR_MAX_IN_LIVE_WATCH		( 16 )
+	#define CLI_PAR_MAX_IN_LIVE_WATCH		( 32 )
 
 	/**
 	 * 	Live watch data
 	 */
 	typedef struct
 	{
-		par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
+    	par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
+        uint32_t    period;                                 /**<Period of streaming in ms */
+        uint32_t    period_cnt;                             /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
 		uint8_t		num_of;									/**<Number of parameters inside live watch */
 		bool 		active;									/**<Active flag */
 	} cli_live_watch_t;
@@ -111,6 +113,7 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static void 		cli_status_start  		(const uint8_t * p_attr);
 	static void 		cli_status_stop  		(const uint8_t * p_attr);
 	static void 		cli_status_des  		(const uint8_t * p_attr);
+	static void 		cli_status_rate  		(const uint8_t * p_attr);
 	static float32_t 	cli_par_val_to_float	(const par_type_list_t par_type, const void * p_val);
 	static void			cli_par_live_watch_hndl	(void);
 	static void 		cli_par_group_print		(const par_num_t par_num);
@@ -176,6 +179,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
+	{	"status_rate",			cli_status_rate,		"Change data streaming period [miliseconds]"        },
 #endif
 };
 
@@ -201,7 +205,7 @@ static uint32_t	gu32_user_table_count = 0;
 	 *
 	 * 	Inside "par_list" there is parameter enumeration number not parameter ID!
 	 */
-	static cli_live_watch_t g_cli_live_watch = { .active = false, .num_of = 0, .par_list = {0} };
+	static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_HNDL_PERIOD_MS, .period_cnt = 1, .active = false, .num_of = 0, .par_list = {0} };
 
 #endif
 
@@ -256,18 +260,22 @@ static cli_status_t cli_send_str(const uint8_t * const p_str)
 ////////////////////////////////////////////////////////////////////////////////
 static cli_status_t cli_parser_hndl(void)
 {
-			cli_status_t 	status 	= eCLI_OK;
-	static 	uint32_t  		buf_idx	= 0;
+			cli_status_t 	status      = eCLI_OK;
+	static 	uint32_t  		buf_idx 	= 0;
+            uint32_t        escape_cnt  = 0;
 
 	// Take all data from reception buffer
-	while ( eCLI_OK == cli_if_receive( &gu8_rx_buffer[buf_idx] ))
+	while   (   ( eCLI_OK == cli_if_receive( &gu8_rx_buffer[buf_idx] ))
+            &&  ( escape_cnt < 10000UL ))
 	{
-		// Check for termination character
-		if 	(	( '\r' == gu8_rx_buffer[buf_idx] )
-			||	( '\n' == gu8_rx_buffer[buf_idx] ))
+		// Find termination character
+        char * p_term_str_start = strstr((char*) &gu8_rx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
+        
+        // Termination string found
+        if ( NULL != p_term_str_start )
 		{
-			// Replace end termination with NULL
-			gu8_rx_buffer[buf_idx] = '\0';
+			// Replace all termination character with NULL
+            memset((char*) p_term_str_start, 0, strlen( CLI_CFG_TERMINATION_STRING ));
 
 			// Reset buffer index
 			buf_idx = 0;
@@ -298,7 +306,8 @@ static cli_status_t cli_parser_hndl(void)
 			break;
 		}
 
-		// TODO: Implement protection again infinite loop!
+		// Increment escape count in order to prevent infinite loop
+        escape_cnt++;
 	}
 
 	return status;
@@ -722,8 +731,8 @@ static void cli_ch_info(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_ch_en(const uint8_t * p_attr)
 {
-	static cli_ch_opt_t ch = 0;
-	bool en = false;
+	uint32_t ch;
+	uint32_t en;
 
 	if ( NULL != p_attr )
 	{
@@ -778,12 +787,12 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_par_print(const uint8_t * p_attr)
 	{
+        par_cfg_t 	par_cfg 	= { 0 };
+        uint32_t 	par_num		= 0UL;
+        uint32_t	par_val		= 0UL;
+
 		if ( NULL == p_attr )
 		{
-			par_cfg_t 	par_cfg 	= { 0 };
-			uint32_t 	par_num		= 0UL;
-			uint32_t	par_val		= 0UL;
-
 			// Send header
 			cli_printf(";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level");
 
@@ -857,86 +866,93 @@ static void cli_unknown(const uint8_t * p_attr)
 		par_status_t	status 		= ePAR_OK;
 		par_cfg_t		par_cfg		= {0};
 
-		// Check input command
-		if ( 2U == sscanf((const char*) p_attr, "%u,%f", (unsigned int*)&par_id, &par_data.f32 ))
+        if ( NULL != p_attr )
+        {
+    		// Check input command
+    		if ( 2U == sscanf((const char*) p_attr, "%u,%f", (unsigned int*)&par_id, &par_data.f32 ))
+    		{
+    			// Check if parameter exist
+    			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+    			{
+    				// Get parameter configurations
+    				par_get_config( par_num, &par_cfg );
+
+    				// Check if parameter writable
+    				if ( ePAR_ACCESS_RW == par_cfg.access )
+    				{
+    					// Based on type get parameter
+    					switch( par_cfg.type )
+    					{
+    						case ePAR_TYPE_U8:
+    							par_data.u8 = (uint8_t)par_data.f32;
+    							status = par_set( par_num, (uint8_t*) &par_data.u8 );
+    							cli_printf( "OK,PAR_SET=%u", par_data.u8);
+    						break;
+
+    						case ePAR_TYPE_I8:
+    							par_data.i8 = (int8_t)par_data.f32;
+    							status = par_set( par_num, (int8_t*) &par_data.i8 );
+    							cli_printf( "OK,PAR_SET=%i", (int) par_data.i8);
+    						break;
+
+    						case ePAR_TYPE_U16:
+    							par_data.u16 = (uint16_t)par_data.f32;
+    							status = par_set( par_num, (uint16_t*) &par_data.u16 );
+    							cli_printf( "OK,PAR_SET=%u", par_data.u16);
+    						break;
+
+    						case ePAR_TYPE_I16:
+    							par_data.i16 = (int16_t)par_data.f32;
+    							status = par_set( par_num, (int16_t*) &par_data.i16 );
+    							cli_printf( "OK,PAR_SET=%i", (int) par_data.i16);
+    						break;
+
+    						case ePAR_TYPE_U32:
+    							par_data.u32 = (uint32_t)par_data.f32;
+    							status = par_set( par_num, (uint32_t*) &par_data.u32 );
+    							cli_printf( "OK,PAR_SET=%u", (int) par_data.u32);
+    						break;
+
+    						case ePAR_TYPE_I32:
+    							par_data.i32 = (int32_t)par_data.f32;
+    							status = par_set( par_num, (int32_t*) &par_data.i32 );
+    							cli_printf( "OK,PAR_SET=%i", (int) par_data.i32);
+    						break;
+
+    						case ePAR_TYPE_F32:
+    							status = par_set( par_num, (float32_t*) &par_data.f32 );
+    							cli_printf( "OK,PAR_SET=%g", par_data.f32);
+    						break;
+
+    						default:
+    							CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
+    							CLI_ASSERT( 0 );
+    						break;
+    					}
+
+    					if ( ePAR_OK != status )
+    					{
+    						cli_printf( "ERR, err_code: %u", (uint16_t)status);
+    					}
+    				}
+    				else
+    				{
+    					cli_printf( "ERR, Parameter is read only!" );
+    				}
+    			}
+    			else
+    			{
+    				cli_printf( "ERR, Wrong parameter ID!" );
+    			}
+    		}
+    		else
+    		{
+    			cli_printf( "ERR, Wrong command!" );
+    		}
+        }
+        else
 		{
-			// Check if parameter exist
-			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
-			{
-				// Get parameter configurations
-				par_get_config( par_num, &par_cfg );
-
-				// Check if parameter writable
-				if ( ePAR_ACCESS_RW == par_cfg.access )
-				{
-					// Based on type get parameter
-					switch( par_cfg.type )
-					{
-						case ePAR_TYPE_U8:
-							par_data.u8 = (uint8_t)par_data.f32;
-							status = par_set( par_num, (uint8_t*) &par_data.u8 );
-							cli_printf( "OK,PAR_SET=%u", par_data.u8);
-						break;
-
-						case ePAR_TYPE_I8:
-							par_data.i8 = (int8_t)par_data.f32;
-							status = par_set( par_num, (int8_t*) &par_data.i8 );
-							cli_printf( "OK,PAR_SET=%i", (int) par_data.i8);
-						break;
-
-						case ePAR_TYPE_U16:
-							par_data.u16 = (uint16_t)par_data.f32;
-							status = par_set( par_num, (uint16_t*) &par_data.u16 );
-							cli_printf( "OK,PAR_SET=%u", par_data.u16);
-						break;
-
-						case ePAR_TYPE_I16:
-							par_data.i16 = (int16_t)par_data.f32;
-							status = par_set( par_num, (int16_t*) &par_data.i16 );
-							cli_printf( "OK,PAR_SET=%i", (int) par_data.i16);
-						break;
-
-						case ePAR_TYPE_U32:
-							par_data.u32 = (uint32_t)par_data.f32;
-							status = par_set( par_num, (uint32_t*) &par_data.u32 );
-							cli_printf( "OK,PAR_SET=%u", (int) par_data.u32);
-						break;
-
-						case ePAR_TYPE_I32:
-							par_data.i32 = (int32_t)par_data.f32;
-							status = par_set( par_num, (int32_t*) &par_data.i32 );
-							cli_printf( "OK,PAR_SET=%i", (int) par_data.i32);
-						break;
-
-						case ePAR_TYPE_F32:
-							status = par_set( par_num, (float32_t*) &par_data.f32 );
-							cli_printf( "OK,PAR_SET=%g", par_data.f32);
-						break;
-
-						default:
-							CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
-							CLI_ASSERT( 0 );
-						break;
-					}
-
-					if ( ePAR_OK != status )
-					{
-						cli_printf( "ERR, err_code: %u", (uint16_t)status);
-					}
-				}
-				else
-				{
-					cli_printf( "ERR, Parameter is read only!" );
-				}
-			}
-			else
-			{
-				cli_printf( "ERR, Wrong parameter ID!" );
-			}
-		}
-		else
-		{
-			cli_printf( "ERR, Wrong command!" );
+			cli_unknown(NULL);
 		}
 	}
 
@@ -958,72 +974,79 @@ static void cli_unknown(const uint8_t * p_attr)
 		par_status_t	status 		= ePAR_OK;
 		par_cfg_t		par_cfg		= {0};
 
-		// Check input command
-		if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
+        if ( NULL != p_attr )
+        {
+    		// Check input command
+    		if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
+    		{
+    			// Check if parameter exist
+    			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+    			{
+    				// Get par configurations
+    				par_get_config( par_num, &par_cfg );
+
+    				// Based on type get parameter
+    				switch ( par_cfg.type )
+    				{
+    					case ePAR_TYPE_U8:
+    						status = par_get( par_num, (uint8_t*) &par_data.u8 );
+    						cli_printf( "OK,PAR_GET=%u", par_data.u8 );
+    					break;
+
+    					case ePAR_TYPE_I8:
+    						status = par_get( par_num, (int8_t*) &par_data.i8 );
+    						cli_printf(  "OK,PAR_GET=%i", (int) par_data.i8 );
+    					break;
+
+    					case ePAR_TYPE_U16:
+    						status = par_get( par_num, (uint16_t*) &par_data.u16 );
+    						cli_printf(  "OK,PAR_GET=%u", par_data.u16 );
+    					break;
+
+    					case ePAR_TYPE_I16:
+    						status = par_get( par_num, (int16_t*) &par_data.i16 );
+    						cli_printf(  "OK,PAR_GET=%i", (int) par_data.i16 );
+    					break;
+
+    					case ePAR_TYPE_U32:
+    						status = par_get( par_num, (uint32_t*) &par_data.u32 );
+    						cli_printf(  "OK,PAR_GET=%u", (int) par_data.u32 );
+    					break;
+
+    					case ePAR_TYPE_I32:
+    						status = par_get( par_num, (int32_t*) &par_data.i32 );
+    						cli_printf(  "OK,PAR_GET=%i", (int) par_data.i32 );
+    					break;
+
+    					case ePAR_TYPE_F32:
+    						status = par_get( par_num, (float32_t*) &par_data.f32 );
+    						cli_printf(  "OK,PAR_GET=%g", par_data.f32 );
+    					break;
+
+    					default:
+    						CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
+    						CLI_ASSERT( 0 );
+    					break;
+    				}
+
+    				if ( ePAR_OK != status )
+    				{
+    					cli_printf( "ERR, err_code: %u", (uint16_t)status);
+    				}
+    			}
+    			else
+    			{
+    				cli_printf( "ERR, Wrong parameter ID!" );
+    			}
+    		}
+    		else
+    		{
+    			cli_printf( "ERR, Wrong command!" );
+    		}
+        }
+        else
 		{
-			// Check if parameter exist
-			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
-			{
-				// Get par configurations
-				par_get_config( par_num, &par_cfg );
-
-				// Based on type get parameter
-				switch ( par_cfg.type )
-				{
-					case ePAR_TYPE_U8:
-						status = par_get( par_num, (uint8_t*) &par_data.u8 );
-						cli_printf( "OK,PAR_GET=%u", par_data.u8 );
-					break;
-
-					case ePAR_TYPE_I8:
-						status = par_get( par_num, (int8_t*) &par_data.i8 );
-						cli_printf(  "OK,PAR_GET=%i", (int) par_data.i8 );
-					break;
-
-					case ePAR_TYPE_U16:
-						status = par_get( par_num, (uint16_t*) &par_data.u16 );
-						cli_printf(  "OK,PAR_GET=%u", par_data.u16 );
-					break;
-
-					case ePAR_TYPE_I16:
-						status = par_get( par_num, (int16_t*) &par_data.i16 );
-						cli_printf(  "OK,PAR_GET=%i", (int) par_data.i16 );
-					break;
-
-					case ePAR_TYPE_U32:
-						status = par_get( par_num, (uint32_t*) &par_data.u32 );
-						cli_printf(  "OK,PAR_GET=%u", (int) par_data.u32 );
-					break;
-
-					case ePAR_TYPE_I32:
-						status = par_get( par_num, (int32_t*) &par_data.i32 );
-						cli_printf(  "OK,PAR_GET=%i", (int) par_data.i32 );
-					break;
-
-					case ePAR_TYPE_F32:
-						status = par_get( par_num, (float32_t*) &par_data.f32 );
-						cli_printf(  "OK,PAR_GET=%g", par_data.f32 );
-					break;
-
-					default:
-						CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
-						CLI_ASSERT( 0 );
-					break;
-				}
-
-				if ( ePAR_OK != status )
-				{
-					cli_printf( "ERR, err_code: %u", (uint16_t)status);
-				}
-			}
-			else
-			{
-				cli_printf( "ERR, Wrong parameter ID!" );
-			}
-		}
-		else
-		{
-			cli_printf( "ERR, Wrong command!" );
+			cli_unknown(NULL);
 		}
 	}
 
@@ -1042,26 +1065,33 @@ static void cli_unknown(const uint8_t * p_attr)
 		par_num_t 	par_num	= 0UL;
 		uint16_t	par_id	= 0UL;
 
-		// Check input command
-		if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
-		{
-			// Check if parameter exist
-			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
-			{
-				// Set to default
-				par_set_to_default( par_num );
+        if ( NULL != p_attr )
+        {
+    		// Check input command
+    		if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
+    		{
+    			// Check if parameter exist
+    			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+    			{
+    				// Set to default
+    				par_set_to_default( par_num );
 
-				// Rtn msg
-				cli_printf( "OK, Parameter %u set to default", par_id );
-			}
-			else
-			{
-				cli_printf( "ERR, Wrong parameter ID!" );
-			}
-		}
-		else
+    				// Rtn msg
+    				cli_printf( "OK, Parameter %u set to default", par_id );
+    			}
+    			else
+    			{
+    				cli_printf( "ERR, Wrong parameter ID!" );
+    			}
+    		}
+    		else
+    		{
+    			cli_printf( "ERR, Wrong command!" );
+    		}
+        }
+        else
 		{
-			cli_printf( "ERR, Wrong command!" );
+			cli_unknown(NULL);
 		}
 	}
 
@@ -1173,7 +1203,16 @@ static void cli_unknown(const uint8_t * p_attr)
 	{
 		if ( NULL == p_attr )
 		{
-			g_cli_live_watch.active = true;
+            if ( g_cli_live_watch.num_of > 0 )
+            {
+                g_cli_live_watch.active = true;
+
+                cli_printf( "OK, Streaming started!" );
+            }
+            else
+            {
+               cli_printf( "ERR, Streaming parameter list empty!" ); 
+            }
 		}
 		else
 		{
@@ -1196,6 +1235,8 @@ static void cli_unknown(const uint8_t * p_attr)
 		if ( NULL == p_attr )
 		{
 			g_cli_live_watch.active = false;
+
+            cli_printf( "OK, Streaming stopped!" );
 		}
 		else
 		{
@@ -1216,71 +1257,148 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
 	static void cli_status_des(const uint8_t * p_attr)
 	{
-		uint32_t 	ch_cnt	= 0;
-		uint32_t 	par_id	= 0;
-		par_cfg_t	par_cfg = {0};
-		par_num_t	par_num = 0;
+		uint32_t 	ch_cnt      = 0;
+		uint32_t 	par_id      = 0;
+		par_cfg_t	par_cfg     = {0};
+		par_num_t	par_num     = 0;
+        bool        invalid_par = false;
 
-		// Reset counts
-		g_cli_live_watch.num_of = 0;
+        if ( NULL != p_attr )
+        {
+    		// Reset counts
+    		g_cli_live_watch.num_of = 0;
 
-		// Parse live watch request command
-		while(		( g_cli_live_watch.num_of < CLI_PAR_MAX_IN_LIVE_WATCH )
-				&& 	( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
+    		// Parse live watch request command
+    		while(		( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH )
+    				&& 	( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
+    		{
+    			// Get parameter ID by number
+    			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+    			{
+    				// Add new parameter to streaming list
+    				g_cli_live_watch.par_list[ g_cli_live_watch.num_of ] = par_num;
+    				g_cli_live_watch.num_of++;
+
+    				// Increment attribute cursor
+    				p_attr += ch_cnt;
+
+    				// Skip comma
+    				if ( ',' == *p_attr )
+    				{
+    					p_attr++;
+    				}
+    			}
+
+    			// Invalid parameter ID
+    			else
+    			{
+    				// Reset watch list
+    				g_cli_live_watch.num_of = 0;
+                    
+                    // Raise invalid parameter flag
+                    invalid_par = true;
+
+    				cli_printf( "ERR, Wrong parameter ID! ID: %d does not exsist!", par_id );
+
+    				// Exit reading command
+    				break;
+    			}
+    		}
+            
+            // Check requested live watch paramter list
+    		if  (   ( g_cli_live_watch.num_of > 0 ) 
+                &&  ( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH ))
+    		{
+    			// Send sample time
+    			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
+    			cli_send_str( gu8_tx_buffer );
+
+    			// Print streaming parameters/variables
+    			for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
+    			{
+    				// Get parameter configurations
+    				par_get_config( g_cli_live_watch.par_list[ par_idx ], &par_cfg );
+
+    				// Format string with parameters info
+    				sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
+
+    				// Send
+    				cli_send_str( gu8_tx_buffer );
+    			}
+
+    			// Terminate line
+    			cli_printf("");
+    		}
+
+            // Raise error only if all valid parameters
+            else if ( false == invalid_par )
+            {
+                cli_printf( "ERR, Invalid number of streaming parameter!" );
+            }
+
+            else
+            {
+                // No actions...
+            }
+        }
+        else
 		{
-			// Get parameter ID by number
-			if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
-			{
-				// Add new parameter to streaming list
-				g_cli_live_watch.par_list[ g_cli_live_watch.num_of ] = par_num;
-				g_cli_live_watch.num_of++;
-
-				// Increment attribute cursor
-				p_attr += ch_cnt;
-
-				// Skip comma
-				if ( ',' == *p_attr )
-				{
-					p_attr++;
-				}
-			}
-
-			// Invalid parameter ID
-			else
-			{
-				// Reset watch list
-				g_cli_live_watch.num_of = 0;
-
-				cli_printf( "ERR, Wrong parameter ID!" );
-
-				// Exit reading command
-				break;
-			}
-		}
-
-		if ( g_cli_live_watch.num_of > 0 )
-		{
-			// Send sample time
-			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( CLI_CFG_HNDL_PERIOD_MS / 1000.0f ));
-			cli_send_str( gu8_tx_buffer );
-
-			// Print streaming parameters/variables
-			for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
-			{
-				// Get parameter configurations
-				par_get_config( g_cli_live_watch.par_list[ par_idx ], &par_cfg );
-
-				// Format string with parameters info
-				sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
-
-				// Send
-				cli_send_str( gu8_tx_buffer );
-			}
-
-			// Terminate line
-			cli_printf("");
+			cli_unknown(NULL);
 		}
 	}
+
+	////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Change rate of live watch streaming period
+	*
+	* @note			Command format: >>>status_rate [period_in_ms]
+    *
+	* @example      >>>status_rate 100 --> Will change period to 100 ms
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+    static void cli_status_rate(const uint8_t * p_attr)
+    {
+        uint32_t period;
+
+        if ( NULL != p_attr )
+        {
+            if ( 1U == sscanf((const char*) p_attr, "%d", (int*) &period ))
+            {
+                // Check if within wanted range
+                if  (   ( period >= CLI_CFG_HNDL_PERIOD_MS )
+                    &&  ( period <= 60000UL ))
+                {
+                    // Check if multiple of defined period
+                    if (( period % CLI_CFG_HNDL_PERIOD_MS ) == 0 )
+                    {
+                        g_cli_live_watch.period = period;
+                        g_cli_live_watch.period_cnt = (uint32_t) ( g_cli_live_watch.period / CLI_CFG_HNDL_PERIOD_MS );
+
+                        cli_printf( "OK, Period changed to %d ms", g_cli_live_watch.period );
+                    }
+                    else
+                    {
+                        cli_printf( "ERR, Wanted period is not multiple of \"CLI_CFG_HNDL_PERIOD_MS\"!" );
+                    }
+                }
+                else
+                {
+                    cli_printf( "ERR, Period out of valid range!" );
+                }
+            }
+            else
+    		{
+    			cli_printf( "ERR, Wrong command!" );
+    		}
+        }
+        else
+		{
+			cli_unknown(NULL);
+		}
+    }
 
 	////////////////////////////////////////////////////////////////////////////////
 	/*!
@@ -1369,25 +1487,25 @@ static void cli_unknown(const uint8_t * p_attr)
 				switch ( par_cfg.type )
 				{
 					case ePAR_TYPE_U8:
-						sprintf((char*) &gu8_tx_buffer, "%d,", (int)par_val.u8 );
+						sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u8 );
 						break;
 					case ePAR_TYPE_U16:
-						sprintf((char*) &gu8_tx_buffer, "%d,", (int)par_val.u16 );
+						sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u16 );
 					break;
 					case ePAR_TYPE_U32:
-						sprintf((char*) &gu8_tx_buffer, "%d,", (int)par_val.u32 );
+						sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u32 );
 					break;
 					case ePAR_TYPE_I8:
-						sprintf((char*) &gu8_tx_buffer, "%i,", (int)par_val.i8 );
+						sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i8 );
 						break;
 					case ePAR_TYPE_I16:
-						sprintf((char*) &gu8_tx_buffer, "%i,", (int)par_val.i16 );
+						sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i16 );
 					break;
 					case ePAR_TYPE_I32:
-						sprintf((char*) &gu8_tx_buffer, "%i,", (int)par_val.i32 );
+						sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i32 );
 					break;
 					case ePAR_TYPE_F32:
-						sprintf((char*) &gu8_tx_buffer, "%g,", par_val.f32 );
+						sprintf((char*) &gu8_tx_buffer, "%g", par_val.f32 );
 					break;
 
 					default:
@@ -1397,6 +1515,12 @@ static void cli_unknown(const uint8_t * p_attr)
 
 				// Send
 				cli_send_str( gu8_tx_buffer );
+
+                // If not last -> send delimiter
+                if ( par_idx < ( g_cli_live_watch.num_of - 1 ))
+                {
+                    cli_send_str( "," );
+                }
 			}
 
 			// Terminate line
@@ -1712,7 +1836,23 @@ cli_status_t cli_hndl(void)
 
 	// Data streaming
 	#if ( 1 == CLI_CFG_PAR_USE_EN )
-		cli_par_live_watch_hndl();
+
+        static uint32_t loop_cnt = 0;
+        
+        // Count main handler loops
+        if ( loop_cnt >= ( g_cli_live_watch.period_cnt - 1 ))
+        {
+            loop_cnt = 0;
+            
+            // Handle streaming
+            cli_par_live_watch_hndl();
+        }
+        else
+        {
+            loop_cnt++;
+        }
+
+		
 	#endif
 
 	return status;

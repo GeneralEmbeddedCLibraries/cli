@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## V1.1.0 - 01.12.2022
+
+### Added
+ - Ability to change live watch time period. Added "status_rate" command to basic table
+ - Streaming CLI commands feedback
+
+### Fixed
+ - Checking for NULL pointers at basic commands
+ - Parsing inputed string termination was fixed to "\r" or "\n". Solved to search for CLI_CFG_TERMIANTION_STRING as defined in config file
+ - Inifinite loop escape check
+
+---
 ## V1.0.0 - 04.11.2022
 
 ### Added
