@@ -65,7 +65,8 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_MAX_NUM_OF_USER_TABLES** 	| Maximum number of user define command tables. |
 | **CLI_CFG_MUTEX_EN** 					| Enable/Disable usage of mutex in order to protect low level communication driver. |
 | **CLI_CFG_PAR_USE_EN** 				| Enable/Disable usage of Device Parameters. |
-| **CLI_CFG_HNDL_PERIOD_MS** 			| Time period of "cli_hndl()" function call. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
+| **CLI_CFG_HNDL_PERIOD_MS** 			| Time period of "cli_hndl()" function call in ms. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
+| **CLI_CFG_DEF_STREAM_PER_MS** 		| Defaulf time period of parameter streaming in ms. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_DEBUG_EN** 					| Enable/Disable debugging mode. |
 | **CLI_CFG_ASSERT_EN** 				| Enable/Disable asserts. Shall be disabled in release build! |
 | **CLI_ASSERT** 						| Definition of assert |

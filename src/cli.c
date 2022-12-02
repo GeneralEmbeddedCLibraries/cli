@@ -205,7 +205,7 @@ static uint32_t	gu32_user_table_count = 0;
 	 *
 	 * 	Inside "par_list" there is parameter enumeration number not parameter ID!
 	 */
-	static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_HNDL_PERIOD_MS, .period_cnt = 1, .active = false, .num_of = 0, .par_list = {0} };
+	static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_DEF_STREAM_PER_MS, .period_cnt = (uint32_t)(CLI_CFG_DEF_STREAM_PER_MS/CLI_CFG_HNDL_PERIOD_MS), .active = false, .num_of = 0, .par_list = {0} };
 
 #endif
 
