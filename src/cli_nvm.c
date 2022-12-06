@@ -143,217 +143,221 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
     
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Erase signature
-*
-* @note     Function returns
-*           - eCLI_OK: if signature is erased ok
-*           - eCLI_ERROR_NVM: if NVM interface error
-*
-* @return		status 	- Status of operation
-*/
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t	cli_nvm_erase_signature(void)
-{
-    cli_status_t status = eCLI_OK;
+#if ( 1 == CLI_CFG_PAR_USE_EN )
 
-    // Erase signature
-    if ( eNVM_OK != nvm_erase( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE ))
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Erase signature
+    *
+    * @note     Function returns
+    *           - eCLI_OK: if signature is erased ok
+    *           - eCLI_ERROR_NVM: if NVM interface error
+    *
+    * @return		status 	- Status of operation
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static cli_status_t	cli_nvm_erase_signature(void)
     {
-        status = eCLI_ERROR_NVM;
-        cli_printf( "CLI NVM ERROR: NVM error during signature corruption!" );
-    }
+        cli_status_t status = eCLI_OK;
 
-    return status;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Write correct signature
-*
-* @note     Function returns
-*           - eCLI_OK: if signature is written ok
-*           - eCLI_ERROR_NVM: if NVM interface error
-*
-* @return		status 	- Status of operation
-*/
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t	cli_nvm_write_signature(void)
-{
-            cli_status_t    status  = eCLI_OK;
-    const   uint32_t        sign    = CLI_NVM_SIGN;
-
-    // Write signature
-    if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE, (uint8_t*) &sign ))
-    {
-        status = eCLI_ERROR_NVM;
-        cli_printf( "CLI NVM ERROR: NVM error during signature write!" );
-    }
-
-    return status;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Read header
-*
-* @note     Function returns
-*           - eCLI_OK: if header is read ok
-*           - eCLI_ERROR_NVM: if NVM interface error
-*
-* @return		status 	- Status of operation
-*/
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_nvm_read_header(cli_nvm_head_obj_t * const p_head_obj)
-{
-    cli_status_t status = eCLI_OK;
-
-    // Read signature
-    if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
-    {
-        status = eCLI_ERROR_NVM;
-        cli_printf( "CLI NVM ERROR: NVM error during header read!" );
-    }
-
-    return status;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Write header
-*
-* @note     Function returns
-*           - eCLI_OK: if header is read ok
-*           - eCLI_ERROR_NVM: if NVM interface error
-*
-* @return		status 	- Status of operation
-*/
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_nvm_write_header(const cli_nvm_head_obj_t * const p_head_obj)
-{
-    cli_status_t status = eCLI_OK;
-
-    // Write signature
-    if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
-    {
-        status = eCLI_ERROR_NVM;
-        cli_printf( "CLI NVM ERROR: NVM error during header write!" );
-    }
-
-    return status;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Read parameter list
-*
-* @note     Function returns
-*           - eCLI_OK: if header is read ok
-*           - eCLI_ERROR_NVM: if NVM interface error
-*
-* @return		status 	- Status of operation
-*/
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_nvm_read_par_list(uint16_t * const p_par_list)
-{
-    cli_status_t status = eCLI_OK;
-    
-    // Read parameter list
-    if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
-    {
-        status = eCLI_ERROR_NVM;
-        cli_printf( "CLI NVM ERROR: NVM error during parameter list reading!" );
-    }
-
-    return status;   
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Write parameter list
-*
-* @note     Function returns
-*           - eCLI_OK: if header is read ok
-*           - eCLI_ERROR_NVM: if NVM interface error
-*
-* @return		status 	- Status of operation
-*/
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_nvm_write_par_list(const uint16_t * const p_par_list)
-{
-    cli_status_t status = eCLI_OK;
-    
-    // Read parameter list
-    if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
-    {
-        status = eCLI_ERROR_NVM;
-        cli_printf( "CLI NVM ERROR: NVM error during parameter list writing!" );
-    }
-
-    return status;   
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Calculate CRC-16
-*
-* @param[in]	p_data	- Pointer to data
-* @param[in]	size	- Size of data to calc crc
-* @return		crc16	- Calculated CRC
-*/
-////////////////////////////////////////////////////////////////////////////////
-static uint16_t cli_nvm_calc_crc(const uint8_t * const p_data, const uint8_t size)
-{
-    const 	uint16_t poly 	= 0x1021U;	// CRC-16-CCITT
-    const 	uint16_t seed 	= 0x1234U;	// Custom seed
-            uint16_t crc16 	= seed;
-
-    // Check input
-    CLI_ASSERT( NULL != p_data );
-    CLI_ASSERT( size > 0 );
-
-    for (uint8_t i = 0; i < size; i++)
-    {
-        crc16 = ( crc16 ^ ( p_data[i] << 8U ));
-
-        for (uint8_t j = 0U; j < 8U; j++)
+        // Erase signature
+        if ( eNVM_OK != nvm_erase( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE ))
         {
-            if (crc16 & 0x8000)
+            status = eCLI_ERROR_NVM;
+            cli_printf( "CLI NVM ERROR: NVM error during signature corruption!" );
+        }
+
+        return status;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Write correct signature
+    *
+    * @note     Function returns
+    *           - eCLI_OK: if signature is written ok
+    *           - eCLI_ERROR_NVM: if NVM interface error
+    *
+    * @return		status 	- Status of operation
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static cli_status_t	cli_nvm_write_signature(void)
+    {
+                cli_status_t    status  = eCLI_OK;
+        const   uint32_t        sign    = CLI_NVM_SIGN;
+
+        // Write signature
+        if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE, (uint8_t*) &sign ))
+        {
+            status = eCLI_ERROR_NVM;
+            cli_printf( "CLI NVM ERROR: NVM error during signature write!" );
+        }
+
+        return status;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Read header
+    *
+    * @note     Function returns
+    *           - eCLI_OK: if header is read ok
+    *           - eCLI_ERROR_NVM: if NVM interface error
+    *
+    * @return		status 	- Status of operation
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static cli_status_t cli_nvm_read_header(cli_nvm_head_obj_t * const p_head_obj)
+    {
+        cli_status_t status = eCLI_OK;
+
+        // Read signature
+        if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
+        {
+            status = eCLI_ERROR_NVM;
+            cli_printf( "CLI NVM ERROR: NVM error during header read!" );
+        }
+
+        return status;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Write header
+    *
+    * @note     Function returns
+    *           - eCLI_OK: if header is read ok
+    *           - eCLI_ERROR_NVM: if NVM interface error
+    *
+    * @return		status 	- Status of operation
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static cli_status_t cli_nvm_write_header(const cli_nvm_head_obj_t * const p_head_obj)
+    {
+        cli_status_t status = eCLI_OK;
+
+        // Write signature
+        if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
+        {
+            status = eCLI_ERROR_NVM;
+            cli_printf( "CLI NVM ERROR: NVM error during header write!" );
+        }
+
+        return status;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Read parameter list
+    *
+    * @note     Function returns
+    *           - eCLI_OK: if header is read ok
+    *           - eCLI_ERROR_NVM: if NVM interface error
+    *
+    * @return		status 	- Status of operation
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static cli_status_t cli_nvm_read_par_list(uint16_t * const p_par_list)
+    {
+        cli_status_t status = eCLI_OK;
+    
+        // Read parameter list
+        if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
+        {
+            status = eCLI_ERROR_NVM;
+            cli_printf( "CLI NVM ERROR: NVM error during parameter list reading!" );
+        }
+
+        return status;   
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Write parameter list
+    *
+    * @note     Function returns
+    *           - eCLI_OK: if header is read ok
+    *           - eCLI_ERROR_NVM: if NVM interface error
+    *
+    * @return		status 	- Status of operation
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static cli_status_t cli_nvm_write_par_list(const uint16_t * const p_par_list)
+    {
+        cli_status_t status = eCLI_OK;
+    
+        // Read parameter list
+        if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
+        {
+            status = eCLI_ERROR_NVM;
+            cli_printf( "CLI NVM ERROR: NVM error during parameter list writing!" );
+        }
+
+        return status;   
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Calculate CRC-16
+    *
+    * @param[in]	p_data	- Pointer to data
+    * @param[in]	size	- Size of data to calc crc
+    * @return		crc16	- Calculated CRC
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static uint16_t cli_nvm_calc_crc(const uint8_t * const p_data, const uint8_t size)
+    {
+        const 	uint16_t poly 	= 0x1021U;	// CRC-16-CCITT
+        const 	uint16_t seed 	= 0x1234U;	// Custom seed
+                uint16_t crc16 	= seed;
+
+        // Check input
+        CLI_ASSERT( NULL != p_data );
+        CLI_ASSERT( size > 0 );
+
+        for (uint8_t i = 0; i < size; i++)
+        {
+            crc16 = ( crc16 ^ ( p_data[i] << 8U ));
+
+            for (uint8_t j = 0U; j < 8U; j++)
             {
-                crc16 = (( crc16 << 1U ) ^ poly );
-            }
-            else
-            {
-                crc16 = ( crc16 << 1U );
+                if (crc16 & 0x8000)
+                {
+                    crc16 = (( crc16 << 1U ) ^ poly );
+                }
+                else
+                {
+                    crc16 = ( crc16 << 1U );
+                }
             }
         }
+
+        return crc16;
     }
 
-    return crc16;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*		Calculate CRC-16 on complete CLI NVM space
-*
-* @param[in]	p_data      - Pointer to NVM header
-* @param[in]	p_par_list	- Pointer to parameter list
-* @return		crc16       - Calculated CRC
-*/
-////////////////////////////////////////////////////////////////////////////////
-static uint16_t cli_nvm_calc_crc_whole(const cli_nvm_head_obj_t * const p_header, const uint16_t * const p_par_list)
-{
-    uint16_t crc16 = 0;
+    ////////////////////////////////////////////////////////////////////////////////
+    /**
+    *		Calculate CRC-16 on complete CLI NVM space
+    *
+    * @param[in]	p_data      - Pointer to NVM header
+    * @param[in]	p_par_list	- Pointer to parameter list
+    * @return		crc16       - Calculated CRC
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static uint16_t cli_nvm_calc_crc_whole(const cli_nvm_head_obj_t * const p_header, const uint16_t * const p_par_list)
+    {
+        uint16_t crc16 = 0;
     
-    // Calculate crc over header
-    crc16 = cli_nvm_calc_crc((uint8_t*) p_header, sizeof( cli_nvm_head_obj_t));
+        // Calculate crc over header
+        crc16 = cli_nvm_calc_crc((uint8_t*) p_header, sizeof( cli_nvm_head_obj_t));
 
-    // Calculate crc over parameter list
-    crc16 ^= cli_nvm_calc_crc((uint8_t*) p_par_list, CLI_CFG_PAR_MAX_IN_LIVE_WATCH );
+        // Calculate crc over parameter list
+        crc16 ^= cli_nvm_calc_crc((uint8_t*) p_par_list, CLI_CFG_PAR_MAX_IN_LIVE_WATCH );
 
-    return crc16;
-}
+        return crc16;
+    }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
