@@ -130,6 +130,7 @@ static cli_status_t	cli_nvm_write_signature	(void);
 static cli_status_t cli_nvm_read_header		(cli_nvm_head_obj_t * const p_head_obj);
 static cli_status_t cli_nvm_write_header	(const cli_nvm_head_obj_t * const p_head_obj);
 static cli_status_t cli_nvm_read_par_list   (uint16_t * const p_par_list);
+static cli_status_t cli_nvm_write_par_list  (const uint16_t * const p_par_list);
 static uint16_t 	cli_nvm_calc_crc		(const uint8_t * const p_data, const uint8_t size);
 static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_header, const uint16_t * const p_par_list);
 
@@ -270,6 +271,31 @@ static cli_status_t cli_nvm_read_par_list(uint16_t * const p_par_list)
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
+*		Write parameter list
+*
+* @note     Function returns
+*           - eCLI_OK: if header is read ok
+*           - eCLI_ERROR_NVM: if NVM interface error
+*
+* @return		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+static cli_status_t cli_nvm_write_par_list(const uint16_t * const p_par_list)
+{
+    cli_status_t status = eCLI_OK;
+    
+    // Read parameter list
+    if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
+    {
+        status = eCLI_ERROR_NVM;
+        cli_printf( "CLI NVM ERROR: NVM error during parameter list writing!" );
+    }
+
+    return status;   
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
 *		Calculate CRC-16
 *
 * @param[in]	p_data	- Pointer to data
@@ -363,45 +389,52 @@ static uint16_t cli_nvm_calc_crc_whole(const cli_nvm_head_obj_t * const p_header
     {
                 cli_status_t        status                                  = eCLI_OK;
                 cli_nvm_head_obj_t  header                                  = { 0 };
-        static  uint16_t             par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH] = {0};
+        static  uint16_t            par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH] = {0};
                 uint16_t            crc_calc                                = 0;
 
         CLI_ASSERT( NULL != p_watch_info );
     
-        // Read status
-        status = cli_nvm_read_header( &header );
+        if ( NULL != p_watch_info )
+        {
+            // Read status
+            status = cli_nvm_read_header( &header );
 
-        // Header read OK
-        if ( eCLI_OK == status )
-        {  
-            // Signature OK
-            if ( CLI_NVM_SIGN == header.sign )
-            {
-                // Read streaming parameters list    
-                status |= cli_nvm_read_par_list((uint16_t*) &par_list );
-
-                // Calculate CRC
-                crc_calc = cli_nvm_calc_crc_whole( &header, (uint16_t*) &par_list );
-
-                // CRC OK
-                if ( crc_calc == header.crc )
+            // Header read OK
+            if ( eCLI_OK == status )
+            {  
+                // Signature OK
+                if ( CLI_NVM_SIGN == header.sign )
                 {
-                    // Return readed streaming info
-                    memcpy((uint8_t*) p_watch_info->par_list, (uint8_t*) &par_list, ( sizeof(uint16_t) * header.num_of ));
-                    p_watch_info->num_of = header.num_of;
-                    p_watch_info->period = header.stream_period;
-                    p_watch_info->active = header.active;
+                    // Read streaming parameters list    
+                    status |= cli_nvm_read_par_list((uint16_t*) &par_list );
 
-                    // Calculate period counts
-                    p_watch_info->period_cnt = (uint32_t) ( p_watch_info->period / CLI_CFG_HNDL_PERIOD_MS );
+                    // Calculate CRC
+                    crc_calc = cli_nvm_calc_crc_whole( &header, (uint16_t*) &par_list );
+
+                    // CRC OK
+                    if ( crc_calc == header.crc )
+                    {
+                        // Return readed streaming info
+                        memcpy((uint8_t*) p_watch_info->par_list, (uint8_t*) &par_list, ( sizeof(uint16_t) * header.num_of ));
+                        p_watch_info->num_of = header.num_of;
+                        p_watch_info->period = header.stream_period;
+                        p_watch_info->active = header.active;
+
+                        // Calculate period counts
+                        p_watch_info->period_cnt = (uint32_t) ( p_watch_info->period / CLI_CFG_HNDL_PERIOD_MS );
+                    }
+                }
+
+                // Signature corrupted
+                else
+                {
+                    status = eCLI_ERROR;
                 }
             }
-
-            // Signature corrupted
-            else
-            {
-                status = eCLI_ERROR;
-            }
+        }
+        else
+        {
+            status = eCLI_ERROR;
         }
 
         return status;  
@@ -420,11 +453,38 @@ static uint16_t cli_nvm_calc_crc_whole(const cli_nvm_head_obj_t * const p_header
     ////////////////////////////////////////////////////////////////////////////////
     cli_status_t cli_nvm_write(const cli_live_watch_t * const p_watch_info)
     {
-        cli_status_t status = eCLI_OK;
+        cli_status_t        status = eCLI_OK;
+        cli_nvm_head_obj_t  header = { 0 };
 
         CLI_ASSERT( NULL != p_watch_info );
+        
+        if ( NULL != p_watch_info )
+        {
+            // Corrupt signature (enter critical)
+            status |= cli_nvm_erase_signature();
 
+            // Assemble header
+            header.sign             = CLI_NVM_SIGN;
+            header.stream_period    = p_watch_info->period;
+            header.num_of           = p_watch_info->num_of;
+            header.active           = p_watch_info->active;
 
+            // Calculate CRC 
+            header.crc = cli_nvm_calc_crc_whole( &header, p_watch_info->par_list );
+
+            // Write header
+            status |= cli_nvm_write_header( &header );
+
+            // Write parameters
+            status |= cli_nvm_write_par_list( p_watch_info->par_list );        
+
+            // Write signature (exit critical)
+            status |= cli_nvm_write_signature();
+        }
+        else
+        {
+            status = eCLI_ERROR;
+        }
 
         return status;    
     }
