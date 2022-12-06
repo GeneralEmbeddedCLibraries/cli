@@ -32,22 +32,29 @@
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- *  Stored streaming data
- */
-typedef struct
-{
-    uint16_t    par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH];    /**<Parameters number inside live watch queue. Values are paraemters enumeration not parameter ID! */
-    uint32_t    period;                                     /**<Period of streaming in ms */
-    uint8_t		num_of;                                     /**<Number of parameters inside live watch */
-    uint8_t		active;                                     /**<Active flag */
-} cli_nvm_live_watch_t;
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+    /**
+     *  Streaming info
+     */
+    typedef struct
+    {
+        uint16_t	par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue. Values are paraemters enumeration not parameter ID! */
+        uint32_t    period;                                     /**<Period of streaming in ms */
+        uint32_t    period_cnt;                                 /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
+        uint8_t		num_of;                                     /**<Number of parameters inside live watch */
+        bool 		active;                                     /**<Active flag */
+    } cli_live_watch_t;
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_nvm_read   (cli_nvm_live_watch_t * const p_stream_info);
-cli_status_t cli_nvm_write  (const cli_nvm_live_watch_t * const p_stream_info);
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+    cli_status_t cli_nvm_read   (cli_live_watch_t * const p_watch_info);
+    cli_status_t cli_nvm_write  (const cli_live_watch_t * const p_watch_info);
+#endif
 
 #endif // __CLI_NVM_H
 

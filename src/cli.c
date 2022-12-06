@@ -63,21 +63,6 @@
  */
 #define CLI_MAX(a,b) 						((a >= b) ? (a) : (b))
 
-#if ( 1 == CLI_CFG_PAR_USE_EN )
-
-	/**
-	 * 	Live watch data
-	 */
-	typedef struct
-	{
-    	par_num_t	par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue. Values are paraemters enumeration not parameter ID! */
-        uint32_t    period;                                     /**<Period of streaming in ms */
-        uint32_t    period_cnt;                                 /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
-		uint8_t		num_of;                                     /**<Number of parameters inside live watch */
-		bool 		active;                                     /**<Active flag */
-	} cli_live_watch_t;
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
@@ -1751,6 +1736,7 @@ cli_status_t cli_init(void)
 
             #if ( 1 == CLI_CFG_STREAM_NVM_EN )
 
+            /*
                 // Streaming info
                 cli_nvm_live_watch_t live_watch_info = { 0 };
 
@@ -1780,6 +1766,10 @@ cli_status_t cli_init(void)
                     CLI_ASSERT( 0 );
                     status = eCLI_ERROR_INIT;
                 }
+               */
+
+                // Read streaming info
+                status = cli_nvm_read( &g_cli_live_watch );
 
             #endif
 		}
