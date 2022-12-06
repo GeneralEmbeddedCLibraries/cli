@@ -171,8 +171,9 @@
       *             - status_des
       *             - status_start
       *             - status_stop
+	  *				- status_rate
       */
-      #define CLI_CFG_AUTO_STREAM_STORE_EN      ( 1 )
+      #define CLI_CFG_AUTO_STREAM_STORE_EN      ( 0 )
 
 #endif
 
