@@ -155,6 +155,14 @@
      */
      #define CLI_CFG_STREAM_NVM_EN              ( 1 )
 
+    /**
+	 * 	NVM parameter region option
+	 *
+	 * 	@note 	User shall select region based on nvm_cfg.h region
+	 * 			definitions "nvm_region_name_t"
+	 */
+     #define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
+
 #endif
 
 /**
