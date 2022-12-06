@@ -146,7 +146,7 @@
 	#define CLI_CFG_DEF_STREAM_PER_MS          	( 100UL )
 
 	/**
-	 * 	Maxumum number of parameters in streaming list
+	 *      Maxumum number of parameters in streaming list
 	 */
 	#define CLI_CFG_PAR_MAX_IN_LIVE_WATCH       ( 32 )
 
@@ -156,12 +156,23 @@
      #define CLI_CFG_STREAM_NVM_EN              ( 1 )
 
     /**
-	 * 	NVM parameter region option
+	 *      NVM parameter region option
 	 *
 	 * 	@note 	User shall select region based on nvm_cfg.h region
 	 * 			definitions "nvm_region_name_t"
 	 */
      #define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
+
+     /**
+      *     Enable/Disable automatic storage of streaming infor to NVM
+      *
+      * @note   When enabled streaming info is stored on following 
+      *         commands execution:
+      *             - status_des
+      *             - status_start
+      *             - status_stop
+      */
+      #define CLI_CFG_AUTO_STREAM_STORE_EN      ( 1 )
 
 #endif
 

@@ -100,8 +100,12 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static void 		cli_par_group_print		(const par_num_t par_num);
 
 	#if ( 1 == CLI_CFG_DEBUG_EN )
-		static void 		cli_par_store_reset		(const uint8_t * p_attr);
+		static void cli_par_store_reset(const uint8_t * p_attr);
 	#endif
+
+    #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+        static void cli_status_save(const uint8_t * p_attr);
+    #endif
 #endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
@@ -161,6 +165,9 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
 	{	"status_rate",			cli_status_rate,		"Change data streaming period [miliseconds]"        },
+    #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+        {	"status_save",			cli_status_save,		"Save streaming infro to NVM"                   },
+    #endif
 #endif
 };
 
@@ -906,7 +913,7 @@ static void cli_unknown(const uint8_t * p_attr)
     						break;
 
     						default:
-    							CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
+    							CLI_DBG_PRINT( "ERR, Invalid parameter type!" );
     							CLI_ASSERT( 0 );
     						break;
     					}
@@ -1005,7 +1012,7 @@ static void cli_unknown(const uint8_t * p_attr)
     					break;
 
     					default:
-    						CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
+    						CLI_DBG_PRINT( "ERR, Invalid parameter type!" );
     						CLI_ASSERT( 0 );
     					break;
     				}
@@ -1170,6 +1177,39 @@ static void cli_unknown(const uint8_t * p_attr)
 
 	#endif
 
+    #if (( 1 == CLI_CFG_PAR_USE_EN ) && ( 1 == CLI_CFG_STREAM_NVM_EN ))
+
+
+		////////////////////////////////////////////////////////////////////////////////
+		/*!
+		* @brief 		Store streaming informations to NVM
+		*
+		* @note			Command format: >>>status_save
+		*
+		* @param[in] 	attr 	- Inputed command attributes
+		* @return 		void
+		*/
+		////////////////////////////////////////////////////////////////////////////////
+        static void cli_status_save(const uint8_t * p_attr)
+        {
+            if ( NULL == p_attr )
+            {
+				if ( eCLI_OK == cli_nvm_write( &g_cli_live_watch ))
+				{
+					cli_printf( "OK, Streaming info stored to NVM successfully" );
+				}
+				else
+				{
+					cli_printf( "ERR, Error while storing streaming info to NVM!" );
+				} 
+            }
+            else
+            {
+                cli_unknown(NULL);
+            }
+        }
+    #endif
+
 	////////////////////////////////////////////////////////////////////////////////
 	/*!
 	* @brief        Start live watch streaming
@@ -1189,6 +1229,10 @@ static void cli_unknown(const uint8_t * p_attr)
                 g_cli_live_watch.active = true;
 
                 cli_printf( "OK, Streaming started!" );
+
+                #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+                    cli_status_save( NULL );
+                #endif
             }
             else
             {
@@ -1218,6 +1262,10 @@ static void cli_unknown(const uint8_t * p_attr)
 			g_cli_live_watch.active = false;
 
             cli_printf( "OK, Streaming stopped!" );
+
+            #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+                cli_status_save( NULL );
+            #endif
 		}
 		else
 		{
@@ -1309,6 +1357,10 @@ static void cli_unknown(const uint8_t * p_attr)
 
     			// Terminate line
     			cli_printf("");
+
+                #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+                    cli_status_save( NULL );
+                #endif
     		}
 
             // Raise error only if all valid parameters
@@ -1736,41 +1788,8 @@ cli_status_t cli_init(void)
 
             #if ( 1 == CLI_CFG_STREAM_NVM_EN )
 
-            /*
-                // Streaming info
-                cli_nvm_live_watch_t live_watch_info = { 0 };
-
-                // Read stored streaming info 
-                status = cli_nvm_read( &live_watch_info );
-                
-                // Successfully read
-                if ( eCLI_OK == status )
-                {
-                    // Overide default values
-                    memcpy( &g_cli_live_watch.par_list, &live_watch_info.par_list, ( sizeof(uint16_t) * live_watch_info.num_of ));
-                    g_cli_live_watch.period = live_watch_info.period;
-                    g_cli_live_watch.num_of = live_watch_info.num_of;
-                    g_cli_live_watch.active = live_watch_info.active;
-                }
-
-                // Nothing jet store in NVM
-                else if ( eCLI_ERROR == status )
-                {
-                    cli_printf( "CLI WARNING: Streaming data in NVM corrupted or missing. Setting to default..." );
-                }
-
-                // Reading from NVM error
-                else
-                {
-                    cli_printf( "CLI ERROR: Reading CLI streaming values from NVM error!" );
-                    CLI_ASSERT( 0 );
-                    status = eCLI_ERROR_INIT;
-                }
-               */
-
                 // Read streaming info
                 status = cli_nvm_read( &g_cli_live_watch );
-
             #endif
 		}
 	}

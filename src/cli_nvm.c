@@ -164,7 +164,7 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         if ( eNVM_OK != nvm_erase( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE ))
         {
             status = eCLI_ERROR_NVM;
-            cli_printf( "CLI NVM ERROR: NVM error during signature corruption!" );
+            cli_printf( "ERR, CLI NVM error during signature corruption!" );
         }
 
         return status;
@@ -190,7 +190,7 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE, (uint8_t*) &sign ))
         {
             status = eCLI_ERROR_NVM;
-            cli_printf( "CLI NVM ERROR: NVM error during signature write!" );
+            cli_printf( "ERR, CLI NVM error during signature write!" );
         }
 
         return status;
@@ -215,7 +215,7 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
         {
             status = eCLI_ERROR_NVM;
-            cli_printf( "CLI NVM ERROR: NVM error during header read!" );
+            cli_printf( "ERR, CLI NVM error during header read!" );
         }
 
         return status;
@@ -240,7 +240,7 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
         {
             status = eCLI_ERROR_NVM;
-            cli_printf( "CLI NVM ERROR: NVM error during header write!" );
+            cli_printf( "ERR, CLI NVM error during header write!" );
         }
 
         return status;
@@ -265,7 +265,7 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
         {
             status = eCLI_ERROR_NVM;
-            cli_printf( "CLI NVM ERROR: NVM error during parameter list reading!" );
+            cli_printf( "ERR, CLI NVM error during parameter list reading!" );
         }
 
         return status;   
@@ -290,7 +290,7 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
         {
             status = eCLI_ERROR_NVM;
-            cli_printf( "CLI NVM ERROR: NVM error during parameter list writing!" );
+            cli_printf( "ERR, CLI NVM error during parameter list writing!" );
         }
 
         return status;   
