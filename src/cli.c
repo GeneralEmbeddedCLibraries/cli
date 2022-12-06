@@ -27,6 +27,7 @@
 #include <assert.h>
 
 #include "cli.h"
+#include "cli_nvm.h"
 #include "../../cli_cfg.h"
 #include "../../cli_if.h"
 
@@ -1747,6 +1748,40 @@ cli_status_t cli_init(void)
 			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 				cli_send_intro();
 			#endif
+
+            #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+
+                // Streaming info
+                cli_nvm_live_watch_t live_watch_info = { 0 };
+
+                // Read stored streaming info 
+                status = cli_nvm_read( &live_watch_info );
+                
+                // Successfully read
+                if ( eCLI_OK == status )
+                {
+                    // Overide default values
+                    memcpy( &g_cli_live_watch.par_list, &live_watch_info.par_list, ( sizeof(uint16_t) * live_watch_info.num_of ));
+                    g_cli_live_watch.period = live_watch_info.period;
+                    g_cli_live_watch.num_of = live_watch_info.num_of;
+                    g_cli_live_watch.active = live_watch_info.active;
+                }
+
+                // Nothing jet store in NVM
+                else if ( eCLI_ERROR == status )
+                {
+                    cli_printf( "CLI WARNING: Streaming data in NVM corrupted or missing. Setting to default..." );
+                }
+
+                // Reading from NVM error
+                else
+                {
+                    cli_printf( "CLI ERROR: Reading CLI streaming values from NVM error!" );
+                    CLI_ASSERT( 0 );
+                    status = eCLI_ERROR_INIT;
+                }
+
+            #endif
 		}
 	}
 	else

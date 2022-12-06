@@ -48,6 +48,7 @@ typedef enum
 
 	eCLI_ERROR			= 0x01,		/**<General error code */
 	eCLI_ERROR_INIT		= 0x02,		/**<Initialization error or usage before initialization */
+    eCLI_ERROR_NVM      = 0x04,     /**<Read/Write to NVM error */
 
 } cli_status_t;
 

@@ -61,7 +61,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-cli_status_t cli_nvm_init(cli_nvm_live_watch_t * const p_stream_info)
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Read streaming info
+*
+* @note     This function returns
+*               - eCLI_ERROR_NVM: in case of NVM read/write error
+*               - eCLI_ERROR:   in case streaming info are corrupted or not 
+*                               jet written to NVM
+*
+* @return       status	- Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_nvm_read(cli_nvm_live_watch_t * const p_stream_info)
 {
     cli_status_t status = eCLI_OK;
 

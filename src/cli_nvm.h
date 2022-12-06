@@ -46,7 +46,7 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_nvm_init   (cli_nvm_live_watch_t * const p_stream_info);
+cli_status_t cli_nvm_read   (cli_nvm_live_watch_t * const p_stream_info);
 cli_status_t cli_nvm_write  (const cli_nvm_live_watch_t * const p_stream_info);
 
 #endif // __CLI_NVM_H
