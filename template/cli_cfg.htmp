@@ -145,6 +145,16 @@
 	 */
 	#define CLI_CFG_DEF_STREAM_PER_MS          	( 100UL )
 
+	/**
+	 * 	Maxumum number of parameters in streaming list
+	 */
+	#define CLI_CFG_PAR_MAX_IN_LIVE_WATCH       ( 32 )
+
+    /**
+     *      Enable/Disable storing streaming info to NVM
+     */
+     #define CLI_CFG_STREAM_NVM_EN              ( 1 )
+
 #endif
 
 /**

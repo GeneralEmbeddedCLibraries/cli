@@ -65,20 +65,15 @@
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
 	/**
-	 * 	Maxumum allowed live watch
-	 */
-	#define CLI_PAR_MAX_IN_LIVE_WATCH		( 32 )
-
-	/**
 	 * 	Live watch data
 	 */
 	typedef struct
 	{
-    	par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
-        uint32_t    period;                                 /**<Period of streaming in ms */
-        uint32_t    period_cnt;                             /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
-		uint8_t		num_of;									/**<Number of parameters inside live watch */
-		bool 		active;									/**<Active flag */
+    	par_num_t	par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue. Values are paraemters enumeration not parameter ID! */
+        uint32_t    period;                                     /**<Period of streaming in ms */
+        uint32_t    period_cnt;                                 /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
+		uint8_t		num_of;                                     /**<Number of parameters inside live watch */
+		bool 		active;                                     /**<Active flag */
 	} cli_live_watch_t;
 
 #endif
@@ -1269,7 +1264,7 @@ static void cli_unknown(const uint8_t * p_attr)
     		g_cli_live_watch.num_of = 0;
 
     		// Parse live watch request command
-    		while(		( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH )
+    		while(		( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH )
     				&& 	( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
     		{
     			// Get parameter ID by number
@@ -1307,7 +1302,7 @@ static void cli_unknown(const uint8_t * p_attr)
             
             // Check requested live watch paramter list
     		if  (   ( g_cli_live_watch.num_of > 0 ) 
-                &&  ( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH ))
+                &&  ( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH ))
     		{
     			// Send sample time
     			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
