@@ -349,7 +349,8 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         uint16_t crc16 = 0;
     
         // Calculate crc over header
-        crc16 = cli_nvm_calc_crc((uint8_t*) p_header, sizeof( cli_nvm_head_obj_t));
+		// NOTE: Ignore signature in header!
+        crc16 = cli_nvm_calc_crc((uint8_t*) p_header->stream_period, sizeof( cli_nvm_head_obj_t));
 
         // Calculate crc over parameter list
         crc16 ^= cli_nvm_calc_crc((uint8_t*) p_par_list, CLI_CFG_PAR_MAX_IN_LIVE_WATCH );
@@ -468,7 +469,6 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
             status |= cli_nvm_erase_signature();
 
             // Assemble header
-            header.sign             = CLI_NVM_SIGN;
             header.stream_period    = p_watch_info->period;
             header.num_of           = p_watch_info->num_of;
             header.active           = p_watch_info->active;

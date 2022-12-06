@@ -1411,6 +1411,10 @@ static void cli_unknown(const uint8_t * p_attr)
                         g_cli_live_watch.period_cnt = (uint32_t) ( g_cli_live_watch.period / CLI_CFG_HNDL_PERIOD_MS );
 
                         cli_printf( "OK, Period changed to %d ms", g_cli_live_watch.period );
+
+						#if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+							cli_status_save( NULL );
+						#endif
                     }
                     else
                     {
