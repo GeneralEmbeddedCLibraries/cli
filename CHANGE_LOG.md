@@ -9,6 +9,7 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 
 ### Added
  - Configuration for default paramter streaming period
+ - Streaming info storing to NVM
 
 
 ---
