@@ -48,6 +48,7 @@ typedef enum
 
 	eCLI_ERROR			= 0x01,		/**<General error code */
 	eCLI_ERROR_INIT		= 0x02,		/**<Initialization error or usage before initialization */
+    eCLI_ERROR_NVM      = 0x04,     /**<Read/Write to NVM error */
 
 } cli_status_t;
 
@@ -76,6 +77,7 @@ typedef struct
 	cli_cmd_t  	cmd[CLI_CFG_MAX_NUM_OF_COMMANDS];	/**<Command table */
 	uint32_t 	num_of;								/**<Number of commands */
 } cli_cmd_table_t;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
