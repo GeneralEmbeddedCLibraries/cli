@@ -11,7 +11,6 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
  - Configuration for default paramter streaming period
  - Streaming info storing to NVM
 
-
 ---
 ## V1.1.0 - 01.12.2022
 

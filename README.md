@@ -70,7 +70,7 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_PAR_MAX_IN_LIVE_WATCH** 	| Maximum number of parameter in streaming list. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_STREAM_NVM_EN** 			| Enable/Disable storing streaming info to NVM. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_NVM_REGION** 				| CLI NVM region space. (Applicable only if CLI_CFG_STREAM_NVM_EN=1) |
-| **CLI_CFG_AUTO_STREAM_STORE_EN** 		| Enable/Disable automatic storing of streaming info to NVM. (Applicable only if CLI_CFG_STREAM_NVM_EN=1) |
+| **CLI_CFG_AUTO_STREAM_STORE_EN** 		| Enable/Disable automatic storing of streaming info to NVM. (Applicable only if CLI_CFG_STREAM_NVM_EN=1). If enabled streaming info will be stored after following command is executed: *status_des*, *status_start*, *status_stop* and *status_rate*. |
 | **CLI_CFG_DEBUG_EN** 					| Enable/Disable debugging mode. |
 | **CLI_CFG_ASSERT_EN** 				| Enable/Disable asserts. Shall be disabled in release build! |
 | **CLI_ASSERT** 						| Definition of assert |
@@ -240,5 +240,62 @@ NOTICE: Change only code between ***USER CODE BEGIN*** and ***USER CODE END*** s
 Now you have everything setup to use Device Parameters module in combination with CLI.
 
 
+### **Storing streaming info to NVM**
+
+Streaming (or live watch) info consist of:
+ - list of stream paramter enumerations
+ - number of parameters in list
+ - streaming period
+ - streaming active flag
+
+When CLI module is configured to store streaming info to NVM (*CLI_CFG_STREAM_NVM_EN* = 1) user must also include [NVM module](https://github.com/GeneralEmbeddedCLibraries/nvm) into project. Additionally user must define NVM region for CLI storage purposes inside *nvm_cfg.h/.c*. Name of NVM region must be pass to CLI configuration to *CLI_CFG_NVM_REGION* macro.
+
+Code section from *nvm_cfg.h*:
+```C
+/**
+ * 		NVM region definitions
+ *
+ *	@brief	User shall specified NVM regions name, start, size
+ *			and pointer to low level driver.
+ *
+ * 	@note	Special care with start address and its size!
+ */
+static const nvm_region_t g_nvm_region[ eNVM_REGION_NUM_OF ] =
+{
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//											Region Name						Start address			Size [byte]			Low level driver
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	[eNVM_REGION_EEPROM_DEV_PAR]	=	{	.name = "device parameters",	.start_addr = 0x0,		.size = 1024,		.p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]	},
+	[eNVM_REGION_EEPROM_CLI]		=	{	.name = "CLI settings",			.start_addr = 0x400,	.size = 256,		.p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]	},
+
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+};
+```
+
+Code section from *cli_cfg.h*:
+```C
+/**
+ *      Enable/Disable storing streaming info to NVM
+ */
+	#define CLI_CFG_STREAM_NVM_EN              ( 1 )
+
+/**
+ *      NVM parameter region option
+ *
+ * 	@note 	User shall select region based on nvm_cfg.h region
+ * 			definitions "nvm_region_name_t"
+ */
+	#define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
+```
+
+CLI NVM memory layout and field description is shown in picture below:
+![](doc/cli_nvm_layout.png)
+
+Additional option is to enable automatic storage of streaming info via *CLI_CFG_AUTO_STREAM_STORE_EN* macro. This feature provides refreshing of streaming info inside NVM each time it changes in RAM. Meaning that each time either of streaming info data is being change by user it re-writes new streaming configuration to NVM. This routine is triggered on execution of following CLI command:
+ - *status_des*
+ - *status_start*
+ - *status_stop*
+ - *status_rate* 
 
 
