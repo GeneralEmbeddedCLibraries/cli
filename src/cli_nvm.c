@@ -49,101 +49,98 @@
 	_Static_assert( 1 == NVM_VER_MAJOR );
 	_Static_assert( 0 == NVM_VER_MINOR );
 
-#endif
+	////////////////////////////////////////////////////////////////////////////////
+	// Definitions
+	////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-// Definitions
-////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * 	CLI NVM signature and size in bytes
+	 */
+	#define CLI_NVM_SIGN							( 0xFF00AA55 )
+	#define CLI_NVM_SIGN_SIZE						( 4UL )
 
-/**
- * 	CLI NVM signature and size in bytes
- */
-#define CLI_NVM_SIGN							( 0xFF00AA55 )
-#define CLI_NVM_SIGN_SIZE						( 4UL )
+	/**
+	 * 	CLI NVM streaming period size
+	 *
+	 * 	Unit: byte
+	 */
+	#define CLI_NVM_STREAM_PERIOD_SIZE				( 4UL )
 
-/**
- * 	CLI NVM streaming period size
- *
- * 	Unit: byte
- */
-#define CLI_NVM_STREAM_PERIOD_SIZE				( 4UL )
+	/**
+	 * 	CLI NVM number of streaming parameters size
+	 *
+	 * 	Unit: byte
+	 */
+	#define CLI_NVM_NUMBER_OF_SIZE					( 1UL )
 
-/**
- * 	CLI NVM number of streaming parameters size
- *
- * 	Unit: byte
- */
-#define CLI_NVM_NUMBER_OF_SIZE					( 1UL )
+	/**
+	 * 	CLI NVM streaming active flag
+	 *
+	 * 	Unit: byte
+	 */
+	#define CLI_NVM_STREAM_ACTIVE_SIZE				( 1UL )
 
-/**
- * 	CLI NVM streaming active flag
- *
- * 	Unit: byte
- */
-#define CLI_NVM_STREAM_ACTIVE_SIZE				( 1UL )
+	/**
+	 * 	CLI CRC size
+	 *
+	 * 	Unit: byte
+	 */
+	#define CLI_NVM_CRC_SIZE						( 2UL )
 
-/**
- * 	CLI CRC size
- *
- * 	Unit: byte
- */
-#define CLI_NVM_CRC_SIZE						( 2UL )
+	/**
+	 * 	CLI NVM header content address start
+	 *
+	 * 	@note 	This is offset to reserved NVM region. For absolute address
+	 * 			add that value to NVM start region.
+	 */
+	#define CLI_NVM_HEAD_ADDR                       ( 0x00 )
+	#define CLI_NVM_HEAD_SIGN_ADDR					( CLI_NVM_HEAD_ADDR )
+	#define CLI_NVM_HEAD_STREAM_PERIOD_ADDR			( CLI_NVM_HEAD_SIGN_ADDR            + CLI_NVM_SIGN_SIZE             )
+	#define CLI_NVM_HEAD_NUMBER_OF_ADDR				( CLI_NVM_HEAD_STREAM_PERIOD_ADDR 	+ CLI_NVM_STREAM_PERIOD_SIZE 	)
+	#define CLI_NVM_HEAD_STREAM_ACTIVE_ADDR			( CLI_NVM_HEAD_NUMBER_OF_ADDR 		+ CLI_NVM_NUMBER_OF_SIZE 		)
+	#define CLI_NVM_HEAD_CRC_ADDR					( CLI_NVM_HEAD_STREAM_ACTIVE_ADDR 	+ CLI_NVM_STREAM_ACTIVE_SIZE 	)
 
-/**
- * 	CLI NVM header content address start
- *
- * 	@note 	This is offset to reserved NVM region. For absolute address
- * 			add that value to NVM start region.
- */
-#define CLI_NVM_HEAD_ADDR                       ( 0x00 )
-#define CLI_NVM_HEAD_SIGN_ADDR					( CLI_NVM_HEAD_ADDR )
-#define CLI_NVM_HEAD_STREAM_PERIOD_ADDR			( CLI_NVM_HEAD_SIGN_ADDR            + CLI_NVM_SIGN_SIZE             )
-#define CLI_NVM_HEAD_NUMBER_OF_ADDR				( CLI_NVM_HEAD_STREAM_PERIOD_ADDR 	+ CLI_NVM_STREAM_PERIOD_SIZE 	)
-#define CLI_NVM_HEAD_STREAM_ACTIVE_ADDR			( CLI_NVM_HEAD_NUMBER_OF_ADDR 		+ CLI_NVM_NUMBER_OF_SIZE 		)
-#define CLI_NVM_HEAD_CRC_ADDR					( CLI_NVM_HEAD_STREAM_ACTIVE_ADDR 	+ CLI_NVM_STREAM_ACTIVE_SIZE 	)
+	/**
+	 * 	Parameters first data object start address
+	 *
+	 * 	Unit: byte
+	 */
+	#define CLI_NVM_FIRST_STREAM_PAR_ADDR			( CLI_NVM_HEAD_ADDR + 0x10 )
 
-/**
- * 	Parameters first data object start address
- *
- * 	Unit: byte
- */
-#define CLI_NVM_FIRST_STREAM_PAR_ADDR			( CLI_NVM_HEAD_ADDR + 0x10 )
-
-/**
- * 	Parameter NVM header object
- */
-typedef struct
-{
-    uint32_t    sign;               /**<Signature */
-    uint32_t    stream_period;		/**<Period of streaming in ms */
-    uint8_t     num_of;             /**<Number of parameters inside live watch */
-    uint8_t     active;             /**<Active flag */
-    uint16_t    crc;                /**<Header CRC */
-} cli_nvm_head_obj_t;
+	/**
+	 * 	Parameter NVM header object
+	 */
+	typedef struct
+	{
+		uint32_t    sign;               /**<Signature */
+		uint32_t    stream_period;		/**<Period of streaming in ms */
+		uint8_t     num_of;             /**<Number of parameters inside live watch */
+		uint8_t     active;             /**<Active flag */
+		uint16_t    crc;                /**<Header CRC */
+	} cli_nvm_head_obj_t;
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Function prototypes
-////////////////////////////////////////////////////////////////////////////////
-static cli_status_t	cli_nvm_erase_signature (void);
-static cli_status_t	cli_nvm_write_signature	(void);
-static cli_status_t cli_nvm_read_header		(cli_nvm_head_obj_t * const p_head_obj);
-static cli_status_t cli_nvm_write_header	(const cli_nvm_head_obj_t * const p_head_obj);
-static cli_status_t cli_nvm_read_par_list   (uint16_t * const p_par_list);
-static cli_status_t cli_nvm_write_par_list  (const uint16_t * const p_par_list);
-static uint16_t 	cli_nvm_calc_crc		(const uint8_t * const p_data, const uint8_t size);
-static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_header, const uint16_t * const p_par_list);
+	////////////////////////////////////////////////////////////////////////////////
+	// Function prototypes
+	////////////////////////////////////////////////////////////////////////////////
+	static cli_status_t	cli_nvm_erase_signature (void);
+	static cli_status_t	cli_nvm_write_signature	(void);
+	static cli_status_t cli_nvm_read_header		(cli_nvm_head_obj_t * const p_head_obj);
+	static cli_status_t cli_nvm_write_header	(const cli_nvm_head_obj_t * const p_head_obj);
+	static cli_status_t cli_nvm_read_par_list   (uint16_t * const p_par_list);
+	static cli_status_t cli_nvm_write_par_list  (const uint16_t * const p_par_list);
+	static uint16_t 	cli_nvm_calc_crc		(const uint8_t * const p_data, const uint8_t size);
+	static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_header, const uint16_t * const p_par_list);
 
-////////////////////////////////////////////////////////////////////////////////
-// Variables
-////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
+	// Variables
+	////////////////////////////////////////////////////////////////////////////////
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Functions
-////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
+	// Functions
+	////////////////////////////////////////////////////////////////////////////////
     
-#if ( 1 == CLI_CFG_PAR_USE_EN )
 
     ////////////////////////////////////////////////////////////////////////////////
     /**
@@ -358,24 +355,20 @@ static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_
         return crc16;
     }
 
-#endif
+	////////////////////////////////////////////////////////////////////////////////
+	/**
+	* @} <!-- END GROUP -->
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-/**
-* @} <!-- END GROUP -->
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-/**
-*@addtogroup CLI_NVM_API
-* @{ <!-- BEGIN GROUP -->
-*
-* 	Following function are part of CLI NVM API.
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-#if ( 1 == CLI_CFG_PAR_USE_EN )
+	////////////////////////////////////////////////////////////////////////////////
+	/**
+	*@addtogroup CLI_NVM_API
+	* @{ <!-- BEGIN GROUP -->
+	*
+	* 	Following function are part of CLI NVM API.
+	*/
+	////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     /*!
