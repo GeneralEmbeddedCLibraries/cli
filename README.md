@@ -25,6 +25,13 @@ Device Parameters module must take following path:
 "root/middleware/parameters/parameters/src/par.h"
 ```
 
+### **2. NVM Module**
+In case of using NVM *CLI_CFG_STREAM_NVM_EN = 1*, then [NVM module](https://github.com/GeneralEmbeddedCLibraries/nvm) must pe part of project. 
+NVM module must take following path:
+```
+"root/middleware/nvm/nvm/src/nvm.h"
+```
+
 ## **General Embedded C Libraries Ecosystem**
 In order to be part of *General Embedded C Libraries Ecosystem* this module must be placed in following path: 
 
