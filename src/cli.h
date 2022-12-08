@@ -6,8 +6,8 @@
 *@file      cli.h
 *@brief     Command Line Interface API
 *@author    Ziga Miklosic
-*@date      04.11.2022
-*@version   V1.1.0
+*@date      08.12.2022
+*@version   V1.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -36,7 +36,7 @@
  * 	Module version
  */
 #define CLI_VER_MAJOR		( 1 )
-#define CLI_VER_MINOR		( 1 )
+#define CLI_VER_MINOR		( 2 )
 #define CLI_VER_DEVELOP		( 0 )
 
 /**
@@ -48,6 +48,7 @@ typedef enum
 
 	eCLI_ERROR			= 0x01,		/**<General error code */
 	eCLI_ERROR_INIT		= 0x02,		/**<Initialization error or usage before initialization */
+    eCLI_ERROR_NVM      = 0x04,     /**<Read/Write to NVM error */
 
 } cli_status_t;
 
@@ -76,6 +77,7 @@ typedef struct
 	cli_cmd_t  	cmd[CLI_CFG_MAX_NUM_OF_COMMANDS];	/**<Command table */
 	uint32_t 	num_of;								/**<Number of commands */
 } cli_cmd_table_t;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions

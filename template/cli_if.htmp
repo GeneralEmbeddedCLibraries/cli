@@ -6,8 +6,8 @@
 *@file      cli_if.h
 *@brief     Interface with Command Line Interface
 *@author    Ziga Miklosic
-*@date      11.09.2022
-*@version   V1.1.0
+*@date      08.12.2022
+*@version   V1.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**

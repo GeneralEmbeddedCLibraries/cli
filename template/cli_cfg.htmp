@@ -6,8 +6,8 @@
 *@file      cli_cfg.h
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
-*@date      11.09.2022
-*@version   V1.1.0
+*@date      08.12.2022
+*@version   V1.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -120,7 +120,7 @@
 /**
  * 	Enable/Disable parameters usage
  *
- * 	@brief	Usage of device parameters.
+ * 	@note	When enabled Device Parameters must be part of the project!
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
 #define CLI_CFG_PAR_USE_EN						( 1 )
@@ -135,6 +135,48 @@
 	 *    Unit: ms
 	 */
 	#define CLI_CFG_HNDL_PERIOD_MS          	( 10UL )
+
+	/**
+	 *    	Default streaming period
+     *
+     *    @note     Must be in "CLI_CFG_HNDL_PERIOD_MS" resolution!
+	 *
+	 *    Unit: ms
+	 */
+	#define CLI_CFG_DEF_STREAM_PER_MS          	( 100UL )
+
+	/**
+	 *      Maxumum number of parameters in streaming list
+	 */
+	#define CLI_CFG_PAR_MAX_IN_LIVE_WATCH       ( 32 )
+
+    /**
+     *      Enable/Disable storing streaming info to NVM
+     *
+     *  @note   When enabled NVM module must be part of the project!
+     * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/nvm
+     */
+     #define CLI_CFG_STREAM_NVM_EN              ( 1 )
+
+    /**
+	 *      NVM parameter region option
+	 *
+	 * 	@note 	User shall select region based on nvm_cfg.h region
+	 * 			definitions "nvm_region_name_t"
+	 */
+     #define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
+
+     /**
+      *     Enable/Disable automatic storage of streaming infor to NVM
+      *
+      * @note   When enabled streaming info is stored on following 
+      *         commands execution:
+      *             - status_des
+      *             - status_start
+      *             - status_stop
+	  *				- status_rate
+      */
+      #define CLI_CFG_AUTO_STREAM_STORE_EN      ( 0 )
 
 #endif
 
@@ -202,6 +244,9 @@ typedef struct
 	#error "CLI Reception buffer size must be larger than 32 bytes! Adjust <CLI_CFG_RX_BUF_SIZE> macro inside cli_cfg.h file!"
 #endif
 
+#if (( 1 == CLI_CFG_PAR_USE_EN ) && (( CLI_CFG_DEF_STREAM_PER_MS < 10 ) || (( CLI_CFG_DEF_STREAM_PER_MS % CLI_CFG_HNDL_PERIOD_MS ) != 0 )))
+	#error "Invalid default streaming period! Adjust <CLI_CFG_DEF_STREAM_PER_MS> macro inside cli_cfg.h file!"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions

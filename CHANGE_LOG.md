@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## V1.2.0 - 08.12.2022
+
+### Added
+ - Configuration for default paramter streaming period
+ - Streaming info storing to NVM
+ - Option to automatically storing streaming infor to NVM on change
+
+---
 ## V1.1.0 - 01.12.2022
 
 ### Added

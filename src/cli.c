@@ -6,8 +6,8 @@
 *@file      cli.c
 *@brief     Command Line Interface
 *@author    Ziga Miklosic
-*@date      04.11.2022
-*@version   V1.1.0
+*@date      08.12.2022
+*@version   V1.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -27,6 +27,7 @@
 #include <assert.h>
 
 #include "cli.h"
+#include "cli_nvm.h"
 #include "../../cli_cfg.h"
 #include "../../cli_if.h"
 
@@ -62,26 +63,6 @@
  */
 #define CLI_MAX(a,b) 						((a >= b) ? (a) : (b))
 
-#if ( 1 == CLI_CFG_PAR_USE_EN )
-
-	/**
-	 * 	Maxumum allowed live watch
-	 */
-	#define CLI_PAR_MAX_IN_LIVE_WATCH		( 32 )
-
-	/**
-	 * 	Live watch data
-	 */
-	typedef struct
-	{
-    	par_num_t	par_list[CLI_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue */
-        uint32_t    period;                                 /**<Period of streaming in ms */
-        uint32_t    period_cnt;                             /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
-		uint8_t		num_of;									/**<Number of parameters inside live watch */
-		bool 		active;									/**<Active flag */
-	} cli_live_watch_t;
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
@@ -119,8 +100,12 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static void 		cli_par_group_print		(const par_num_t par_num);
 
 	#if ( 1 == CLI_CFG_DEBUG_EN )
-		static void 		cli_par_store_reset		(const uint8_t * p_attr);
+		static void cli_par_store_reset(const uint8_t * p_attr);
 	#endif
+
+    #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+        static void cli_status_save(const uint8_t * p_attr);
+    #endif
 #endif
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
@@ -180,6 +165,9 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
 	{	"status_rate",			cli_status_rate,		"Change data streaming period [miliseconds]"        },
+    #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+        {	"status_save",			cli_status_save,		"Save streaming infro to NVM"                   },
+    #endif
 #endif
 };
 
@@ -205,7 +193,7 @@ static uint32_t	gu32_user_table_count = 0;
 	 *
 	 * 	Inside "par_list" there is parameter enumeration number not parameter ID!
 	 */
-	static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_HNDL_PERIOD_MS, .period_cnt = 1, .active = false, .num_of = 0, .par_list = {0} };
+	static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_DEF_STREAM_PER_MS, .period_cnt = (uint32_t)(CLI_CFG_DEF_STREAM_PER_MS/CLI_CFG_HNDL_PERIOD_MS), .active = false, .num_of = 0, .par_list = {0} };
 
 #endif
 
@@ -925,7 +913,7 @@ static void cli_unknown(const uint8_t * p_attr)
     						break;
 
     						default:
-    							CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
+    							CLI_DBG_PRINT( "ERR, Invalid parameter type!" );
     							CLI_ASSERT( 0 );
     						break;
     					}
@@ -1024,7 +1012,7 @@ static void cli_unknown(const uint8_t * p_attr)
     					break;
 
     					default:
-    						CLI_DBG_PRINT( "CLI ERR: Invalid parameter type!" );
+    						CLI_DBG_PRINT( "ERR, Invalid parameter type!" );
     						CLI_ASSERT( 0 );
     					break;
     				}
@@ -1189,6 +1177,39 @@ static void cli_unknown(const uint8_t * p_attr)
 
 	#endif
 
+    #if (( 1 == CLI_CFG_PAR_USE_EN ) && ( 1 == CLI_CFG_STREAM_NVM_EN ))
+
+
+		////////////////////////////////////////////////////////////////////////////////
+		/*!
+		* @brief 		Store streaming informations to NVM
+		*
+		* @note			Command format: >>>status_save
+		*
+		* @param[in] 	attr 	- Inputed command attributes
+		* @return 		void
+		*/
+		////////////////////////////////////////////////////////////////////////////////
+        static void cli_status_save(const uint8_t * p_attr)
+        {
+            if ( NULL == p_attr )
+            {
+				if ( eCLI_OK == cli_nvm_write( &g_cli_live_watch ))
+				{
+					cli_printf( "OK, Streaming info stored to NVM successfully" );
+				}
+				else
+				{
+					cli_printf( "ERR, Error while storing streaming info to NVM!" );
+				} 
+            }
+            else
+            {
+                cli_unknown(NULL);
+            }
+        }
+    #endif
+
 	////////////////////////////////////////////////////////////////////////////////
 	/*!
 	* @brief        Start live watch streaming
@@ -1208,6 +1229,10 @@ static void cli_unknown(const uint8_t * p_attr)
                 g_cli_live_watch.active = true;
 
                 cli_printf( "OK, Streaming started!" );
+
+                #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+                    cli_status_save( NULL );
+                #endif
             }
             else
             {
@@ -1237,6 +1262,10 @@ static void cli_unknown(const uint8_t * p_attr)
 			g_cli_live_watch.active = false;
 
             cli_printf( "OK, Streaming stopped!" );
+
+            #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+                cli_status_save( NULL );
+            #endif
 		}
 		else
 		{
@@ -1269,7 +1298,7 @@ static void cli_unknown(const uint8_t * p_attr)
     		g_cli_live_watch.num_of = 0;
 
     		// Parse live watch request command
-    		while(		( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH )
+    		while(		( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH )
     				&& 	( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
     		{
     			// Get parameter ID by number
@@ -1307,7 +1336,7 @@ static void cli_unknown(const uint8_t * p_attr)
             
             // Check requested live watch paramter list
     		if  (   ( g_cli_live_watch.num_of > 0 ) 
-                &&  ( g_cli_live_watch.num_of <= CLI_PAR_MAX_IN_LIVE_WATCH ))
+                &&  ( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH ))
     		{
     			// Send sample time
     			snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
@@ -1328,6 +1357,10 @@ static void cli_unknown(const uint8_t * p_attr)
 
     			// Terminate line
     			cli_printf("");
+
+                #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+                    cli_status_save( NULL );
+                #endif
     		}
 
             // Raise error only if all valid parameters
@@ -1378,6 +1411,10 @@ static void cli_unknown(const uint8_t * p_attr)
                         g_cli_live_watch.period_cnt = (uint32_t) ( g_cli_live_watch.period / CLI_CFG_HNDL_PERIOD_MS );
 
                         cli_printf( "OK, Period changed to %d ms", g_cli_live_watch.period );
+
+						#if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+							cli_status_save( NULL );
+						#endif
                     }
                     else
                     {
@@ -1752,6 +1789,21 @@ cli_status_t cli_init(void)
 			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 				cli_send_intro();
 			#endif
+
+            #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+
+				// Init NVM
+				if ( eNVM_OK == nvm_init())
+				{
+					// Read streaming info
+					status = cli_nvm_read( &g_cli_live_watch );
+				}
+				else
+				{
+					status = eCLI_ERROR_INIT;
+				}
+
+            #endif
 		}
 	}
 	else
