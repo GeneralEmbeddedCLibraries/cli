@@ -6,8 +6,8 @@
 *@file      cli_cfg.h
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
-*@date      11.09.2022
-*@version   V1.1.0
+*@date      08.12.2022
+*@version   V1.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -120,7 +120,7 @@
 /**
  * 	Enable/Disable parameters usage
  *
- * 	@brief	Usage of device parameters.
+ * 	@note	When enabled Device Parameters must be part of the project!
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
 #define CLI_CFG_PAR_USE_EN						( 1 )
@@ -152,6 +152,9 @@
 
     /**
      *      Enable/Disable storing streaming info to NVM
+     *
+     *  @note   When enabled NVM module must be part of the project!
+     * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/nvm
      */
      #define CLI_CFG_STREAM_NVM_EN              ( 1 )
 

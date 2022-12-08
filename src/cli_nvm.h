@@ -6,8 +6,8 @@
 *@file      cli_nvm.h
 *@brief     Command Line Interface NVM storage
 *@author    Ziga Miklosic
-*@date      06.12.2022
-*@version   V1.1.0
+*@date      08.12.2022
+*@version   V1.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
