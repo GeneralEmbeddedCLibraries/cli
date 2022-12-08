@@ -41,14 +41,6 @@
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
-	#include "middleware/nvm/nvm/src/nvm.h"
-
-	/**
-	 * 	Check NVM module compatibility
-	 */
-	_Static_assert( 1 == NVM_VER_MAJOR );
-	_Static_assert( 0 == NVM_VER_MINOR );
-
 	////////////////////////////////////////////////////////////////////////////////
 	// Definitions
 	////////////////////////////////////////////////////////////////////////////////
