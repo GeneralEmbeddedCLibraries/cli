@@ -249,6 +249,8 @@ Now you have everything setup to use Device Parameters module in combination wit
 
 ### **Storing streaming info to NVM**
 
+Main purpose of storing streaming (live watch) info to NVM is than after power-on or reset of the device you don't have to configure streaming (live watch) config over again. Therefore if using that feature, device will boot and setup stored streaming configuration. Meaning that if device was configured to stream specific parameters for specific measurement it will start sending parameters value right after boot, without any configuration needed. This can save a lot of time when performing extensive measurements.
+
 Streaming (or live watch) info consist of:
  - list of stream paramter enumerations
  - number of parameters in list
