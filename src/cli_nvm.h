@@ -28,7 +28,7 @@
 
 #include "cli.h"
 
-#if ( 1 == CLI_CFG_PAR_USE_EN )
+#if ( 1 == CLI_CFG_STREAM_NVM_EN )
 
 	#include "middleware/nvm/nvm/src/nvm.h"
 
@@ -63,7 +63,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-#if ( 1 == CLI_CFG_PAR_USE_EN )
+#if ( 1 == CLI_CFG_STREAM_NVM_EN )
     cli_status_t cli_nvm_read   (cli_live_watch_t * const p_watch_info);
     cli_status_t cli_nvm_write  (const cli_live_watch_t * const p_watch_info);
 #endif

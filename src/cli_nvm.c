@@ -39,7 +39,7 @@
 
 #include "cli_nvm.h"
 
-#if ( 1 == CLI_CFG_PAR_USE_EN )
+#if ( 1 == CLI_CFG_STREAM_NVM_EN )
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Definitions
