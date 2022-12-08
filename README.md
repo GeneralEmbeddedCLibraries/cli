@@ -284,8 +284,11 @@ Code section from *cli_cfg.h*:
 ```C
 /**
  *      Enable/Disable storing streaming info to NVM
+ *
+ *  @note   When enabled NVM module must be part of the project!
+ * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/nvm
  */
-	#define CLI_CFG_STREAM_NVM_EN              ( 1 )
+#define CLI_CFG_STREAM_NVM_EN              ( 1 )
 
 /**
  *      NVM parameter region option
@@ -293,7 +296,7 @@ Code section from *cli_cfg.h*:
  * 	@note 	User shall select region based on nvm_cfg.h region
  * 			definitions "nvm_region_name_t"
  */
-	#define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
+#define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
 ```
 
 CLI NVM memory layout and field description is shown in picture below:
@@ -305,4 +308,18 @@ Additional option is to enable automatic storage of streaming info via *CLI_CFG_
  - *status_stop*
  - *status_rate* 
 
+Code section from *cli_cfg.h*:
+```C
+/**
+ *     Enable/Disable automatic storage of streaming infor to NVM
+ *
+ * @note   When enabled streaming info is stored on following 
+ *         commands execution:
+ *             - status_des
+ *             - status_start
+ *             - status_stop
+ *			   - status_rate
+*/
+#define CLI_CFG_AUTO_STREAM_STORE_EN      ( 1 )
+```
 
