@@ -1792,8 +1792,17 @@ cli_status_t cli_init(void)
 
             #if ( 1 == CLI_CFG_STREAM_NVM_EN )
 
-                // Read streaming info
-                status = cli_nvm_read( &g_cli_live_watch );
+				// Init NVM
+				if ( eNVM_OK == nvm_init())
+				{
+					// Read streaming info
+					status = cli_nvm_read( &g_cli_live_watch );
+				}
+				else
+				{
+					status = eCLI_ERROR_INIT;
+				}
+
             #endif
 		}
 	}
