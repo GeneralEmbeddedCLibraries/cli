@@ -339,7 +339,7 @@
     
         // Calculate crc over header
 		// NOTE: Ignore signature in header!
-        crc16 = cli_nvm_calc_crc((uint8_t*) p_header->stream_period, sizeof( cli_nvm_head_obj_t));
+        crc16 = cli_nvm_calc_crc((uint8_t*) &p_header->stream_period, sizeof( cli_nvm_head_obj_t));
 
         // Calculate crc over parameter list
         crc16 ^= cli_nvm_calc_crc((uint8_t*) p_par_list, CLI_CFG_PAR_MAX_IN_LIVE_WATCH );
