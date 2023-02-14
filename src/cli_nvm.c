@@ -123,6 +123,8 @@
 	static cli_status_t cli_nvm_write_par_list  (const uint16_t * const p_par_list);
 	static uint16_t 	cli_nvm_calc_crc		(const uint8_t * const p_data, const uint8_t size);
 	static uint16_t     cli_nvm_calc_crc_whole  (const cli_nvm_head_obj_t * const p_header, const uint16_t * const p_par_list);
+    static cli_status_t cli_nvm_sync            (void);
+
 
 	////////////////////////////////////////////////////////////////////////////////
 	// Variables
@@ -339,12 +341,31 @@
     
         // Calculate crc over header
 		// NOTE: Ignore signature in header!
-        crc16 = cli_nvm_calc_crc((uint8_t*) &p_header->stream_period, sizeof( cli_nvm_head_obj_t));
+        crc16 = cli_nvm_calc_crc((uint8_t*) &(p_header->stream_period), sizeof( cli_nvm_head_obj_t));
 
         // Calculate crc over parameter list
         crc16 ^= cli_nvm_calc_crc((uint8_t*) p_par_list, CLI_CFG_PAR_MAX_IN_LIVE_WATCH );
 
         return crc16;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+	/**
+	*		Sync NVM module
+	*
+	* @return		status - Status of operation
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+    static cli_status_t cli_nvm_sync(void)
+    {
+        cli_status_t status = eCLI_OK;
+
+        if ( eNVM_OK != nvm_sync( CLI_CFG_NVM_REGION ))
+        {
+            status = eCLI_ERROR_NVM;
+        }
+
+        return status;       
     }
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -405,7 +426,7 @@
                     if ( crc_calc == header.crc )
                     {
                         // Return readed streaming info
-                        memcpy((uint8_t*) p_watch_info->par_list, (uint8_t*) &par_list, ( sizeof(uint16_t) * header.num_of ));
+                        memcpy((uint8_t*) &p_watch_info->par_list, (uint8_t*) &par_list, ( sizeof(uint16_t) * header.num_of ));
                         p_watch_info->num_of = header.num_of;
                         p_watch_info->period = header.stream_period;
                         p_watch_info->active = header.active;
@@ -413,12 +434,20 @@
                         // Calculate period counts
                         p_watch_info->period_cnt = (uint32_t) ( p_watch_info->period / CLI_CFG_HNDL_PERIOD_MS );
                     }
+
+                    // CRC corrupted
+                    else
+                    {
+                        status = eCLI_ERROR;
+                        cli_printf( "ERR, CLI NVM CRC corrupted!" );                        
+                    }
                 }
 
                 // Signature corrupted
                 else
                 {
                     status = eCLI_ERROR;
+                    cli_printf( "ERR, CLI NVM signature corrupted!" );
                 }
             }
         }
@@ -469,6 +498,9 @@
 
             // Write signature (exit critical)
             status |= cli_nvm_write_signature();
+
+            // Sync NVM
+            status |= cli_nvm_sync();
         }
         else
         {
