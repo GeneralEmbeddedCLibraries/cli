@@ -7,8 +7,11 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 ---
 ## V1.3.0 - xx.xx.2022
 
+### Added 
+ - Streaming configuration info
+
 ### Fixed
- - Configuration cont compilable when parameters are enabled and NVM is disabled
+ - Configuration not compilable when parameters are enabled and NVM is disabled
 
 ---
 ## V1.2.0 - 08.12.2022
