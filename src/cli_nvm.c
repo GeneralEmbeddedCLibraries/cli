@@ -340,7 +340,7 @@
         uint16_t crc16 = 0;
     
         // Calculate crc over header
-		// NOTE: Ignore signature in header!
+		// NOTE: Ignore signature & CRC in header!
         crc16 = cli_nvm_calc_crc((uint8_t*) &(p_header->stream_period), ( CLI_NVM_STREAM_PERIOD_SIZE + CLI_NVM_NUMBER_OF_SIZE + CLI_NVM_STREAM_ACTIVE_SIZE ));
 
         // Calculate crc over parameter list
