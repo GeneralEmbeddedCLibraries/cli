@@ -1451,30 +1451,30 @@ static void cli_unknown(const uint8_t * p_attr)
 	////////////////////////////////////////////////////////////////////////////////
     static void cli_status_info(const uint8_t * p_attr)
     {
-        static uint8_t par_enum_str[32] = {0};
+        uint16_t par_id = 0U;
 
-        if ( NULL != p_attr )
+        if ( NULL == p_attr )
         {
-            cli_printf( "--------------------------------------------------------" );
-    		cli_printf( "        Streaming Config Info" );
-    		cli_printf( "--------------------------------------------------------" );
+            // Send streaming info as
+            // OK, PERIOD,ACTIVE,NUM_OF,PAR_LIST
+            sprintf((char*) &gu8_tx_buffer, "OK, %d,%d,%d", g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );  
+            cli_send_str( gu8_tx_buffer );
 
-            cli_printf( " Streaming period: %d ms", g_cli_live_watch.period );
-            cli_printf( "            State: %s", (( true == g_cli_live_watch.active ) ? "ON" : "OFF" ));
-            cli_printf( "      Num of pars: %d", g_cli_live_watch.num_of );
-            
-
-            for ( uint32_t par = 0U; par < g_cli_live_watch.num_of; par++)
+            // Print streaming parameters/variables
+            for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
             {
-                sprintf( &par_enum_str[5*par], "%3d, ", g_cli_live_watch.par_list[par] );
+                // Get parameter ID
+                (void) par_get_id( g_cli_live_watch.par_list[par_idx], &par_id );
+
+                // Format string with parameters info
+                sprintf((char*) &gu8_tx_buffer, ",%d", par_id );
+
+                // Send
+                cli_send_str( gu8_tx_buffer );
             }
 
-
-
-            cli_printf( "        Par enums: %s", par_enum_str );
-
-
-    		cli_printf( "--------------------------------------------------------" );
+            // Terminate line
+            cli_printf("");
         }
         else
 		{
