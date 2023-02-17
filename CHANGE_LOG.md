@@ -5,14 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V1.3.0 - xx.xx.2022
+## V1.3.0 - 17.02.2022
 
 ### Added 
  - Streaming configuration info
- - Added new configuration to enable/disable legacy mode
+ - Added new configuration to enable/disable legacy mode (Legacy mode support CLI interface formate for PC tool up to V0.2.0)
+
+### Changed
+ - Parameter print command has different format (it is not back-compatible, therefore legacy mode config is added)
 
 ### Fixed
  - Configuration not compilable when parameters are enabled and NVM is disabled
+ - CLI NVM header CRC calculation bug fix
 
 ---
 ## V1.2.0 - 08.12.2022
