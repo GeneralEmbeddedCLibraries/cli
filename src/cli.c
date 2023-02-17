@@ -95,6 +95,7 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static void 		cli_status_stop  		(const uint8_t * p_attr);
 	static void 		cli_status_des  		(const uint8_t * p_attr);
 	static void 		cli_status_rate  		(const uint8_t * p_attr);
+	static void 		cli_status_info  		(const uint8_t * p_attr);
 	static float32_t 	cli_par_val_to_float	(const par_type_list_t par_type, const void * p_val);
 	static void			cli_par_live_watch_hndl	(void);
 	static void 		cli_par_group_print		(const par_num_t par_num);
@@ -159,14 +160,15 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"par_def_all",			cli_par_def_all,    	"Set all parameters to default"						},
 	{	"par_save",				cli_par_store,	    	"Save parameter to NVM"								},
 	#if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
-		{	"par_save_clean",		cli_par_store_reset,	"Clean saved parameters space in NVM"				},
+		{	"par_save_clean",		cli_par_store_reset,	"Clean saved parameters space in NVM"           },
 	#endif
 	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
 	{	"status_rate",			cli_status_rate,		"Change data streaming period [miliseconds]"        },
+	{	"status_info",			cli_status_info,		"Get streaming configuration info"                  },
     #if ( 1 == CLI_CFG_STREAM_NVM_EN )
-        {	"status_save",			cli_status_save,		"Save streaming infro to NVM"                   },
+        {	"status_save",			cli_status_save,		"Save streaming into to NVM"                    },
     #endif
 #endif
 };
@@ -1435,6 +1437,49 @@ static void cli_unknown(const uint8_t * p_attr)
 		{
 			cli_unknown(NULL);
 		}
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Get streaming configuration info
+	*
+	* @note			Command format: >>>status_info
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+    static void cli_status_info(const uint8_t * p_attr)
+    {
+        uint16_t par_id = 0U;
+
+        if ( NULL == p_attr )
+        {
+            // Send streaming info as
+            // OK, PERIOD,ACTIVE,NUM_OF,PAR_LIST
+            sprintf((char*) &gu8_tx_buffer, "OK, %d,%d,%d", g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );  
+            cli_send_str( gu8_tx_buffer );
+
+            // Print streaming parameters/variables
+            for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
+            {
+                // Get parameter ID
+                (void) par_get_id( g_cli_live_watch.par_list[par_idx], &par_id );
+
+                // Format string with parameters info
+                sprintf((char*) &gu8_tx_buffer, ",%d", par_id );
+
+                // Send
+                cli_send_str( gu8_tx_buffer );
+            }
+
+            // Terminate line
+            cli_printf("");
+        }
+        else
+		{
+			cli_unknown(NULL);
+		}        
     }
 
 	////////////////////////////////////////////////////////////////////////////////
