@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Ziga Miklosic
+// Copyright (c) 2023 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -6,8 +6,9 @@
 *@file      cli_cfg.h
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
-*@date      08.12.2022
-*@version   V1.2.0
+*@email     ziga.miklosic@gmail.com
+*@date      17.02.2023
+*@version   V1.3.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -56,7 +57,7 @@
 	/**
 	 * 	Intro strings
 	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "RND Thermal Modeling" )
+	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "nRF52840 Dev Board Base Code" )
 	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
 	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
 	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
@@ -75,7 +76,7 @@
 /**
  * 	Transmission buffer size in bytes
  */
-#define CLI_CFG_TX_BUF_SIZE						( 512 )
+#define CLI_CFG_TX_BUF_SIZE						( 1024 )
 
 /**
  * 	Reception buffer size in bytes
@@ -164,7 +165,7 @@
 	 * 	@note 	User shall select region based on nvm_cfg.h region
 	 * 			definitions "nvm_region_name_t"
 	 */
-     #define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
+     #define CLI_CFG_NVM_REGION                 ( eNVM_REGION_INT_FLASH_CLI )
 
      /**
       *     Enable/Disable automatic storage of streaming infor to NVM
@@ -179,6 +180,13 @@
       #define CLI_CFG_AUTO_STREAM_STORE_EN      ( 0 )
 
 #endif
+
+/**
+ *  Enable/Disable legacy mode
+ *
+ * @note    Legacy mode is compatible with PC tool V0.2.0!
+ */
+#define CLI_CFG_LEGACY_EN                       ( 0 )
 
 /**
  * 	Enable/Disable debug mode
@@ -216,6 +224,8 @@ typedef enum
 	// USER_CODE_BEGIN
 
 	eCLI_CH_APP,
+    eCLI_CH_BLE_P,
+    eCLI_CH_BLE_C,
 
 	// USER_CODE_END
 
