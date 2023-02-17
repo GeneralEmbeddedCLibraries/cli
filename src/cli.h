@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Ziga Miklosic
+// Copyright (c) 2023 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -6,8 +6,9 @@
 *@file      cli.h
 *@brief     Command Line Interface API
 *@author    Ziga Miklosic
-*@date      08.12.2022
-*@version   V1.2.0
+*@email     ziga.miklosic@gmail.com
+*@date      17.02.2023
+*@version   V1.3.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -36,7 +37,7 @@
  * 	Module version
  */
 #define CLI_VER_MAJOR		( 1 )
-#define CLI_VER_MINOR		( 2 )
+#define CLI_VER_MINOR		( 3 )
 #define CLI_VER_DEVELOP		( 0 )
 
 /**
