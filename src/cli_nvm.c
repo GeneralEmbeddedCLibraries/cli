@@ -306,13 +306,13 @@
         CLI_ASSERT( NULL != p_data );
         CLI_ASSERT( size > 0 );
 
-        for (uint8_t i = 0; i < size; i++)
+        for ( uint8_t i = 0; i < size; i++ )
         {
             crc16 = ( crc16 ^ ( p_data[i] << 8U ));
 
-            for (uint8_t j = 0U; j < 8U; j++)
+            for  (uint8_t j = 0U; j < 8U; j++ )
             {
-                if (crc16 & 0x8000)
+                if ( crc16 & 0x8000U )
                 {
                     crc16 = (( crc16 << 1U ) ^ poly );
                 }
@@ -399,7 +399,7 @@
     cli_status_t cli_nvm_read(cli_live_watch_t * const p_watch_info)
     {
                 cli_status_t        status                                  = eCLI_OK;
-                cli_nvm_head_obj_t  header                                  = { 0 };
+                cli_nvm_head_obj_t  header                                  = {0};
         static  uint16_t            par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH] = {0};
                 uint16_t            crc_calc                                = 0;
 
