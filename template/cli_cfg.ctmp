@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Ziga Miklosic
+// Copyright (c) 2023 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -6,8 +6,9 @@
 *@file      cli_cfg.c
 *@brief     Command Line Interface Configuration
 *@author    Ziga Miklosic
-*@date      08.12.2022
-*@version   V1.2.0
+*@email     ziga.miklosic@gmail.com
+*@date      17.02.2023
+*@version   V1.3.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -69,6 +70,8 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 	[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = true 				},
 	[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = true 				},
 	[eCLI_CH_APP] 		= {	.name = "APP",				.en = true 				},
+	[eCLI_CH_BLE_P]  	= {	.name = "BLE_P",			.en = false 			},
+	[eCLI_CH_BLE_C]  	= {	.name = "BLE_C",			.en = false 			},
 
 	// USER_CODE_BEGIN
 
@@ -95,13 +98,13 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 		//	Group start parameter						Group name
 		// --------------------------------------------------------------------------------------------
 		
-		{ 	.par_num = ePAR_BTN_PWR,					.name="BUTTON STATES" 						},
-		{ 	.par_num = ePAR_ADC_TEMP_INT,				.name="RAW ADC MEASUREMENTS"				},
-		{ 	.par_num = ePAR_TEMP_INT_LPF_FC,            .name="TEMPERATURE FILTER SETTINGS"         },
-		{ 	.par_num = ePAR_TEMP_INT,                   .name="TEMPERATURE MEASUREMENTS"            },
-		{ 	.par_num = ePAR_BAT_VOL,                    .name="BATTERY MEASUREMENTS"                },
-		{ 	.par_num = ePAR_RELAY_STATE,                .name="RELAY CONTROL"                       },
-		{ 	.par_num = ePAR_BUZZER_EN,					.name="HMI SETTINGS"				        },
+		{ 	.par_num = ePAR_BTN_1,						.name="BUTTON STATE" 						},
+		{ 	.par_num = ePAR_AIN_1,						.name="ADC VALUES"	 						},
+		{ 	.par_num = ePAR_BLE_ROLE,                   .name="BLE General Status"                  },
+		{ 	.par_num = ePAR_BLE_C_CONN_NUM,             .name="BLE Central Device Status"           },
+		{ 	.par_num = ePAR_SYS_STATUS,                 .name="GENERAL SYSTEM STATUS"               },
+		{ 	.par_num = ePAR_RST_CNT_PIN,                .name="SYSTEM RESET COUNTERS"               },
+
 
 		// USER CODE END
 	};

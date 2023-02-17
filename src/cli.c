@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Ziga Miklosic
+// Copyright (c) 2023 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -6,8 +6,9 @@
 *@file      cli.c
 *@brief     Command Line Interface
 *@author    Ziga Miklosic
-*@date      08.12.2022
-*@version   V1.2.0
+*@email     ziga.miklosic@gmail.com
+*@date      17.02.2023
+*@version   V1.3.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -37,10 +38,10 @@
 	/**
 	 * 	Compatibility check with Parameters module
 	 *
-	 * 	Support version V1.3.x
+	 * 	Support version V2.0.x
 	 */
-	_Static_assert( 1 == PAR_VER_MAJOR );
-	_Static_assert( 3 <= PAR_VER_MINOR );
+	_Static_assert( 2 == PAR_VER_MAJOR );
+	_Static_assert( 0 <= PAR_VER_MINOR );
 
 #endif
 
@@ -85,19 +86,24 @@ static void cli_ch_en  			(const uint8_t * p_attr);
 static void cli_unknown	  		(const uint8_t * p_attr);
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-	static void 		cli_par_print	  		(const uint8_t * p_attr);
-	static void 		cli_par_set		  		(const uint8_t * p_attr);
-	static void 		cli_par_get		  		(const uint8_t * p_attr);
-	static void 		cli_par_def		  		(const uint8_t * p_attr);
-	static void 		cli_par_def_all	  		(const uint8_t * p_attr);
-	static void 		cli_par_store	  		(const uint8_t * p_attr);
-	static void 		cli_status_start  		(const uint8_t * p_attr);
-	static void 		cli_status_stop  		(const uint8_t * p_attr);
-	static void 		cli_status_des  		(const uint8_t * p_attr);
-	static void 		cli_status_rate  		(const uint8_t * p_attr);
-	static float32_t 	cli_par_val_to_float	(const par_type_list_t par_type, const void * p_val);
-	static void			cli_par_live_watch_hndl	(void);
-	static void 		cli_par_group_print		(const par_num_t par_num);
+    static void         cli_par_print_info_legacy   (const par_cfg_t * const p_par_cfg, const uint32_t par_val);
+    static void         cli_par_print_info          (const par_cfg_t * const p_par_cfg, const uint32_t par_val);
+    static void         cli_par_print_header_legacy (void);
+    static void         cli_par_print_header        (void);
+	static void 		cli_par_print               (const uint8_t * p_attr);
+	static void 		cli_par_set                 (const uint8_t * p_attr);
+	static void 		cli_par_get                 (const uint8_t * p_attr);
+	static void 		cli_par_def                 (const uint8_t * p_attr);
+	static void 		cli_par_def_all	  		    (const uint8_t * p_attr);
+	static void 		cli_par_store	  		    (const uint8_t * p_attr);
+	static void 		cli_status_start  		    (const uint8_t * p_attr);
+	static void 		cli_status_stop  		    (const uint8_t * p_attr);
+	static void 		cli_status_des  		    (const uint8_t * p_attr);
+	static void 		cli_status_rate  		    (const uint8_t * p_attr);
+	static void 		cli_status_info  		    (const uint8_t * p_attr);
+	static float32_t 	cli_par_val_to_float	    (const par_type_list_t par_type, const void * p_val);
+	static void			cli_par_live_watch_hndl	    (void);
+	static void 		cli_par_group_print		    (const par_num_t par_num);
 
 	#if ( 1 == CLI_CFG_DEBUG_EN )
 		static void cli_par_store_reset(const uint8_t * p_attr);
@@ -159,14 +165,15 @@ static cli_cmd_t g_cli_basic_table[] =
 	{	"par_def_all",			cli_par_def_all,    	"Set all parameters to default"						},
 	{	"par_save",				cli_par_store,	    	"Save parameter to NVM"								},
 	#if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
-		{	"par_save_clean",		cli_par_store_reset,	"Clean saved parameters space in NVM"				},
+		{	"par_save_clean",		cli_par_store_reset,	"Clean saved parameters space in NVM"           },
 	#endif
 	{	"status_start", 		cli_status_start,		"Start data streaming"  			 				},
 	{	"status_stop", 			cli_status_stop,		"Stop data streaming"	  			 				},
 	{	"status_des",			cli_status_des,			"Status description"	  			 				},
 	{	"status_rate",			cli_status_rate,		"Change data streaming period [miliseconds]"        },
+	{	"status_info",			cli_status_info,		"Get streaming configuration info"                  },
     #if ( 1 == CLI_CFG_STREAM_NVM_EN )
-        {	"status_save",			cli_status_save,		"Save streaming infro to NVM"                   },
+        {	"status_save",			cli_status_save,		"Save streaming into to NVM"                    },
     #endif
 #endif
 };
@@ -763,6 +770,121 @@ static void cli_unknown(const uint8_t * p_attr)
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
+    ////////////////////////////////////////////////////////////////////////////////
+    /*!
+    * @brief        Print parameter information in legacy format
+    *
+    * @note     Sending parameter informations in following format:
+    *
+    *           >>>ID, Name, Value, Default, Min, Max, Description,f,4
+    *
+    * @param[in]	p_par_cfg   - Pointer to paramter configurations
+    * @param[in]	par_val     - Parameter value
+    * @return       void
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static void cli_par_print_info_legacy(const par_cfg_t * const p_par_cfg, const uint32_t par_val)
+    {
+        // Parameter has description
+        if ( NULL != p_par_cfg->desc )
+        {
+            // Par info response
+            cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4",
+                    (int) p_par_cfg->id,
+                    p_par_cfg->name,
+                    cli_par_val_to_float( p_par_cfg->type, &par_val ),
+                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->def.u32 )),
+                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->min.u32 )),
+                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->max.u32 )),
+                    p_par_cfg->desc );
+        }
+        else
+        {
+            // Par info response
+            cli_printf("%u, %s, %g, %g, %g, %g, ,f,4",
+                    (int) p_par_cfg->id,
+                    p_par_cfg->name,
+                    cli_par_val_to_float( p_par_cfg->type, &par_val ),
+                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->def.u32 )),
+                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->min.u32 )),
+                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->max.u32 )));
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /*!
+    * @brief        Print parameter information 
+    *
+    * @note     Sending parameter informations in following format:
+    *
+    *           >>>ID,Name,Value,Default,Min,Max,Unit,Type,Access,Persistance,Description
+    *
+    * @param[in]	p_par_cfg   - Pointer to paramter configurations
+    * @param[in]	par_val     - Parameter value
+    * @return       void
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static void cli_par_print_info(const par_cfg_t * const p_par_cfg, const uint32_t par_val)
+    {
+        char * unit_str = "";
+        char * desc_str = "";
+
+        // Unit defined -> replace empty string
+        if ( NULL != p_par_cfg->unit )
+        {
+           unit_str = (char*) p_par_cfg->unit;
+        }
+
+        // Description defined -> replace empty string
+        if ( NULL != p_par_cfg->desc )
+        {
+           desc_str = (char*) p_par_cfg->desc;
+        }
+
+        // Par info response
+        cli_printf( "%u,%s,%g,%g,%g,%g,%s,%d,%d,%d,%s",
+                (int) p_par_cfg->id,
+                p_par_cfg->name,
+                cli_par_val_to_float( p_par_cfg->type, &par_val ),
+                cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->def.u32 )),
+                cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->min.u32 )),
+                cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->max.u32 )),
+                unit_str,
+                p_par_cfg->type,
+                p_par_cfg->access,
+                p_par_cfg->persistant,
+                desc_str );
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /*!
+    * @brief        Print parameter info header in legacy mode
+    *
+    * @return       void
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static void cli_par_print_header_legacy(void)
+    {
+        cli_printf( ";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level" );
+        cli_printf( ":PARAMETER ACCESS LEGEND" );
+        cli_printf( ":RO - Read Only" );
+        cli_printf( ":RW - Read Write" );
+        cli_printf( ": " );        
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /*!
+    * @brief        Print parameter info header
+    *
+    * @return       void
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static void cli_par_print_header(void)
+    {
+        cli_printf( ";ID,Name,Value,Def,Min,Max,Unit,Type,Access,Persistance,Description" );
+        cli_printf( ": " );    
+    }
+
 	////////////////////////////////////////////////////////////////////////////////
 	/*!
 	* @brief 		Print parameter details
@@ -782,12 +904,11 @@ static void cli_unknown(const uint8_t * p_attr)
 		if ( NULL == p_attr )
 		{
 			// Send header
-			cli_printf(";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level");
-
-			cli_printf( ":PARAMETER ACCESS LEGEND" );
-			cli_printf( ":RO - Read Only" );
-			cli_printf( ":RW - Read Write" );
-			cli_printf( ": " );
+            #if ( 1 == CLI_CFG_LEGACY_EN )
+                cli_par_print_header_legacy();
+            #else
+                cli_par_print_header();
+            #endif
 
 			// For each parameter
 			for ( par_num = 0; par_num < ePAR_NUM_OF; par_num++ )
@@ -800,31 +921,13 @@ static void cli_unknown(const uint8_t * p_attr)
 
 				// Print group name
 				cli_par_group_print( par_num );
-
-				// Parameter has description
-				if ( NULL != par_cfg.desc )
-				{
-					// Par info response
-					cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4",
-							(int) par_cfg.id,
-							par_cfg.name,
-							cli_par_val_to_float( par_cfg.type, &par_val ),
-							cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
-							cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
-							cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ),
-							par_cfg.desc );
-				}
-				else
-				{
-					// Par info response
-					cli_printf("%u, %s, %g, %g, %g, %g, ,f,4",
-							(int) par_cfg.id,
-							par_cfg.name,
-							cli_par_val_to_float( par_cfg.type, &par_val ),
-							cli_par_val_to_float( par_cfg.type, &par_cfg.def.u32 ),
-							cli_par_val_to_float( par_cfg.type, &par_cfg.min.u32 ),
-							cli_par_val_to_float( par_cfg.type, &par_cfg.max.u32 ));
-				}
+                
+                // Print parameter info
+                #if ( 1 == CLI_CFG_LEGACY_EN )
+                    cli_par_print_info_legacy((const par_cfg_t*) &par_cfg, par_val ); 
+                #else
+                    cli_par_print_info((const par_cfg_t*) &par_cfg, par_val ); 
+                #endif
 			}
 
 			// Table termination string
@@ -1435,6 +1538,49 @@ static void cli_unknown(const uint8_t * p_attr)
 		{
 			cli_unknown(NULL);
 		}
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+	/*!
+	* @brief        Get streaming configuration info
+	*
+	* @note			Command format: >>>status_info
+	*
+	* @param[in] 	attr 	- Inputed command attributes
+	* @return       void
+	*/
+	////////////////////////////////////////////////////////////////////////////////
+    static void cli_status_info(const uint8_t * p_attr)
+    {
+        uint16_t par_id = 0U;
+
+        if ( NULL == p_attr )
+        {
+            // Send streaming info as
+            // OK, PERIOD,ACTIVE,NUM_OF,PAR_LIST
+            sprintf((char*) &gu8_tx_buffer, "OK, %d,%d,%d", g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );  
+            cli_send_str( gu8_tx_buffer );
+
+            // Print streaming parameters/variables
+            for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
+            {
+                // Get parameter ID
+                (void) par_get_id( g_cli_live_watch.par_list[par_idx], &par_id );
+
+                // Format string with parameters info
+                sprintf((char*) &gu8_tx_buffer, ",%d", par_id );
+
+                // Send
+                cli_send_str( gu8_tx_buffer );
+            }
+
+            // Terminate line
+            cli_printf("");
+        }
+        else
+		{
+			cli_unknown(NULL);
+		}        
     }
 
 	////////////////////////////////////////////////////////////////////////////////

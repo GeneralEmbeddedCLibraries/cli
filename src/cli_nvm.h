@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Ziga Miklosic
+// Copyright (c) 2023 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -6,8 +6,9 @@
 *@file      cli_nvm.h
 *@brief     Command Line Interface NVM storage
 *@author    Ziga Miklosic
-*@date      08.12.2022
-*@version   V1.2.0
+*@email     ziga.miklosic@gmail.com
+*@date      17.02.2023
+*@version   V1.3.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -28,15 +29,15 @@
 
 #include "cli.h"
 
-#if ( 1 == CLI_CFG_PAR_USE_EN )
+#if ( 1 == CLI_CFG_STREAM_NVM_EN )
 
 	#include "middleware/nvm/nvm/src/nvm.h"
 
 	/**
 	 * 	Check NVM module compatibility
 	 */
-	_Static_assert( 1 == NVM_VER_MAJOR );
-	_Static_assert( 0 == NVM_VER_MINOR );
+	_Static_assert( 2 == NVM_VER_MAJOR );
+	_Static_assert( 1 <= NVM_VER_MINOR );
 
 #endif
 
@@ -63,7 +64,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-#if ( 1 == CLI_CFG_PAR_USE_EN )
+#if ( 1 == CLI_CFG_STREAM_NVM_EN )
     cli_status_t cli_nvm_read   (cli_live_watch_t * const p_watch_info);
     cli_status_t cli_nvm_write  (const cli_live_watch_t * const p_watch_info);
 #endif
