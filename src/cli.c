@@ -816,7 +816,7 @@ static void cli_unknown(const uint8_t * p_attr)
     *
     * @note     Sending parameter informations in following format:
     *
-    *           >>>ID,Name,Value,Default,Min,Max,Unit,Type,Access,Description
+    *           >>>ID,Name,Value,Default,Min,Max,Unit,Type,Access,Persistance,Description
     *
     * @param[in]	p_par_cfg   - Pointer to paramter configurations
     * @param[in]	par_val     - Parameter value
@@ -841,7 +841,7 @@ static void cli_unknown(const uint8_t * p_attr)
         }
 
         // Par info response
-        cli_printf( "%u,%s,%g,%g,%g,%g,%s,%d,%d,%s",
+        cli_printf( "%u,%s,%g,%g,%g,%g,%s,%d,%d,%d,%s",
                 (int) p_par_cfg->id,
                 p_par_cfg->name,
                 cli_par_val_to_float( p_par_cfg->type, &par_val ),
@@ -851,6 +851,7 @@ static void cli_unknown(const uint8_t * p_attr)
                 unit_str,
                 p_par_cfg->type,
                 p_par_cfg->access,
+                p_par_cfg->persistant,
                 desc_str );
     }
 
@@ -879,7 +880,7 @@ static void cli_unknown(const uint8_t * p_attr)
     ////////////////////////////////////////////////////////////////////////////////
     static void cli_par_print_header(void)
     {
-        cli_printf(";ID,Name,Value,Def,Min,Max,Unit,Type,Access,Description");
+        cli_printf(";ID,Name,Value,Def,Min,Max,Unit,Type,Access,Persistance,Description");
         cli_printf( ": " );    
     }
 
