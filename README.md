@@ -78,6 +78,7 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_STREAM_NVM_EN** 			| Enable/Disable storing streaming info to NVM. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_NVM_REGION** 				| CLI NVM region space. (Applicable only if CLI_CFG_STREAM_NVM_EN=1) |
 | **CLI_CFG_AUTO_STREAM_STORE_EN** 		| Enable/Disable automatic storing of streaming info to NVM. (Applicable only if CLI_CFG_STREAM_NVM_EN=1). If enabled streaming info will be stored after following command is executed: *status_des*, *status_start*, *status_stop* and *status_rate*. |
+| **CLI_CFG_LEGACY_EN** 				| Enable/Disable legacy mode. (Legacy mode is compatible with PC tool up to V0.2.0) |
 | **CLI_CFG_DEBUG_EN** 					| Enable/Disable debugging mode. |
 | **CLI_CFG_ASSERT_EN** 				| Enable/Disable asserts. Shall be disabled in release build! |
 | **CLI_ASSERT** 						| Definition of assert |

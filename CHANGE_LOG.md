@@ -9,6 +9,7 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 
 ### Added 
  - Streaming configuration info
+ - Added new configuration to enable/disable legacy mode
 
 ### Fixed
  - Configuration not compilable when parameters are enabled and NVM is disabled
