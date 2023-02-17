@@ -864,7 +864,7 @@ static void cli_unknown(const uint8_t * p_attr)
     ////////////////////////////////////////////////////////////////////////////////
     static void cli_par_print_header_legacy(void)
     {
-        cli_printf(";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level");
+        cli_printf( ";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level" );
         cli_printf( ":PARAMETER ACCESS LEGEND" );
         cli_printf( ":RO - Read Only" );
         cli_printf( ":RW - Read Write" );
@@ -880,7 +880,7 @@ static void cli_unknown(const uint8_t * p_attr)
     ////////////////////////////////////////////////////////////////////////////////
     static void cli_par_print_header(void)
     {
-        cli_printf(";ID,Name,Value,Def,Min,Max,Unit,Type,Access,Persistance,Description");
+        cli_printf( ";ID,Name,Value,Def,Min,Max,Unit,Type,Access,Persistance,Description" );
         cli_printf( ": " );    
     }
 
