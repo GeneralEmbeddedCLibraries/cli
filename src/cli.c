@@ -120,7 +120,7 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 
 static bool 			cli_validate_user_table	(const cli_cmd_table_t * const p_cmd_table);
 static const char * 	cli_find_char			(const char * const str, const char target_char, const uint32_t size);
-static const int32_t 	cli_find_char_pos		(const char * const str, const char target_char, const uint32_t size);
+static int32_t 	        cli_find_char_pos		(const char * const str, const char target_char, const uint32_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -765,6 +765,8 @@ static void cli_ch_en(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_unknown(const uint8_t * p_attr)
 {
+    (void) p_attr;
+
 	cli_printf( "ERR, Unknown command!" );
 }
 
@@ -1865,7 +1867,7 @@ static const char * cli_find_char(const char * const str, const char target_char
 * @return		pos				- Position of target char inside string
 */
 ////////////////////////////////////////////////////////////////////////////////
-static const int32_t cli_find_char_pos(const char * const str, const char target_char, const uint32_t size)
+static int32_t cli_find_char_pos(const char * const str, const char target_char, const uint32_t size)
 {
 	int32_t 	pos = -1;
 	uint32_t 	ch 	= 0;
