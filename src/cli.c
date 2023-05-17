@@ -86,10 +86,15 @@ static void cli_ch_en  			(const uint8_t * p_attr);
 static void cli_unknown	  		(const uint8_t * p_attr);
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-    static void         cli_par_print_info_legacy   (const par_cfg_t * const p_par_cfg, const uint32_t par_val);
+
     static void         cli_par_print_info          (const par_cfg_t * const p_par_cfg, const uint32_t par_val);
-    static void         cli_par_print_header_legacy (void);
     static void         cli_par_print_header        (void);
+
+	#if ( 1 == CLI_CFG_LEGACY_EN )
+		static void         cli_par_print_info_legacy   (const par_cfg_t * const p_par_cfg, const uint32_t par_val);
+		static void         cli_par_print_header_legacy (void);
+	#endif
+
 	static void 		cli_par_print               (const uint8_t * p_attr);
 	static void 		cli_par_set                 (const uint8_t * p_attr);
 	static void 		cli_par_get                 (const uint8_t * p_attr);
@@ -105,7 +110,7 @@ static void cli_unknown	  		(const uint8_t * p_attr);
 	static void			cli_par_live_watch_hndl	    (void);
 	static void 		cli_par_group_print		    (const par_num_t par_num);
 
-	#if ( 1 == CLI_CFG_DEBUG_EN )
+	#if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
 		static void cli_par_store_reset(const uint8_t * p_attr);
 	#endif
 
@@ -772,46 +777,48 @@ static void cli_unknown(const uint8_t * p_attr)
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
-    ////////////////////////////////////////////////////////////////////////////////
-    /*!
-    * @brief        Print parameter information in legacy format
-    *
-    * @note     Sending parameter informations in following format:
-    *
-    *           >>>ID, Name, Value, Default, Min, Max, Description,f,4
-    *
-    * @param[in]	p_par_cfg   - Pointer to paramter configurations
-    * @param[in]	par_val     - Parameter value
-    * @return       void
-    */
-    ////////////////////////////////////////////////////////////////////////////////
-    static void cli_par_print_info_legacy(const par_cfg_t * const p_par_cfg, const uint32_t par_val)
-    {
-        // Parameter has description
-        if ( NULL != p_par_cfg->desc )
-        {
-            // Par info response
-            cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4",
-                    (int) p_par_cfg->id,
-                    p_par_cfg->name,
-                    cli_par_val_to_float( p_par_cfg->type, &par_val ),
-                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->def.u32 )),
-                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->min.u32 )),
-                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->max.u32 )),
-                    p_par_cfg->desc );
-        }
-        else
-        {
-            // Par info response
-            cli_printf("%u, %s, %g, %g, %g, %g, ,f,4",
-                    (int) p_par_cfg->id,
-                    p_par_cfg->name,
-                    cli_par_val_to_float( p_par_cfg->type, &par_val ),
-                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->def.u32 )),
-                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->min.u32 )),
-                    cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->max.u32 )));
-        }
-    }
+	#if ( 1 == CLI_CFG_LEGACY_EN )
+		////////////////////////////////////////////////////////////////////////////////
+		/*!
+		* @brief        Print parameter information in legacy format
+		*
+		* @note     Sending parameter informations in following format:
+		*
+		*           >>>ID, Name, Value, Default, Min, Max, Description,f,4
+		*
+		* @param[in]	p_par_cfg   - Pointer to paramter configurations
+		* @param[in]	par_val     - Parameter value
+		* @return       void
+		*/
+		////////////////////////////////////////////////////////////////////////////////
+		static void cli_par_print_info_legacy(const par_cfg_t * const p_par_cfg, const uint32_t par_val)
+		{
+			// Parameter has description
+			if ( NULL != p_par_cfg->desc )
+			{
+				// Par info response
+				cli_printf( "%u, %s, %g, %g, %g, %g, %s,f,4",
+						(int) p_par_cfg->id,
+						p_par_cfg->name,
+						cli_par_val_to_float( p_par_cfg->type, &par_val ),
+						cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->def.u32 )),
+						cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->min.u32 )),
+						cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->max.u32 )),
+						p_par_cfg->desc );
+			}
+			else
+			{
+				// Par info response
+				cli_printf("%u, %s, %g, %g, %g, %g, ,f,4",
+						(int) p_par_cfg->id,
+						p_par_cfg->name,
+						cli_par_val_to_float( p_par_cfg->type, &par_val ),
+						cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->def.u32 )),
+						cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->min.u32 )),
+						cli_par_val_to_float( p_par_cfg->type, &( p_par_cfg->max.u32 )));
+			}
+		}
+	#endif
 
     ////////////////////////////////////////////////////////////////////////////////
     /*!
@@ -858,21 +865,23 @@ static void cli_unknown(const uint8_t * p_attr)
                 desc_str );
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    /*!
-    * @brief        Print parameter info header in legacy mode
-    *
-    * @return       void
-    */
-    ////////////////////////////////////////////////////////////////////////////////
-    static void cli_par_print_header_legacy(void)
-    {
-        cli_printf( ";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level" );
-        cli_printf( ":PARAMETER ACCESS LEGEND" );
-        cli_printf( ":RO - Read Only" );
-        cli_printf( ":RW - Read Write" );
-        cli_printf( ": " );        
-    }
+	#if ( 1 == CLI_CFG_LEGACY_EN )
+		////////////////////////////////////////////////////////////////////////////////
+		/*!
+		* @brief        Print parameter info header in legacy mode
+		*
+		* @return       void
+		*/
+		////////////////////////////////////////////////////////////////////////////////
+		static void cli_par_print_header_legacy(void)
+		{
+			cli_printf( ";Par.ID, Par.Name, Par.value, Par.def, Par.Min, Par.Max, Comment, Type, Access level" );
+			cli_printf( ":PARAMETER ACCESS LEGEND" );
+			cli_printf( ":RO - Read Only" );
+			cli_printf( ":RW - Read Write" );
+			cli_printf( ": " );
+		}
+	#endif
 
     ////////////////////////////////////////////////////////////////////////////////
     /*!
@@ -1017,6 +1026,7 @@ static void cli_unknown(const uint8_t * p_attr)
     							cli_printf( "OK,PAR_SET=%g", par_data.f32);
     						break;
 
+    						case ePAR_TYPE_NUM_OF:
     						default:
     							CLI_DBG_PRINT( "ERR, Invalid parameter type!" );
     							CLI_ASSERT( 0 );
@@ -1116,6 +1126,7 @@ static void cli_unknown(const uint8_t * p_attr)
     						cli_printf(  "OK,PAR_GET=%g", par_data.f32 );
     					break;
 
+    					case ePAR_TYPE_NUM_OF:
     					default:
     						CLI_DBG_PRINT( "ERR, Invalid parameter type!" );
     						CLI_ASSERT( 0 );
@@ -1560,7 +1571,7 @@ static void cli_unknown(const uint8_t * p_attr)
         {
             // Send streaming info as
             // OK, PERIOD,ACTIVE,NUM_OF,PAR_LIST
-            sprintf((char*) &gu8_tx_buffer, "OK, %d,%d,%d", g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );  
+            sprintf((char*) &gu8_tx_buffer, "OK, %d,%d,%d", (int)g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );
             cli_send_str( gu8_tx_buffer );
 
             // Print streaming parameters/variables
@@ -1630,6 +1641,7 @@ static void cli_unknown(const uint8_t * p_attr)
 				f32_par_val = *(float32_t*) p_val;
 				break;
 
+			case ePAR_TYPE_NUM_OF:
 			default:
 				// No actions..
 				break;
@@ -1693,6 +1705,7 @@ static void cli_unknown(const uint8_t * p_attr)
 						sprintf((char*) &gu8_tx_buffer, "%g", par_val.f32 );
 					break;
 
+					case ePAR_TYPE_NUM_OF:
 					default:
 						// No actions..
 					break;
@@ -1704,7 +1717,7 @@ static void cli_unknown(const uint8_t * p_attr)
                 // If not last -> send delimiter
                 if ( par_idx < ( g_cli_live_watch.num_of - 1 ))
                 {
-                    cli_send_str( "," );
+                    cli_send_str((const uint8_t*) "," );
                 }
 			}
 
