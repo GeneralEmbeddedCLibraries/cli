@@ -986,43 +986,37 @@ static void cli_unknown(const uint8_t * p_attr)
     					switch( par_cfg.type )
     					{
     						case ePAR_TYPE_U8:
-    							//par_data.u8 = (uint8_t)par_data.f32;
-                                sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&par_id, &par_data.u8 );
+                                (void) sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&par_id, (unsigned int*)&par_data.u8 );
     							status = par_set( par_num, (uint8_t*) &par_data.u8 );
     							cli_printf( "OK,PAR_SET=%u", par_data.u8);
     						break;
 
     						case ePAR_TYPE_I8:
-    							//par_data.i8 = (int8_t)par_data.f32;
-                                sscanf((const char*) p_attr, "%u,%i", (unsigned int*)&par_id, &par_data.i8 );
+                                sscanf((const char*) p_attr, "%u,%i", (unsigned int*)&par_id, (int*)&par_data.i8 );
     							status = par_set( par_num, (int8_t*) &par_data.i8 );
     							cli_printf( "OK,PAR_SET=%i", (int) par_data.i8);
     						break;
 
     						case ePAR_TYPE_U16:
-    							//par_data.u16 = (uint16_t)par_data.f32;
-                                sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&par_id, &par_data.u16 );
+                                sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&par_id, (unsigned int*)&par_data.u16 );
     							status = par_set( par_num, (uint16_t*) &par_data.u16 );
     							cli_printf( "OK,PAR_SET=%u", par_data.u16);
     						break;
 
     						case ePAR_TYPE_I16:
-    							//par_data.i16 = (int16_t)par_data.f32;
-                                sscanf((const char*) p_attr, "%u,%i", (unsigned int*)&par_id, &par_data.i16 );
+                                sscanf((const char*) p_attr, "%u,%i", (unsigned int*)&par_id, (int*)&par_data.i16 );
     							status = par_set( par_num, (int16_t*) &par_data.i16 );
     							cli_printf( "OK,PAR_SET=%i", (int) par_data.i16);
     						break;
 
     						case ePAR_TYPE_U32:
-    							//par_data.u32 = (uint32_t)par_data.f32;
-                                sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&par_id, &par_data.u32 );
+                                sscanf((const char*) p_attr, "%u,%u", (unsigned int*)&par_id, (unsigned int*)&par_data.u32 );
     							status = par_set( par_num, (uint32_t*) &par_data.u32 );
     							cli_printf( "OK,PAR_SET=%u", par_data.u32);
     						break;
 
     						case ePAR_TYPE_I32:
-    							//par_data.i32 = (int32_t)par_data.f32;
-                                sscanf((const char*) p_attr, "%u,%i", (unsigned int*)&par_id, &par_data.i32 );
+                                sscanf((const char*) p_attr, "%u,%i", (unsigned int*)&par_id, (int*)&par_data.i32 );
     							status = par_set( par_num, (int32_t*) &par_data.i32 );
     							cli_printf( "OK,PAR_SET=%i", (int) par_data.i32);
     						break;
