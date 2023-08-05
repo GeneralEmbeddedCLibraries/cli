@@ -69,9 +69,6 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 	// --------------------------------------------------------------------------
 	[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = true 				},
 	[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = true 				},
-	[eCLI_CH_APP] 		= {	.name = "APP",				.en = true 				},
-	[eCLI_CH_BLE_P]  	= {	.name = "BLE_P",			.en = false 			},
-	[eCLI_CH_BLE_C]  	= {	.name = "BLE_C",			.en = false 			},
 
 	// USER_CODE_BEGIN
 
@@ -150,7 +147,7 @@ const char* cli_cfg_get_ch_name(const cli_ch_opt_t ch)
 * @return 		en	- Active state
 */
 ////////////////////////////////////////////////////////////////////////////////
-const bool cli_cfg_get_ch_en(const cli_ch_opt_t ch)
+bool cli_cfg_get_ch_en(const cli_ch_opt_t ch)
 {
 	bool en = false;
 

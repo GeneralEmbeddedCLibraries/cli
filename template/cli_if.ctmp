@@ -29,11 +29,13 @@
 
 // USER CODE BEGIN...
 
+#include <string.h>
+
 // Communication driver
-#include "drivers/peripheral/uart/uart_dbg.h"
+#include "drivers/peripheral/uart/uart/src/uart.h"
 
 // For reset
-#include "nrf_nvic.h"
+#include "stm32g4xx_hal.h"
 
 // USER CODE END...
 
@@ -77,11 +79,10 @@ cli_status_t cli_if_init(void)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_init())
+	if ( eUART_OK != uart_init( eUART_DBG ))
 	{
 		status = eCLI_ERROR_INIT;
 	}
-
 	// USER CODE END...
 
 	return status;
@@ -120,7 +121,7 @@ cli_status_t cli_if_receive(uint8_t * const p_data)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_get((char*) p_data))
+	if ( eUART_OK != uart_receive( eUART_DBG, (uint8_t*) p_data))
 	{
 		status = eCLI_ERROR;
 	}
@@ -144,7 +145,10 @@ cli_status_t cli_if_transmit(const uint8_t * const p_data)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_write((const char*) p_data))
+    // Calculate size of string
+    const uint32_t str_size = strlen((const char*) p_data );
+
+    if ( eUART_OK != uart_transmit( eUART_DBG, (const uint8_t*) p_data, str_size ))
 	{
 		status = eCLI_ERROR;
 	}
@@ -224,7 +228,6 @@ cli_status_t cli_if_device_reset(void)
 
 	// Reset device
 	NVIC_SystemReset();
-
 
 	// USER CODE END...
 

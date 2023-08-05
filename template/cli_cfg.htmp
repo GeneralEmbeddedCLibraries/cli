@@ -32,7 +32,7 @@
 
 // USER CODE BEGIN...
 
-#include "project_config.h"
+#include "config/proj_cfg.h"
 
 #include "revision/revision/src/version.h"
 
@@ -57,7 +57,7 @@
 	/**
 	 * 	Intro strings
 	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "nRF52840 Dev Board Base Code" )
+	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "ECS Bootloader" )
 	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
 	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
 	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
@@ -124,7 +124,7 @@
  * 	@note	When enabled Device Parameters must be part of the project!
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
-#define CLI_CFG_PAR_USE_EN						( 1 )
+#define CLI_CFG_PAR_USE_EN						( 0 )
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
@@ -202,7 +202,7 @@
  * 	 Assertion macros
  */
 #if ( 1 == CLI_CFG_ASSERT_EN )
-	#define CLI_ASSERT(x)						PROJECT_CONFIG_ASSERT(x)
+	#define CLI_ASSERT(x)						PROJ_CFG_ASSERT(x)
 #else
 	#define CLI_ASSERT(x)						{ ; }
 #endif
@@ -223,9 +223,6 @@ typedef enum
 
 	// USER_CODE_BEGIN
 
-	eCLI_CH_APP,
-    eCLI_CH_BLE_P,
-    eCLI_CH_BLE_C,
 
 	// USER_CODE_END
 
@@ -262,7 +259,7 @@ typedef struct
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 const char* cli_cfg_get_ch_name	(const cli_ch_opt_t ch);
-const bool 	cli_cfg_get_ch_en	(const cli_ch_opt_t ch);
+bool 		cli_cfg_get_ch_en	(const cli_ch_opt_t ch);
 void 		cli_cfg_set_ch_en	(const cli_ch_opt_t ch, const bool en);
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
