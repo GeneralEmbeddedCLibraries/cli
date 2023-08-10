@@ -32,6 +32,11 @@ NVM module must take following path:
 "root/middleware/nvm/nvm/src/nvm.h"
 ```
 
+## **Limitations**
+
+### **1. ASCII Base Interface**
+CLI is ASCII based communication interface therefore all received command shall be fully in ASCII format. Limitation here is that CLI module do no support binary data stream in command attributes nor in comamnd name.
+
 ## **General Embedded C Libraries Ecosystem**
 In order to be part of *General Embedded C Libraries Ecosystem* this module must be placed in following path: 
 
