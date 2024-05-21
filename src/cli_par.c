@@ -1038,13 +1038,13 @@ static void cli_par_live_watch_hndl(void)
         uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
         // Loop thru streaming parameters
-        for(uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++)
+        for ( uint8_t par_it = 0; par_it < g_cli_live_watch.num_of; par_it++ )
         {
             // Get parameter data type
-            par_get_config( g_cli_live_watch.par_list[par_idx], &par_cfg );
+            par_get_config( g_cli_live_watch.par_list[par_it], &par_cfg );
 
             // Get parameter
-            par_get( g_cli_live_watch.par_list[par_idx], &par_val.u32 );
+            par_get( g_cli_live_watch.par_list[par_it], &par_val.u32 );
 
             // Based on type fill streaming buffer
             switch ( par_cfg.type )
@@ -1081,7 +1081,7 @@ static void cli_par_live_watch_hndl(void)
             cli_send_str( p_tx_buf );
 
             // If not last -> send delimiter
-            if ( par_idx < ( g_cli_live_watch.num_of - 1 ))
+            if ( par_it < ( g_cli_live_watch.num_of - 1 ))
             {
                 cli_send_str((const uint8_t*) "," );
             }

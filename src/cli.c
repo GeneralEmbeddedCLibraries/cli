@@ -31,6 +31,7 @@
 #include "cli_util.h"
 #include "cli_nvm.h"
 #include "cli_par.h"
+#include "cli_osci.h"
 
 #include "../../cli_cfg.h"
 #include "../../cli_if.h"
@@ -816,9 +817,13 @@ cli_status_t cli_init(void)
 		// Initialize interface
 		status = cli_if_init();
 
-		// Initialize device parameters
+		// Initialize cli sub-components
         #if ( 1 == CLI_CFG_PAR_USE_EN )
 		    status |= cli_par_init();
+
+            #if ( 1 == CLI_CFG_PAR_OSCI_EN )
+                status |= cli_osci_init();
+            #endif
         #endif
 
 		// Low level driver init error!
@@ -916,9 +921,17 @@ cli_status_t cli_hndl(void)
 	// Cli parser handler
 	status = cli_parser_hndl();
 
-	// Data streaming
 	#if ( 1 == CLI_CFG_PAR_USE_EN )
-	    status |= cli_par_hndl();
+
+        // Data streaming
+        status |= cli_par_hndl();
+
+        #if ( 1 == CLI_CFG_PAR_OSCI_EN )
+
+            // Osci handling
+            status |= cli_osci_hndl();
+        #endif
+
 	#endif
 
 	return status;
