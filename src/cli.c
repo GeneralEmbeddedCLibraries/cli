@@ -80,11 +80,6 @@ static int32_t 	        cli_find_char_pos		(const char * const str, const char t
 static bool gb_is_init = false;
 
 /**
- * 		Transmit buffer for printf
- */
-static uint8_t gu8_tx_buffer[CLI_CFG_TX_BUF_SIZE] = {0};
-
-/**
  * 		Basic CLI commands
  */
 static cli_cmd_t g_cli_basic_table[] =
@@ -630,7 +625,6 @@ static void cli_ch_en(const uint8_t * p_attr)
 	}
 }
 
-
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -985,13 +979,16 @@ cli_status_t cli_printf(char * p_format, ...)
 	{
 		if ( NULL != p_format )
 		{
+		    // Get pointer to Tx buffer
+		    uint8_t * p_tx_buf = cli_util_get_tx_buf();
+
 			// Taking args from stack
 			va_start(args, p_format);
-			vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+			vsprintf((char*) p_tx_buf, (const char*) p_format, args);
 			va_end(args);
 
 			// Send string
-			status = cli_send_str((const uint8_t*) &gu8_tx_buffer);
+			status = cli_send_str((const uint8_t*) p_tx_buf );
 			status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
 		}
 		else
@@ -1030,9 +1027,12 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 			// Is channel enabled
 			if ( true == cli_cfg_get_ch_en( ch ))
 			{
+			    // Get pointer to Tx buffer
+			    uint8_t * p_tx_buf = cli_util_get_tx_buf();
+
 				// Taking args from stack
 				va_start(args, p_format);
-				vsprintf((char*) gu8_tx_buffer, (const char*) p_format, args);
+				vsprintf((char*) p_tx_buf, (const char*) p_format, args);
 				va_end(args);
 
 				// Send channel name
@@ -1040,7 +1040,7 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 				status |= cli_send_str((const uint8_t*) ": " );
 
 				// Send string
-				status |= cli_send_str((const uint8_t*) &gu8_tx_buffer );
+				status |= cli_send_str((const uint8_t*) p_tx_buf );
 				status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
 			}
 		}

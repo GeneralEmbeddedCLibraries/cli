@@ -123,16 +123,9 @@ static const cli_cmd_table_t g_cli_par_table =
  */
 static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_PAR_DEF_STREAM_PER_MS, .period_cnt = (uint32_t)(CLI_CFG_PAR_DEF_STREAM_PER_MS/CLI_CFG_PAR_HNDL_PERIOD_MS), .active = false, .num_of = 0, .par_list = {0} };
 
-/**
- *      Transmit buffer for printf
- */
-static uint8_t gu8_tx_buffer[CLI_CFG_TX_BUF_SIZE] = {0};        // TODO: Make a way to use single buffer between all subparts of CLI!
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-
 
 #if ( 1 == CLI_CFG_LEGACY_EN )
     ////////////////////////////////////////////////////////////////////////////////
@@ -652,7 +645,6 @@ static void cli_par_store(const uint8_t * p_attr)
 
 #if (( 1 == CLI_CFG_PAR_USE_EN ) && ( 1 == CLI_CFG_PAR_STREAM_NVM_EN ))
 
-
     ////////////////////////////////////////////////////////////////////////////////
     /*!
     * @brief        Store streaming informations to NVM
@@ -681,6 +673,7 @@ static void cli_par_store(const uint8_t * p_attr)
             cli_util_unknown_cmd_rsp();
         }
     }
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -811,9 +804,12 @@ static void cli_status_des(const uint8_t * p_attr)
         if  (   ( g_cli_live_watch.num_of > 0 )
             &&  ( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH ))
         {
+            // Get pointer to Tx buffer
+            uint8_t * p_tx_buf = cli_util_get_tx_buf();
+
             // Send sample time
-            snprintf((char*) &gu8_tx_buffer, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
-            cli_send_str( gu8_tx_buffer );
+            snprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
+            cli_send_str( p_tx_buf );
 
             // Print streaming parameters/variables
             for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
@@ -822,10 +818,10 @@ static void cli_status_des(const uint8_t * p_attr)
                 par_get_config( g_cli_live_watch.par_list[ par_idx ], &par_cfg );
 
                 // Format string with parameters info
-                sprintf((char*) &gu8_tx_buffer, ",%s,d,1", par_cfg.name );
+                sprintf((char*) p_tx_buf, ",%s,d,1", par_cfg.name );
 
                 // Send
-                cli_send_str( gu8_tx_buffer );
+                cli_send_str( p_tx_buf );
             }
 
             // Terminate line
@@ -926,10 +922,13 @@ static void cli_status_info(const uint8_t * p_attr)
 
     if ( NULL == p_attr )
     {
+        // Get pointer to Tx buffer
+        uint8_t * p_tx_buf = cli_util_get_tx_buf();
+
         // Send streaming info as
         // OK, PERIOD,ACTIVE,NUM_OF,PAR_LIST
-        sprintf((char*) &gu8_tx_buffer, "OK, %d,%d,%d", (int)g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );
-        cli_send_str( gu8_tx_buffer );
+        sprintf((char*) p_tx_buf, "OK, %d,%d,%d", (int)g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );
+        cli_send_str( p_tx_buf );
 
         // Print streaming parameters/variables
         for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
@@ -938,10 +937,10 @@ static void cli_status_info(const uint8_t * p_attr)
             (void) par_get_id( g_cli_live_watch.par_list[par_idx], &par_id );
 
             // Format string with parameters info
-            sprintf((char*) &gu8_tx_buffer, ",%d", par_id );
+            sprintf((char*) p_tx_buf, ",%d", par_id );
 
             // Send
-            cli_send_str( gu8_tx_buffer );
+            cli_send_str( p_tx_buf );
         }
 
         // Terminate line
@@ -1028,6 +1027,9 @@ static void cli_par_live_watch_hndl(void)
     if  (   ( true == g_cli_live_watch.active )
         &&  ( g_cli_live_watch.num_of > 0 ))
     {
+        // Get pointer to Tx buffer
+        uint8_t * p_tx_buf = cli_util_get_tx_buf();
+
         // Loop thru streaming parameters
         for(uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++)
         {
@@ -1041,25 +1043,25 @@ static void cli_par_live_watch_hndl(void)
             switch ( par_cfg.type )
             {
                 case ePAR_TYPE_U8:
-                    sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u8 );
+                    sprintf((char*) p_tx_buf, "%d", (int)par_val.u8 );
                     break;
                 case ePAR_TYPE_U16:
-                    sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u16 );
+                    sprintf((char*) p_tx_buf, "%d", (int)par_val.u16 );
                 break;
                 case ePAR_TYPE_U32:
-                    sprintf((char*) &gu8_tx_buffer, "%d", (int)par_val.u32 );
+                    sprintf((char*) p_tx_buf, "%d", (int)par_val.u32 );
                 break;
                 case ePAR_TYPE_I8:
-                    sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i8 );
+                    sprintf((char*) p_tx_buf, "%i", (int)par_val.i8 );
                     break;
                 case ePAR_TYPE_I16:
-                    sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i16 );
+                    sprintf((char*) p_tx_buf, "%i", (int)par_val.i16 );
                 break;
                 case ePAR_TYPE_I32:
-                    sprintf((char*) &gu8_tx_buffer, "%i", (int)par_val.i32 );
+                    sprintf((char*) p_tx_buf, "%i", (int)par_val.i32 );
                 break;
                 case ePAR_TYPE_F32:
-                    sprintf((char*) &gu8_tx_buffer, "%g", par_val.f32 );
+                    sprintf((char*) p_tx_buf, "%g", par_val.f32 );
                 break;
 
                 case ePAR_TYPE_NUM_OF:
@@ -1069,7 +1071,7 @@ static void cli_par_live_watch_hndl(void)
             }
 
             // Send
-            cli_send_str( gu8_tx_buffer );
+            cli_send_str( p_tx_buf );
 
             // If not last -> send delimiter
             if ( par_idx < ( g_cli_live_watch.num_of - 1 ))
@@ -1144,6 +1146,7 @@ cli_status_t cli_par_init(void)
 
     return status;
 }
+
 
 cli_status_t cli_par_hndl(void)
 {
