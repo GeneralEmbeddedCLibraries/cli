@@ -16,6 +16,15 @@ CLI divides two types of command tables:
  - ***USER COMMAND TABLE***: Is run-time defined list of command defined by the user application purposes.
 
 
+### **Using CLI in RTOS environment**
+
+TODO: Add detailed describtion how to configure MUTEX
+
+Must be used recursive mutex! As cli_printf is calling two times....
+
+cli_printf (takes first time) ---iscalled--> cli_send_str (takes second time)
+
+
 ## **Dependencies**
 
 ### **1. Device Parameters**

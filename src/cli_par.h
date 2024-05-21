@@ -31,17 +31,15 @@
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
-    #include "middleware/parameters/parameters/src/par.h"
+#include "middleware/parameters/parameters/src/par.h"
 
-    /**
-     *  Compatibility check with Parameters module
-     *
-     *  Support version V2.0.x
-     */
-    _Static_assert( 2 == PAR_VER_MAJOR );
-    _Static_assert( 0 <= PAR_VER_MINOR );
-
-
+/**
+ *  Compatibility check with Parameters module
+ *
+ *  Support version V2.0.x
+ */
+_Static_assert( 2 == PAR_VER_MAJOR );
+_Static_assert( 0 <= PAR_VER_MINOR );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions

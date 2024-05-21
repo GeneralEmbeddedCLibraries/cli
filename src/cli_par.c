@@ -1121,7 +1121,13 @@ static void cli_par_group_print(const par_num_t par_num)
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Initialize CLI Device Parameters sub-component
+*
+* @return       status      - Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_par_init(void)
 {
     cli_status_t status = eCLI_OK;
@@ -1147,7 +1153,17 @@ cli_status_t cli_par_init(void)
     return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        CLI Device Parameters handler
+*
+* @note     This is used for parameters live watch (streaming) purposes!
+*
+*           Shall not be used in ISR!
+*
+* @return       status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_par_hndl(void)
 {
     cli_status_t status = eCLI_OK;
@@ -1169,9 +1185,6 @@ cli_status_t cli_par_hndl(void)
 
     return status;
 }
-
-
-
 
 #endif // ( 1 == CLI_CFG_PAR_USE_EN )
 

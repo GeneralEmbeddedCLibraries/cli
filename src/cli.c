@@ -879,7 +879,7 @@ cli_status_t cli_deinit(void)
 * @brief        Get initialization flag
 *
 * @param[out]	p_is_init	- Initialization flag
-* @return       status		- Status of initialization
+* @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_is_init(bool * const p_is_init)
@@ -904,7 +904,9 @@ cli_status_t cli_is_init(bool * const p_is_init)
 /*!
 * @brief        Main Command Line Interface handler
 *
-* @return       status	- Status of initialization
+* @note     Shall not be used in ISR!
+*
+* @return       status - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_hndl(void)
@@ -925,6 +927,8 @@ cli_status_t cli_hndl(void)
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        Send string
+*
+* @note     Shall not be used in ISR!
 *
 * @param[in]    p_str   - Pointer to string
 * @return       status  - Status of operation
@@ -964,8 +968,10 @@ cli_status_t cli_send_str(const uint8_t * const p_str)
 /*!
 * @brief        Print formated string
 *
+* @note     Shall not be used in ISR!
+*
 * @param[in]	p_format	- Formated string
-* @return       status		- Status of initialization
+* @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_printf(char * p_format, ...)
@@ -982,6 +988,8 @@ cli_status_t cli_printf(char * p_format, ...)
 		    // Get pointer to Tx buffer
 		    uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
+		    // TODO: Take mutex here...
+
 			// Taking args from stack
 			va_start(args, p_format);
 			vsprintf((char*) p_tx_buf, (const char*) p_format, args);
@@ -990,6 +998,8 @@ cli_status_t cli_printf(char * p_format, ...)
 			// Send string
 			status = cli_send_str((const uint8_t*) p_tx_buf );
 			status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
+
+			// TODO: Release mutex here...
 		}
 		else
 		{
@@ -1008,9 +1018,11 @@ cli_status_t cli_printf(char * p_format, ...)
 /*!
 * @brief        Print formated string within debug channel
 *
+* @note     Shall not be used in ISR!
+*
 * @param[in]	ch			- Debug channel
 * @param[in]	p_format	- Formated string
-* @return       status		- Status of initialization
+* @return       status		- Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
@@ -1030,6 +1042,8 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 			    // Get pointer to Tx buffer
 			    uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
+			    // TODO: Take mutex here... (NOTE: Shall be recursive as it is used also in "cli_send_str" )
+
 				// Taking args from stack
 				va_start(args, p_format);
 				vsprintf((char*) p_tx_buf, (const char*) p_format, args);
@@ -1042,6 +1056,8 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 				// Send string
 				status |= cli_send_str((const uint8_t*) p_tx_buf );
 				status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
+
+				// TODO: Release mutex here...
 			}
 		}
 		else
@@ -1061,8 +1077,10 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 /*!
 * @brief        Register user defined CLI command table
 *
+* @note     Shall not be used in ISR!
+*
 * @param[in]	p_cmd_table	- Pointer to user cmd table
-* @return       status		- Status of initialization
+* @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
