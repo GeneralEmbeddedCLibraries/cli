@@ -128,7 +128,7 @@ static void cli_osci_start(const uint8_t * p_attr);
 /**
  *  Oscilloscope control block
  */
-static volatile cli_osci_t g_cli_osci = {0};
+static volatile cli_osci_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))) g_cli_osci = {0};
 
 
 /**
