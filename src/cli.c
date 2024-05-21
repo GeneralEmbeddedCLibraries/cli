@@ -937,6 +937,15 @@ cli_status_t cli_hndl(void)
 	return status;
 }
 
+cli_status_t cli_hndl_osci(void)
+{
+    cli_status_t status = eCLI_OK;
+
+    cli_osci_samp_hndl();
+
+    return status;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        Send string

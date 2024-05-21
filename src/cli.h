@@ -87,6 +87,7 @@ cli_status_t cli_init				(void);
 cli_status_t cli_deinit				(void);
 cli_status_t cli_is_init			(bool * const p_is_init);
 cli_status_t cli_hndl				(void);
+cli_status_t cli_hndl_osci          (void);
 cli_status_t cli_send_str           (const uint8_t * const p_str);
 cli_status_t cli_printf				(char * p_format, ...);
 cli_status_t cli_printf_ch			(const cli_ch_opt_t ch, char * p_format, ...);

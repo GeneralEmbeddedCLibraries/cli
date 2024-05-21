@@ -216,6 +216,10 @@ cli_status_t cli_osci_hndl(void)
                 // Terminate line
                 cli_printf("");
             }
+
+
+            // Osci ready
+            g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
         }
     }
 
@@ -255,13 +259,13 @@ void cli_osci_samp_hndl(void)
 
             if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - 1U ))
             {
-                g_cli_osci.state = eCLI_OSCI_STATE_FINISH;
-                g_cli_osci.samp.idx = 0;
-
+                g_cli_osci.samp.idx++;
             }
             else
             {
-                g_cli_osci.samp.idx++;
+                g_cli_osci.state = eCLI_OSCI_STATE_FINISH;
+                g_cli_osci.samp.idx = 0;
+
             }
         }
     }
