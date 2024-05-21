@@ -938,28 +938,19 @@ cli_status_t cli_send_str(const uint8_t * const p_str)
 {
     cli_status_t status = eCLI_OK;
 
-    #if ( 1 == CLI_CFG_MUTEX_EN )
-
-        // Mutex obtain
-        if ( eCLI_OK == cli_if_aquire_mutex())
-        {
-            // Write to cli port
-            status |= cli_if_transmit( p_str );
-
-            // Release mutex if taken
-            status |= cli_if_release_mutex();
-        }
-        else
-        {
-            status = eCLI_ERROR;
-        }
-
-    #else
-
+    // Mutex obtain
+    if ( eCLI_OK == cli_if_aquire_mutex())
+    {
         // Write to cli port
-        status = cli_if_transmit( p_str );
+        status |= cli_if_transmit( p_str );
 
-    #endif
+        // Release mutex if taken
+        status |= cli_if_release_mutex();
+    }
+    else
+    {
+        status = eCLI_ERROR;
+    }
 
     return status;
 }
@@ -988,18 +979,25 @@ cli_status_t cli_printf(char * p_format, ...)
 		    // Get pointer to Tx buffer
 		    uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
-		    // TODO: Take mutex here...
+            // Mutex obtain
+            if ( eCLI_OK == cli_if_aquire_mutex())
+            {
+                // Taking args from stack
+                va_start(args, p_format);
+                vsprintf((char*) p_tx_buf, (const char*) p_format, args);
+                va_end(args);
 
-			// Taking args from stack
-			va_start(args, p_format);
-			vsprintf((char*) p_tx_buf, (const char*) p_format, args);
-			va_end(args);
+                // Send string
+                status = cli_send_str((const uint8_t*) p_tx_buf );
+                status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
 
-			// Send string
-			status = cli_send_str((const uint8_t*) p_tx_buf );
-			status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
-
-			// TODO: Release mutex here...
+                // Release mutex
+                cli_if_release_mutex();
+            }
+            else
+            {
+                status = eCLI_ERROR;
+            }
 		}
 		else
 		{
@@ -1042,22 +1040,29 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 			    // Get pointer to Tx buffer
 			    uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
-			    // TODO: Take mutex here... (NOTE: Shall be recursive as it is used also in "cli_send_str" )
+			    // Mutex obtain
+			    if ( eCLI_OK == cli_if_aquire_mutex())
+			    {
+                    // Taking args from stack
+                    va_start(args, p_format);
+                    vsprintf((char*) p_tx_buf, (const char*) p_format, args);
+                    va_end(args);
 
-				// Taking args from stack
-				va_start(args, p_format);
-				vsprintf((char*) p_tx_buf, (const char*) p_format, args);
-				va_end(args);
+                    // Send channel name
+                    status |= cli_send_str((const uint8_t*) cli_cfg_get_ch_name( ch ));
+                    status |= cli_send_str((const uint8_t*) ": " );
 
-				// Send channel name
-				status |= cli_send_str((const uint8_t*) cli_cfg_get_ch_name( ch ));
-				status |= cli_send_str((const uint8_t*) ": " );
+                    // Send string
+                    status |= cli_send_str((const uint8_t*) p_tx_buf );
+                    status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
 
-				// Send string
-				status |= cli_send_str((const uint8_t*) p_tx_buf );
-				status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
-
-				// TODO: Release mutex here...
+                    // Release mutex
+                    cli_if_release_mutex();
+			    }
+			    else
+			    {
+			        status = eCLI_ERROR;
+			    }
 			}
 		}
 		else
@@ -1089,52 +1094,47 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 
 	CLI_ASSERT( NULL != p_cmd_table );
 
-	#if ( 1 == CLI_CFG_MUTEX_EN )
+    // Mutex obtain
+    if ( eCLI_OK == cli_if_aquire_mutex())
+    {
+        if ( NULL != p_cmd_table )
+        {
+            // Is there any space left for user tables?
+            if ( gu32_user_table_count < CLI_CFG_MAX_NUM_OF_USER_TABLES )
+            {
+                // User table defined OK
+                if ( true == cli_validate_user_table( p_cmd_table ))
+                {
+                    // Store
+                    gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
+                    gu32_user_table_count++;
+                }
 
-		// Mutex obtain
-		if ( eCLI_OK == cli_if_aquire_mutex())
-		{
-	#endif
-			if ( NULL != p_cmd_table )
-			{
-				// Is there any space left for user tables?
-				if ( gu32_user_table_count < CLI_CFG_MAX_NUM_OF_USER_TABLES )
-				{
-					// User table defined OK
-					if ( true == cli_validate_user_table( p_cmd_table ))
-					{
-						// Store
-						gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
-						gu32_user_table_count++;
-					}
+                // User table definition error
+                else
+                {
+                    CLI_DBG_PRINT( "CLI ERROR: Invalid definition of user table!");
+                    CLI_ASSERT( 0 );
+                    status = eCLI_ERROR;
+                }
+            }
+            else
+            {
+                status = eCLI_ERROR;
+            }
+        }
+        else
+        {
+            status = eCLI_ERROR;
+        }
 
-					// User table definition error
-					else
-					{
-						CLI_DBG_PRINT( "CLI ERROR: Invalid definition of user table!");
-						CLI_ASSERT( 0 );
-						status = eCLI_ERROR;
-					}
-				}
-				else
-				{
-					status = eCLI_ERROR;
-				}
-			}
-			else
-			{
-				status = eCLI_ERROR;
-			}
-		#if ( 1 == CLI_CFG_MUTEX_EN )
-
-			// Release mutex
-			cli_if_release_mutex();
-		}
-		else
-		{
-			status = eCLI_ERROR;
-		}
-		#endif
+        // Release mutex
+        cli_if_release_mutex();
+    }
+    else
+    {
+        status = eCLI_ERROR;
+    }
 
 	return status;
 }
