@@ -18,12 +18,134 @@ CLI divides two types of command tables:
 
 ### **Using CLI in RTOS environment**
 
-TODO: Add detailed describtion how to configure MUTEX
+When using CLI module with RTOS make sure to prepare mutex functions inside interface file ***cli_if.c***. Mutex must have the **recursive** property as it might happent that mutex will be taken multiple times by the same task. 
 
-Must be used recursive mutex! As cli_printf is calling two times....
+Example of CLI interface file when using FreeRTOS with CMSIS v2:
+```C
+////////////////////////////////////////////////////////////////////////////////
+// Definitions
+////////////////////////////////////////////////////////////////////////////////
 
-cli_printf (takes first time) ---iscalled--> cli_send_str (takes second time)
+// USER CODE BEGIN..
 
+/**
+ *      CLI mutex timeout
+ *
+ *  Unit: ms
+ */
+#define CLI_IF_MUTEX_TIMEOUT_MS                 ( 10U )
+
+// USER CODE END...
+
+////////////////////////////////////////////////////////////////////////////////
+// Variables
+////////////////////////////////////////////////////////////////////////////////
+
+// USER CODE BEGIN...
+
+/**
+ *  CLI OS mutex
+ */
+static osMutexId_t  g_cli_mutex_id = NULL;
+const osMutexAttr_t g_cli_mutex_attr =
+{
+    .name       = "cli",
+    .attr_bits  = ( osMutexPrioInherit | osMutexRecursive ),	// IMPORTANT TO BE A RECURSIVE!!!
+};
+
+// USER CODE END...
+
+// ...
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Initialize Command Line Interface communication port
+*
+* @return 		status 	- Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_init(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	if ( eUART_OK != uart_init( eUART_DBG ))
+	{
+		status = eCLI_ERROR_INIT;
+	}
+	else
+	{
+        // Create mutex
+        g_cli_mutex_id = osMutexNew( &g_cli_mutex_attr );
+
+        if ( NULL == g_cli_mutex_id )
+        {
+            status = eCLI_ERROR;
+        }
+	}
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Acquire mutex
+*
+* @note	User shall provide definition of that function based on used platform!
+*
+*		If not being used leave empty.
+*
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_aquire_mutex(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+    if ( osOK == osMutexAcquire( g_cli_mutex_id, CLI_IF_MUTEX_TIMEOUT_MS ))
+    {
+        // No action
+    }
+    else
+    {
+        status = eCLI_ERROR;
+    }
+
+	// USER CODE END...
+
+	return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Release mutex
+*
+* @note	User shall provide definition of that function based on used platform!
+*
+*		If not being used leave empty.
+*
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_release_mutex(void)
+{
+	cli_status_t status = eCLI_OK;
+
+	// USER CODE BEGIN...
+
+	osMutexRelease( g_cli_mutex_id );
+
+	// USER CODE END...
+
+	return status;
+}
+
+```
 
 ## **Dependencies**
 
