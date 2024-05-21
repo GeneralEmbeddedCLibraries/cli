@@ -5,7 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V1.3.0 - 17.02.2022
+## V1.4.0 - xx.05.2024
+
+### Added 
+ - Added software oscilloscope functionalities
+
+### Changed
+ - Template interface files added RTOS mutex example
+ - Complete module implementation re-work, spliting tasks by files
+ - Transmit buffer is being shared between parameter and main CLI sub-component
+
+---
+## V1.3.0 - 17.02.2023
 
 ### Added 
  - Streaming configuration info

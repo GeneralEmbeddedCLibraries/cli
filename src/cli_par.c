@@ -121,7 +121,14 @@ static const cli_cmd_table_t g_cli_par_table =
  *
  *  Inside "par_list" there is parameter enumeration number not parameter ID!
  */
-static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_PAR_DEF_STREAM_PER_MS, .period_cnt = (uint32_t)(CLI_CFG_PAR_DEF_STREAM_PER_MS/CLI_CFG_PAR_HNDL_PERIOD_MS), .active = false, .num_of = 0, .par_list = {0} };
+static cli_live_watch_t g_cli_live_watch =
+{
+    .period     = CLI_CFG_PAR_DEF_STREAM_PER_MS,
+    .period_cnt = (uint32_t)( CLI_CFG_PAR_DEF_STREAM_PER_MS / CLI_CFG_PAR_HNDL_PERIOD_MS ),
+    .active     = false,
+    .num_of     = 0,
+    .par_list   = {0}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -1104,7 +1111,6 @@ static void cli_par_group_print(const par_num_t par_num)
         cli_printf( ":%s", group_name );
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
