@@ -117,6 +117,9 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
+static void cli_osci_start(const uint8_t * p_attr);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -127,6 +130,28 @@ typedef struct
  */
 static volatile cli_osci_t g_cli_osci = {0};
 
+
+/**
+ *      Oscilloscope CLI commands
+ */
+static const cli_cmd_table_t g_cli_osci_table =
+{
+    // List of commands
+    .cmd =
+    {
+        // ------------------------------------------------------------------------------------------------------
+        //  name                    function                help string
+        // ------------------------------------------------------------------------------------------------------
+
+        {   "osci_start",           cli_osci_start,         "Start oscilloscope"                                },
+
+    },
+
+    // Total number of listed commands
+    .num_of = 1
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +161,20 @@ cli_status_t cli_osci_reset         (void);
 cli_status_t cli_osci_configure     (const cli_osci_mode_t mode, const cli_osci_trig_t, const float32_t threshold);
 
 
+
+static void cli_osci_start(const uint8_t * p_attr)
+{
+    if ( NULL == p_attr )
+    {
+
+        // TODO: only for testing...
+        g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
+    }
+    else
+    {
+        cli_util_unknown_cmd_rsp();
+    }
+}
 
 
 
@@ -166,6 +205,20 @@ cli_status_t cli_osci_init(void)
     cli_status_t status = eCLI_OK;
 
     // TODO: Load saved osci settings from NVM...
+
+
+
+    // TODO: Only for testing...
+    g_cli_osci.par.list[0] = ePAR_SPIRAL_1_CUR;
+    g_cli_osci.par.list[1] = ePAR_SPIRAL_1_CUR_FILT;
+    g_cli_osci.par.num_of = 2;
+
+    g_cli_osci.mode = eCLI_OSCI_MODE_AUTO;
+
+
+
+    // Register Device Parameters CLI table
+    cli_register_cmd_table((const cli_cmd_table_t*) &g_cli_osci_table );
 
     return status;
 }
@@ -218,8 +271,8 @@ cli_status_t cli_osci_hndl(void)
             }
 
 
-            // Osci ready
-            g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
+            // Osci idle
+            g_cli_osci.state = eCLI_OSCI_STATE_IDLE;
         }
     }
 
