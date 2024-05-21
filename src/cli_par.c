@@ -70,7 +70,7 @@ static void         cli_par_group_print         (const par_num_t par_num);
     static void cli_par_store_reset(const uint8_t * p_attr);
 #endif
 
-#if ( 1 == CLI_CFG_STREAM_NVM_EN )
+#if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
     static void cli_status_save(const uint8_t * p_attr);
 #endif
 
@@ -107,7 +107,7 @@ static const cli_cmd_table_t g_cli_par_table =
         {   "status_rate",          cli_status_rate,        "Change data streaming period [miliseconds]"        },
         {   "status_info",          cli_status_info,        "Get streaming configuration info"                  },
 
-    #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+    #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
         {   "status_save",          cli_status_save,        "Save streaming into to NVM"                        },
     #endif
     },
@@ -121,7 +121,7 @@ static const cli_cmd_table_t g_cli_par_table =
  *
  *  Inside "par_list" there is parameter enumeration number not parameter ID!
  */
-static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_DEF_STREAM_PER_MS, .period_cnt = (uint32_t)(CLI_CFG_DEF_STREAM_PER_MS/CLI_CFG_HNDL_PERIOD_MS), .active = false, .num_of = 0, .par_list = {0} };
+static cli_live_watch_t g_cli_live_watch = { .period = CLI_CFG_PAR_DEF_STREAM_PER_MS, .period_cnt = (uint32_t)(CLI_CFG_PAR_DEF_STREAM_PER_MS/CLI_CFG_PAR_HNDL_PERIOD_MS), .active = false, .num_of = 0, .par_list = {0} };
 
 /**
  *      Transmit buffer for printf
@@ -650,7 +650,7 @@ static void cli_par_store(const uint8_t * p_attr)
 
 #endif
 
-#if (( 1 == CLI_CFG_PAR_USE_EN ) && ( 1 == CLI_CFG_STREAM_NVM_EN ))
+#if (( 1 == CLI_CFG_PAR_USE_EN ) && ( 1 == CLI_CFG_PAR_STREAM_NVM_EN ))
 
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -703,7 +703,7 @@ static void cli_status_start(const uint8_t * p_attr)
 
             cli_printf( "OK, Streaming started!" );
 
-            #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+            #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
                 cli_status_save( NULL );
             #endif
         }
@@ -736,7 +736,7 @@ static void cli_status_stop(const uint8_t * p_attr)
 
         cli_printf( "OK, Streaming stopped!" );
 
-        #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+        #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
             cli_status_save( NULL );
         #endif
     }
@@ -831,7 +831,7 @@ static void cli_status_des(const uint8_t * p_attr)
             // Terminate line
             cli_printf("");
 
-            #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+            #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
                 cli_status_save( NULL );
             #endif
         }
@@ -874,24 +874,24 @@ static void cli_status_rate(const uint8_t * p_attr)
         if ( 1U == sscanf((const char*) p_attr, "%d", (int*) &period ))
         {
             // Check if within wanted range
-            if  (   ( period >= CLI_CFG_HNDL_PERIOD_MS )
+            if  (   ( period >= CLI_CFG_PAR_HNDL_PERIOD_MS )
                 &&  ( period <= 60000UL ))
             {
                 // Check if multiple of defined period
-                if (( period % CLI_CFG_HNDL_PERIOD_MS ) == 0 )
+                if (( period % CLI_CFG_PAR_HNDL_PERIOD_MS ) == 0 )
                 {
                     g_cli_live_watch.period = period;
-                    g_cli_live_watch.period_cnt = (uint32_t) ( g_cli_live_watch.period / CLI_CFG_HNDL_PERIOD_MS );
+                    g_cli_live_watch.period_cnt = (uint32_t) ( g_cli_live_watch.period / CLI_CFG_PAR_HNDL_PERIOD_MS );
 
                     cli_printf( "OK, Period changed to %d ms", g_cli_live_watch.period );
 
-                    #if ( 1 == CLI_CFG_AUTO_STREAM_STORE_EN )
+                    #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
                         cli_status_save( NULL );
                     #endif
                 }
                 else
                 {
-                    cli_printf( "ERR, Wanted period is not multiple of \"CLI_CFG_HNDL_PERIOD_MS\"!" );
+                    cli_printf( "ERR, Wanted period is not multiple of \"CLI_CFG_PAR_HNDL_PERIOD_MS\"!" );
                 }
             }
             else
@@ -1124,7 +1124,7 @@ cli_status_t cli_par_init(void)
 {
     cli_status_t status = eCLI_OK;
 
-    #if ( 1 == CLI_CFG_STREAM_NVM_EN )
+    #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
         // Init NVM
         if ( eNVM_OK == nvm_init())

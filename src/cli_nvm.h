@@ -29,7 +29,7 @@
 
 #include "cli.h"
 
-#if ( 1 == CLI_CFG_STREAM_NVM_EN )
+#if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
 #include "middleware/nvm/nvm/src/nvm.h"
 
@@ -39,7 +39,7 @@
 _Static_assert( 2 == NVM_VER_MAJOR );
 _Static_assert( 1 <= NVM_VER_MINOR );
 
-#endif // ( 1 == CLI_CFG_STREAM_NVM_EN )
+#endif // ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -64,12 +64,12 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-#if ( 1 == CLI_CFG_STREAM_NVM_EN )
+#if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
 cli_status_t cli_nvm_read   (cli_live_watch_t * const p_watch_info);
 cli_status_t cli_nvm_write  (const cli_live_watch_t * const p_watch_info);
 
-#endif // ( 1 == CLI_CFG_STREAM_NVM_EN )
+#endif // ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
 #endif // __CLI_NVM_H
 

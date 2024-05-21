@@ -40,7 +40,7 @@
 
 #include "cli_nvm.h"
 
-#if ( 1 == CLI_CFG_STREAM_NVM_EN )
+#if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -149,7 +149,7 @@ static cli_status_t	cli_nvm_erase_signature(void)
     cli_status_t status = eCLI_OK;
 
     // Erase signature
-    if ( eNVM_OK != nvm_erase( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE ))
+    if ( eNVM_OK != nvm_erase( CLI_CFG_PAR_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE ))
     {
         status = eCLI_ERROR_NVM;
         cli_printf( "ERR, CLI NVM error during signature corruption!" );
@@ -175,7 +175,7 @@ static cli_status_t	cli_nvm_write_signature(void)
     const   uint32_t        sign    = CLI_NVM_SIGN;
 
     // Write signature
-    if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE, (uint8_t*) &sign ))
+    if ( eNVM_OK != nvm_write( CLI_CFG_PAR_NVM_REGION, CLI_NVM_HEAD_SIGN_ADDR, CLI_NVM_SIGN_SIZE, (uint8_t*) &sign ))
     {
         status = eCLI_ERROR_NVM;
         cli_printf( "ERR, CLI NVM error during signature write!" );
@@ -200,7 +200,7 @@ static cli_status_t cli_nvm_read_header(cli_nvm_head_obj_t * const p_head_obj)
     cli_status_t status = eCLI_OK;
 
     // Read signature
-    if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
+    if ( eNVM_OK != nvm_read( CLI_CFG_PAR_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
     {
         status = eCLI_ERROR_NVM;
         cli_printf( "ERR, CLI NVM error during header read!" );
@@ -225,7 +225,7 @@ static cli_status_t cli_nvm_write_header(const cli_nvm_head_obj_t * const p_head
     cli_status_t status = eCLI_OK;
 
     // Write signature
-    if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
+    if ( eNVM_OK != nvm_write( CLI_CFG_PAR_NVM_REGION, CLI_NVM_HEAD_ADDR, sizeof(cli_nvm_head_obj_t), (uint8_t*) p_head_obj ))
     {
         status = eCLI_ERROR_NVM;
         cli_printf( "ERR, CLI NVM error during header write!" );
@@ -250,7 +250,7 @@ static cli_status_t cli_nvm_read_par_list(uint16_t * const p_par_list)
     cli_status_t status = eCLI_OK;
 
     // Read parameter list
-    if ( eNVM_OK != nvm_read( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
+    if ( eNVM_OK != nvm_read( CLI_CFG_PAR_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
     {
         status = eCLI_ERROR_NVM;
         cli_printf( "ERR, CLI NVM error during parameter list reading!" );
@@ -275,7 +275,7 @@ static cli_status_t cli_nvm_write_par_list(const uint16_t * const p_par_list)
     cli_status_t status = eCLI_OK;
 
     // Read parameter list
-    if ( eNVM_OK != nvm_write( CLI_CFG_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
+    if ( eNVM_OK != nvm_write( CLI_CFG_PAR_NVM_REGION, CLI_NVM_FIRST_STREAM_PAR_ADDR, CLI_CFG_PAR_MAX_IN_LIVE_WATCH, (uint8_t*) p_par_list ))
     {
         status = eCLI_ERROR_NVM;
         cli_printf( "ERR, CLI NVM error during parameter list writing!" );
@@ -357,7 +357,7 @@ static cli_status_t cli_nvm_sync(void)
 {
     cli_status_t status = eCLI_OK;
 
-    if ( eNVM_OK != nvm_sync( CLI_CFG_NVM_REGION ))
+    if ( eNVM_OK != nvm_sync( CLI_CFG_PAR_NVM_REGION ))
     {
         status = eCLI_ERROR_NVM;
     }
@@ -429,7 +429,7 @@ cli_status_t cli_nvm_read(cli_live_watch_t * const p_watch_info)
                     p_watch_info->active = header.active;
 
                     // Calculate period counts
-                    p_watch_info->period_cnt = (uint32_t) ( p_watch_info->period / CLI_CFG_HNDL_PERIOD_MS );
+                    p_watch_info->period_cnt = (uint32_t) ( p_watch_info->period / CLI_CFG_PAR_HNDL_PERIOD_MS );
                 }
 
                 // CRC corrupted
@@ -507,7 +507,7 @@ cli_status_t cli_nvm_write(const cli_live_watch_t * const p_watch_info)
     return status;
 }
 
-#endif // ( 1 == CLI_CFG_STREAM_NVM_EN )
+#endif // ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
