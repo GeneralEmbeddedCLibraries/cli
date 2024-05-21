@@ -32,8 +32,10 @@
 
 // USER CODE BEGIN...
 
+// Global project settings
 #include "config/proj_cfg.h"
 
+// Software revision module
 #include "revision/revision/src/version.h"
 
 // USER CODE END...
@@ -114,18 +116,16 @@
 #define CLI_CFG_MAX_NUM_OF_USER_TABLES			( 8 )
 
 /**
- * 	Enable/Disable multiple access protection
- */
-#define CLI_CFG_MUTEX_EN						( 0 )
-
-/**
- * 	Enable/Disable parameters usage
+ * 	Enable/Disable Device Parameters usage
  *
- * 	@note	When enabled Device Parameters must be part of the project!
+ * 	@note	When enabled, Device Parameters must be part of the project!
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
 #define CLI_CFG_PAR_USE_EN						( 1 )
 
+/**
+ *  Following configuration switches are directly connected to Device Parameters
+ */
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
     /**
@@ -180,7 +180,7 @@
       #define CLI_CFG_PAR_AUTO_STREAM_STORE_EN      ( 0 )
 
      /**
-      *     Enable/Disable usage of software osciloscope
+      *     Enable/Disable usage of software oscilloscope
       */
       #define CLI_CFG_PAR_OSCI_EN                   ( 0 )
 
@@ -212,7 +212,6 @@
     #define CLI_DBG_PRINT(...)                  { ; }
 
 #endif
-
 
 /**
  * 	 Assertion macros
