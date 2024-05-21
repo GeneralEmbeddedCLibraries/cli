@@ -255,18 +255,18 @@ void cli_osci_samp_hndl(void)
             const float32_t par_val = com_util_par_val_to_float( g_cli_osci.par.list[par_it] );
 
             // Set value to sample buffer
-            g_cli_osci.samp.buf[g_cli_osci.samp.idx] = par_val;
+            g_cli_osci.samp.buf[ ( g_cli_osci.samp.idx + par_it )] = par_val;
+        }
 
-            if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - 1U ))
-            {
-                g_cli_osci.samp.idx++;
-            }
-            else
-            {
-                g_cli_osci.state = eCLI_OSCI_STATE_FINISH;
-                g_cli_osci.samp.idx = 0;
+        if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.par.num_of ))
+        {
+            g_cli_osci.samp.idx += g_cli_osci.par.num_of;
+        }
+        else
+        {
+            g_cli_osci.state = eCLI_OSCI_STATE_FINISH;
+            g_cli_osci.samp.idx = 0;
 
-            }
         }
     }
 }
