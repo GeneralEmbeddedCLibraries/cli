@@ -244,6 +244,11 @@ static void cli_osci_data(const uint8_t * p_attr)
             uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
             // Loop thru sample buffer
+
+            // TODO: When pre-trigger will be implemented, then this logic is no longer OK!!!!
+
+            // TODO: Use ring buffer for sample buffer!!!!!
+
             for ( uint32_t samp_it = 0U; samp_it < CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE; samp_it += g_cli_osci.channel.num_of )
             {
                 // Loop thru parameter list
