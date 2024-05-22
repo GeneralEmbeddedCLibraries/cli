@@ -926,12 +926,6 @@ cli_status_t cli_hndl(void)
         // Data streaming
         status |= cli_par_hndl();
 
-        #if ( 1 == CLI_CFG_PAR_OSCI_EN )
-
-            // Osci handling
-            status |= cli_osci_hndl();
-        #endif
-
 	#endif
 
 	return status;
@@ -1152,13 +1146,22 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 	return status;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        CLI Oscilloscope Sampling handler
+*
+* @note     This function shall be called in time equidistant period!
+*
+*           Can be called from ISR!
+*
+* @return       status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_osci_hndl(void)
 {
-    cli_status_t status = eCLI_OK;
-
     cli_osci_samp_hndl();
 
-    return status;
+    return eCLI_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
