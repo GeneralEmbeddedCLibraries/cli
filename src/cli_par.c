@@ -103,7 +103,7 @@ static const cli_cmd_table_t g_cli_par_table =
 
         {   "status_start",         cli_status_start,       "Start data streaming"                              },
         {   "status_stop",          cli_status_stop,        "Stop data streaming"                               },
-        {   "status_des",           cli_status_des,         "Status description"                                },
+        {   "status_des",           cli_status_des,         "Status description [par1,par2,...,parN]"           },
         {   "status_rate",          cli_status_rate,        "Change data streaming period [miliseconds]"        },
         {   "status_info",          cli_status_info,        "Get streaming configuration info"                  },
 
