@@ -37,24 +37,9 @@
 
 #if ( 1 == CLI_CFG_PAR_OSCI_EN )
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
-
-/**
- *  Oscilloscope mode
- */
-typedef enum
-{
-    eCLI_OSCI_MODE_OFF = 0,     /**<Oscilloscope turned OFF */
-    eCLI_OSCI_MODE_AUTO,        /**<Automatic mode */
-    eCLI_OSCI_MODE_NORMAL,      /**<Normal mode */
-    eCLI_OSCI_MODE_SINGLE,      /**<Single mode */
-
-    eCLI_OSCI_MODE_NUM_OF,
-} cli_osci_mode_t;
 
 /**
  *  Oscilloscope triggers
@@ -88,17 +73,18 @@ typedef struct
     /**<Trigger */
     struct
     {
-        par_type_t      th;     /**<Trigger threshold */
-        par_num_t       par;    /**<Device parameter used for triggering */
-        cli_osci_trig_t type;   /**<Trigger type*/
+        float32_t       th;         /**<Trigger threshold */
+        par_num_t       par;        /**<Device parameter used for triggering */
+        cli_osci_trig_t type;       /**<Trigger type*/
+        float32_t       pretrigger; /**<Pretrigger */
     } trigger;
 
-    /**<Parameters in osci */
+    /**<Channels */
     struct
     {
-        par_num_t   list[CLI_CFG_PAR_MAX_IN_OSCI];
-        uint32_t    num_of;
-    } par;
+        par_num_t   list[CLI_CFG_PAR_MAX_IN_OSCI];  /**<List of channels, Device Parameters enumerations */
+        uint32_t    num_of;                         /**<Number of channels */
+    } channel;
 
     /**<Sample buffer */
     struct
@@ -107,7 +93,6 @@ typedef struct
         uint32_t    idx;                                    /**<Sample buffer index */
     } samp;
 
-    cli_osci_mode_t     mode;       /**<Oscilloscope mode */
     cli_osci_state_t    state;      /**<Oscilloscope state */
 } cli_osci_t;
 
@@ -165,11 +150,6 @@ static const cli_cmd_table_t g_cli_osci_table =
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 
-// Internal functions....
-cli_status_t cli_osci_reset         (void);
-cli_status_t cli_osci_configure     (const cli_osci_mode_t mode, const cli_osci_trig_t, const float32_t threshold);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        Start oscilloscope
@@ -197,10 +177,17 @@ static void cli_osci_start(const uint8_t * p_attr)
         if  (   ( eCLI_OSCI_STATE_IDLE  == g_cli_osci.state )
             ||  ( eCLI_OSCI_STATE_DONE  == g_cli_osci.state ))
         {
-            // Enter waiting state
-            g_cli_osci.state = eCLI_OSCI_STATE_WAITING;
+            if ( g_cli_osci.channel.num_of > 0 )
+            {
+                // Enter waiting state
+                g_cli_osci.state = eCLI_OSCI_STATE_WAITING;
 
-            cli_printf( "OK, Osci started!" );
+                cli_printf( "OK, Osci started!" );
+            }
+            else
+            {
+                cli_printf( "ERR, Oscilloscope is not configured!" );
+            }
         }
         else
         {
@@ -257,10 +244,10 @@ static void cli_osci_data(const uint8_t * p_attr)
             uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
             // Loop thru sample buffer
-            for ( uint32_t samp_it = 0U; samp_it < CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE; samp_it += g_cli_osci.par.num_of )
+            for ( uint32_t samp_it = 0U; samp_it < CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE; samp_it += g_cli_osci.channel.num_of )
             {
                 // Loop thru parameter list
-                for ( uint8_t par_it = 0; par_it < g_cli_osci.par.num_of; par_it++ )
+                for ( uint8_t par_it = 0; par_it < g_cli_osci.channel.num_of; par_it++ )
                 {
                     // Get value from sample buffer
                     const float32_t samp_val = g_cli_osci.samp.buf[ ( samp_it + par_it )];
@@ -272,7 +259,7 @@ static void cli_osci_data(const uint8_t * p_attr)
                     cli_send_str( p_tx_buf );
 
                     // If not last -> send delimiter
-                    if ( par_it < ( g_cli_osci.par.num_of - 1 ))
+                    if ( par_it < ( g_cli_osci.channel.num_of - 1 ))
                     {
                         cli_send_str((const uint8_t*) "," );
                     }
@@ -297,7 +284,7 @@ static void cli_osci_data(const uint8_t * p_attr)
 /*!
 * @brief        Set oscilloscope channels
 *
-*           Command: >>>osci_channels [par1,par2,...parN]
+*           Command: >>>osci_channels [parId1,parId2,...parIdN]
 *
 *           where parX is Device Parameter ID number
 *
@@ -325,18 +312,18 @@ static void cli_osci_channel(const uint8_t * p_attr)
             ||  ( eCLI_OSCI_STATE_DONE  == g_cli_osci.state ))
         {
             // Reset counts
-            g_cli_osci.par.num_of = 0U;
+            g_cli_osci.channel.num_of = 0U;
 
             // Parse live watch request command
-            while(      ( g_cli_osci.par.num_of <= CLI_CFG_PAR_MAX_IN_OSCI)
+            while(      ( g_cli_osci.channel.num_of <= CLI_CFG_PAR_MAX_IN_OSCI)
                     &&  ( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
             {
                 // Get parameter ID by number
                 if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
                 {
                     // Add new parameter to streaming list
-                    g_cli_osci.par.list[ g_cli_osci.par.num_of ] = par_num;
-                    g_cli_osci.par.num_of++;
+                    g_cli_osci.channel.list[ g_cli_osci.channel.num_of ] = par_num;
+                    g_cli_osci.channel.num_of++;
 
                     // Increment attribute cursor
                     p_attr += ch_cnt;
@@ -352,7 +339,7 @@ static void cli_osci_channel(const uint8_t * p_attr)
                 else
                 {
                     // Reset watch list
-                    g_cli_osci.par.num_of = 0;
+                    g_cli_osci.channel.num_of = 0;
 
                     // Raise invalid parameter flag
                     invalid_par = true;
@@ -365,8 +352,8 @@ static void cli_osci_channel(const uint8_t * p_attr)
             }
 
             // Check requested live watch paramter list
-            if  (   ( g_cli_osci.par.num_of > 0 )
-                &&  ( g_cli_osci.par.num_of <= CLI_CFG_PAR_MAX_IN_OSCI ))
+            if  (   ( g_cli_osci.channel.num_of > 0 )
+                &&  ( g_cli_osci.channel.num_of <= CLI_CFG_PAR_MAX_IN_OSCI ))
             {
                 // Get pointer to Tx buffer
                 uint8_t * p_tx_buf = cli_util_get_tx_buf();
@@ -376,10 +363,10 @@ static void cli_osci_channel(const uint8_t * p_attr)
                 cli_send_str( p_tx_buf );
 
                 // Print streaming parameters/variables
-                for ( uint8_t par_idx = 0; par_idx < g_cli_osci.par.num_of; par_idx++ )
+                for ( uint8_t par_idx = 0; par_idx < g_cli_osci.channel.num_of; par_idx++ )
                 {
                     // Get parameter configurations
-                    par_get_config( g_cli_osci.par.list[ par_idx ], &par_cfg );
+                    par_get_config( g_cli_osci.channel.list[ par_idx ], &par_cfg );
 
                     // Format string with parameters info
                     sprintf((char*) p_tx_buf, ",%s", par_cfg.name );
@@ -438,13 +425,40 @@ static void cli_osci_channel(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_osci_trigger(const uint8_t * p_attr)
 {
+    uint32_t    type        = 0U;
+    uint32_t    par_id      = 0U;
+    float32_t   threshold   = 0.0f;
+    float32_t   pretrigger  = 0U;
+    par_num_t   par_num     = 0U;
+
     if ( NULL != p_attr )
     {
         // Osci idle
         if  (   ( eCLI_OSCI_STATE_IDLE  == g_cli_osci.state )
             ||  ( eCLI_OSCI_STATE_DONE  == g_cli_osci.state ))
         {
-            // TODO: ...
+            if ( 4U == sscanf((const char*) p_attr, "%d,%d,%f,%f", (int*) &type, (int*) &par_id, (float*) &threshold, (float32_t*) &pretrigger ))
+            {
+                if  (   ( type < eCLI_OSCI_TRIG_NUM_OF )
+                    &&  ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+                    &&  (( pretrigger >= 0.0f) && ( pretrigger <= 1.0f )))
+                {
+                    g_cli_osci.trigger.type 		= (cli_osci_trig_t) type;
+                    g_cli_osci.trigger.par  		= par_num;
+                    g_cli_osci.trigger.th   		= threshold;
+                    g_cli_osci.trigger.pretrigger   = pretrigger;
+
+                    cli_printf( "OK, Oscilloscope trigger set!" );
+                }
+                else
+                {
+                    cli_printf( "ERR, Invalid trigger settings!" );
+                }
+            }
+            else
+            {
+                cli_printf( "ERR, Invalid trigger settings!" );
+            }
         }
         else
         {
@@ -558,19 +572,6 @@ cli_status_t cli_osci_init(void)
 {
     cli_status_t status = eCLI_OK;
 
-    // TODO: Load saved osci settings from NVM...
-
-
-
-    // TODO: Only for testing...
-    g_cli_osci.par.list[0] = ePAR_SPIRAL_1_CUR;
-    g_cli_osci.par.list[1] = ePAR_SPIRAL_1_CUR_FILT;
-    g_cli_osci.par.num_of = 2;
-
-    g_cli_osci.mode = eCLI_OSCI_MODE_AUTO;
-
-
-
     // Register Device Parameters CLI table
     cli_register_cmd_table((const cli_cmd_table_t*) &g_cli_osci_table );
 
@@ -618,19 +619,19 @@ void cli_osci_samp_hndl(void)
     if ( eCLI_OSCI_STATE_SAMPLING == g_cli_osci.state )
     {
         // Take sample of each parameter in osci list
-        for ( uint32_t par_it = 0U; par_it < g_cli_osci.par.num_of; par_it++ )
+        for ( uint32_t par_it = 0U; par_it < g_cli_osci.channel.num_of; par_it++ )
         {
             // Get parameter value
-            const float32_t par_val = com_util_par_val_to_float( g_cli_osci.par.list[par_it] );
+            const float32_t par_val = com_util_par_val_to_float( g_cli_osci.channel.list[par_it] );
 
             // Set value to sample buffer
             g_cli_osci.samp.buf[ ( g_cli_osci.samp.idx + par_it )] = par_val;
         }
 
         // Sample buffer not full
-        if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.par.num_of ))
+        if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.channel.num_of ))
         {
-            g_cli_osci.samp.idx += g_cli_osci.par.num_of;
+            g_cli_osci.samp.idx += g_cli_osci.channel.num_of;
         }
 
         // Sample buffer full
