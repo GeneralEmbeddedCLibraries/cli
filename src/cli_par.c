@@ -91,9 +91,9 @@ static const cli_cmd_table_t g_cli_par_table =
         // ------------------------------------------------------------------------------------------------------
 
         {   "par_print",            cli_par_print,          "Prints parameters"                                 },
-        {   "par_set",              cli_par_set,            "Set parameter [parID,value]"                       },
-        {   "par_get",              cli_par_get,            "Get parameter [parID]"                             },
-        {   "par_def",              cli_par_def,            "Set parameter to default [parID]"                  },
+        {   "par_set",              cli_par_set,            "Set parameter [parId,value]"                       },
+        {   "par_get",              cli_par_get,            "Get parameter [parId]"                             },
+        {   "par_def",              cli_par_def,            "Set parameter to default [parId]"                  },
         {   "par_def_all",          cli_par_def_all,        "Set all parameters to default"                     },
         {   "par_save",             cli_par_store,          "Save parameter to NVM"                             },
 
@@ -103,7 +103,7 @@ static const cli_cmd_table_t g_cli_par_table =
 
         {   "status_start",         cli_status_start,       "Start data streaming"                              },
         {   "status_stop",          cli_status_stop,        "Stop data streaming"                               },
-        {   "status_des",           cli_status_des,         "Status description [par1,par2,...,parN]"           },
+        {   "status_des",           cli_status_des,         "Status description [parId1,parId2,...,parIdN]"     },
         {   "status_rate",          cli_status_rate,        "Change data streaming period [miliseconds]"        },
         {   "status_info",          cli_status_info,        "Get streaming configuration info"                  },
 

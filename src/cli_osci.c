@@ -120,8 +120,8 @@ static void cli_osci_data       (const uint8_t * p_attr);
 static void cli_osci_channel    (const uint8_t * p_attr);
 static void cli_osci_trigger    (const uint8_t * p_attr);
 static void cli_osci_downsample (const uint8_t * p_attr);
+static void cli_osci_state      (const uint8_t * p_attr);
 static void cli_osci_info       (const uint8_t * p_attr);
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,15 +149,15 @@ static const cli_cmd_table_t g_cli_osci_table =
         {   "osci_start",           cli_osci_start,         	"Start (trigger) oscilloscope"                                  },
         {   "osci_stop",            cli_osci_stop,          	"Stop or cancel ongoing sampling"                               },
         {   "osci_data",            cli_osci_data,          	"Get oscilloscope sampled data"                                 },
-        {   "osci_channel",         cli_osci_channel,       	"Set oscilloscope channels [par1,par2,...,parN]"                },
+        {   "osci_channel",         cli_osci_channel,       	"Set oscilloscope channels [parId1,parId2,...,parIdN]"          },
         {   "osci_trigger",         cli_osci_trigger,       	"Set oscilloscope trigger [type,par,threshold,pre-trigger]"     },
         {   "osci_downsample",      cli_osci_downsample,    	"Set oscilloscope downsample factor [downsample]"               },
+        {   "osci_state",           cli_osci_state,             "Get oscilloscope state"                                        },
         {   "osci_info",            cli_osci_info,              "Get information of oscilloscope configuration"                 },
-
     },
 
     // Total number of listed commands
-    .num_of = 7
+    .num_of = 8
 };
 
 
@@ -199,6 +199,8 @@ static void cli_osci_start(const uint8_t * p_attr)
         {
             // Enter waiting state
             g_cli_osci.state = eCLI_OSCI_STATE_WAITING;
+
+            cli_printf( "OK, Osci started!" );
         }
         else
         {
@@ -225,6 +227,8 @@ static void cli_osci_stop(const uint8_t * p_attr)
     {
         // Enter idle state
         g_cli_osci.state = eCLI_OSCI_STATE_IDLE;
+
+        cli_printf( "OK, Osci stopped!" );
     }
     else
     {
@@ -308,13 +312,96 @@ static void cli_osci_data(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_osci_channel(const uint8_t * p_attr)
 {
+    uint32_t    ch_cnt      = 0;
+    uint32_t    par_id      = 0;
+    par_cfg_t   par_cfg     = {0};
+    par_num_t   par_num     = 0;
+    bool        invalid_par = false;
+
     if ( NULL != p_attr )
     {
         // Osci idle
         if  (   ( eCLI_OSCI_STATE_IDLE  == g_cli_osci.state )
             ||  ( eCLI_OSCI_STATE_DONE  == g_cli_osci.state ))
         {
-            // TODO: ...
+            // Reset counts
+            g_cli_osci.par.num_of = 0U;
+
+            // Parse live watch request command
+            while(      ( g_cli_osci.par.num_of <= CLI_CFG_PAR_MAX_IN_OSCI)
+                    &&  ( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
+            {
+                // Get parameter ID by number
+                if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+                {
+                    // Add new parameter to streaming list
+                    g_cli_osci.par.list[ g_cli_osci.par.num_of ] = par_num;
+                    g_cli_osci.par.num_of++;
+
+                    // Increment attribute cursor
+                    p_attr += ch_cnt;
+
+                    // Skip comma
+                    if ( ',' == *p_attr )
+                    {
+                        p_attr++;
+                    }
+                }
+
+                // Invalid parameter ID
+                else
+                {
+                    // Reset watch list
+                    g_cli_osci.par.num_of = 0;
+
+                    // Raise invalid parameter flag
+                    invalid_par = true;
+
+                    cli_printf( "ERR, Wrong parameter ID! ID: %d does not exsist!", par_id );
+
+                    // Exit reading command
+                    break;
+                }
+            }
+
+            // Check requested live watch paramter list
+            if  (   ( g_cli_osci.par.num_of > 0 )
+                &&  ( g_cli_osci.par.num_of <= CLI_CFG_PAR_MAX_IN_OSCI ))
+            {
+                // Get pointer to Tx buffer
+                uint8_t * p_tx_buf = cli_util_get_tx_buf();
+
+                // Send sample time
+                snprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, "OK" );
+                cli_send_str( p_tx_buf );
+
+                // Print streaming parameters/variables
+                for ( uint8_t par_idx = 0; par_idx < g_cli_osci.par.num_of; par_idx++ )
+                {
+                    // Get parameter configurations
+                    par_get_config( g_cli_osci.par.list[ par_idx ], &par_cfg );
+
+                    // Format string with parameters info
+                    sprintf((char*) p_tx_buf, ",%s", par_cfg.name );
+
+                    // Send
+                    cli_send_str( p_tx_buf );
+                }
+
+                // Terminate line
+                cli_printf("");
+            }
+
+            // Raise error only if all valid parameters
+            else if ( false == invalid_par )
+            {
+                cli_printf( "ERR, Invalid number of osci channels!" );
+            }
+
+            else
+            {
+                // No actions...
+            }
         }
         else
         {
@@ -402,6 +489,28 @@ static void cli_osci_downsample(const uint8_t * p_attr)
         {
             cli_printf( "WAR, Oscilloscope cfg cannot be changed during sampling!" );
         }
+    }
+    else
+    {
+        cli_util_unknown_cmd_rsp();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Get oscilloscope state
+*
+* @param[in]    attr    - Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_osci_state(const uint8_t * p_attr)
+{
+    if ( NULL == p_attr )
+    {
+        const char * status_str[] = { "IDLE", "WAITING", "SAMPLING", "DONE" };
+
+        cli_printf( "OK, %s", status_str[g_cli_osci.state] );
     }
     else
     {
