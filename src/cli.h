@@ -93,7 +93,7 @@ cli_status_t cli_printf_ch			(const cli_ch_opt_t ch, char * p_format, ...);
 cli_status_t cli_register_cmd_table (const cli_cmd_table_t * const p_cmd_table);
 
 // Oscilloscope API
-cli_status_t cli_hndl_osci          (void);
+cli_status_t cli_osci_hndl          (void);
 
 #endif // __CLI_H
 

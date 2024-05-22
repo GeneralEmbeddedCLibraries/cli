@@ -470,64 +470,6 @@ cli_status_t cli_osci_init(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
-* @brief        Handle CLI Oscilloscope
-*
-* @note     Shall not be called from ISR!
-*
-* @return       status - Status of operation
-*/
-////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_osci_hndl(void)
-{
-    cli_status_t status = eCLI_OK;
-
-    if ( eCLI_OSCI_MODE_AUTO == g_cli_osci.mode )
-    {
-        // Sampling finished
-        if ( eCLI_OSCI_STATE_DONE == g_cli_osci.state )
-        {
-            // Get pointer to Tx buffer
-            uint8_t * p_tx_buf = cli_util_get_tx_buf();
-
-            // Loop thru sample buffer
-            for ( uint32_t samp_it = 0U; samp_it < CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE; samp_it += g_cli_osci.par.num_of )
-            {
-                // Loop thru parameter list
-                for ( uint8_t par_it = 0; par_it < g_cli_osci.par.num_of; par_it++ )
-                {
-                    // Get value from sample buffer
-                    const float32_t samp_val = g_cli_osci.samp.buf[ ( samp_it + par_it )];
-
-                    // Convert to string
-                    sprintf((char*) p_tx_buf, "%g", samp_val );
-
-                    // Send
-                    cli_send_str( p_tx_buf );
-
-                    // If not last -> send delimiter
-                    if ( par_it < ( g_cli_osci.par.num_of - 1 ))
-                    {
-                        cli_send_str((const uint8_t*) "," );
-                    }
-                }
-
-                // Terminate line
-                cli_printf("");
-            }
-
-
-            // Osci idle
-            g_cli_osci.state = eCLI_OSCI_STATE_IDLE;
-        }
-    }
-
-
-
-    return status;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*!
 * @brief        CLI Oscilloscope Sampling handler
 *
 * @note     This function shall be called in time equidistant period!

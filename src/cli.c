@@ -937,15 +937,6 @@ cli_status_t cli_hndl(void)
 	return status;
 }
 
-cli_status_t cli_hndl_osci(void)
-{
-    cli_status_t status = eCLI_OK;
-
-    cli_osci_samp_hndl();
-
-    return status;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        Send string
@@ -1159,6 +1150,15 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
     }
 
 	return status;
+}
+
+cli_status_t cli_osci_hndl(void)
+{
+    cli_status_t status = eCLI_OK;
+
+    cli_osci_samp_hndl();
+
+    return status;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
