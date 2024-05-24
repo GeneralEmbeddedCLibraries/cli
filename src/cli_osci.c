@@ -111,13 +111,24 @@ typedef struct
  */
 typedef void (*pf_osci_state_hndl_t)(void);
 
+/**
+ *  Trigger detection pointer function
+ */
+typedef bool (*pf_cli_trig_check)(const float32_t sig, const float32_t th);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_osci_init_buf       (void);
-static void         cli_osci_take_sample    (void);
-static void         osci_state_waiting_hndl (void);
-static void         osci_state_sapling_hndl (void);
+static cli_status_t cli_osci_init_buf       	(void);
+static void         cli_osci_take_sample    	(void);
+static void         osci_state_waiting_hndl 	(void);
+static void         osci_state_sapling_hndl 	(void);
+static bool         cli_osci_trig_equal     	(const float32_t sig, const float32_t th);
+static bool         cli_osci_trig_above     	(const float32_t sig, const float32_t th);
+static bool         cli_osci_trig_below         (const float32_t sig, const float32_t th);
+static bool         cli_osci_trig_edge_rising   (const float32_t sig, const float32_t th);
+static bool         cli_osci_trig_edge_falling  (const float32_t sig, const float32_t th);
+static bool         cli_osci_trig_edge_both     (const float32_t sig, const float32_t th);
 
 // Cli functions
 static void cli_osci_start      (const uint8_t * p_attr);
@@ -151,6 +162,20 @@ static const pf_osci_state_hndl_t gpf_cli_osci_state_hndl[eCLI_OSCI_STATE_NUM_OF
 };
 
 /**
+ *  Trigger detection logic
+ */
+static const pf_cli_trig_check gpf_cli_osci_check_trig[eCLI_OSCI_TRIG_NUM_OF] =
+{
+    [eCLI_OSCI_TRIG_NONE]           = NULL,
+    [eCLI_OSCI_TRIG_EDGE_RISING]    = cli_osci_trig_edge_rising,
+    [eCLI_OSCI_TRIG_EDGE_FALLING]   = cli_osci_trig_edge_falling,
+    [eCLI_OSCI_TRIG_EDGE_BOTH]      = cli_osci_trig_edge_both,
+    [eCLI_OSCI_TRIG_EQUAL]          = cli_osci_trig_equal,
+    [eCLI_OSCI_TRIG_ABOVE]          = cli_osci_trig_above,
+    [eCLI_OSCI_TRIG_BELOW]          = cli_osci_trig_below,
+};
+
+/**
  *      Oscilloscope CLI commands
  */
 static const cli_cmd_table_t g_cli_osci_table =
@@ -175,7 +200,6 @@ static const cli_cmd_table_t g_cli_osci_table =
     // Total number of listed commands
     .num_of = 8
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -239,69 +263,6 @@ static void cli_osci_take_sample(void)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
-typedef bool (*pf_cli_trig_check)(const float32_t sig, const float32_t th);
-
-
-static bool cli_osci_trig_equal (const float32_t sig, const float32_t th);
-static bool cli_osci_trig_above (const float32_t sig, const float32_t th);
-static bool cli_osci_trig_below (const float32_t sig, const float32_t th);
-
-
-
-static bool cli_osci_trig_equal(const float32_t sig, const float32_t th)
-{
-    bool detected = false;
-
-    if ( sig == th )
-    {
-        detected = true;
-    }
-
-    return detected;
-}
-
-static bool cli_osci_trig_above(const float32_t sig, const float32_t th)
-{
-    bool detected = false;
-
-    if ( sig > th )
-    {
-        detected = true;
-    }
-
-    return detected;
-}
-
-static bool cli_osci_trig_below(const float32_t sig, const float32_t th)
-{
-    bool detected = false;
-
-    if ( sig < th )
-    {
-        detected = true;
-    }
-
-    return detected;
-}
-
-
-static const pf_cli_trig_check gpf_cli_osci_check_trig[eCLI_OSCI_TRIG_NUM_OF] =
-{
-    [eCLI_OSCI_TRIG_NONE]           = NULL,
-    [eCLI_OSCI_TRIG_EDGE_RISING]    = NULL,
-    [eCLI_OSCI_TRIG_EDGE_FALLING]   = NULL,
-    [eCLI_OSCI_TRIG_EDGE_BOTH]      = NULL,
-    [eCLI_OSCI_TRIG_EQUAL]          = cli_osci_trig_equal,
-    [eCLI_OSCI_TRIG_ABOVE]          = cli_osci_trig_above,
-    [eCLI_OSCI_TRIG_BELOW]          = cli_osci_trig_below,
-};
-
-
-
-
 static void osci_state_waiting_hndl(void)
 {
     static uint32_t pretrigger_samp_cnt = 0;
@@ -376,6 +337,132 @@ static void osci_state_sapling_hndl(void)
         g_cli_osci.state = eCLI_OSCI_STATE_DONE;
         g_cli_osci.samp.idx = 0;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope trigger on equal threshold value
+*
+* @param[in]    sig         - Signal to check for trigger
+* @param[in]    th          - Trigger threshold
+* @return       detected    - True when triggers
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_osci_trig_equal(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    if ( sig == th )
+    {
+        detected = true;
+    }
+
+    return detected;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope trigger above threshold value
+*
+* @param[in]    sig         - Signal to check for trigger
+* @param[in]    th          - Trigger threshold
+* @return       detected    - True when triggers
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_osci_trig_above(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    if ( sig > th )
+    {
+        detected = true;
+    }
+
+    return detected;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope trigger below threshold value
+*
+* @param[in]    sig         - Signal to check for trigger
+* @param[in]    th          - Trigger threshold
+* @return       detected    - True when triggers
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_osci_trig_below(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    if ( sig < th )
+    {
+        detected = true;
+    }
+
+    return detected;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope trigger on rising edge
+*
+* @param[in]    sig         - Signal to check for trigger
+* @param[in]    th          - Trigger threshold
+* @return       detected    - True when triggers
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_osci_trig_edge_rising(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    (void) sig;
+    (void) th;
+
+    // TODO: Implement logic...
+
+    return detected;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope trigger on falling edge
+*
+* @param[in]    sig         - Signal to check for trigger
+* @param[in]    th          - Trigger threshold
+* @return       detected    - True when triggers
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_osci_trig_edge_falling(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    (void) sig;
+    (void) th;
+
+    // TODO: Implement logic...
+
+    return detected;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope trigger on both (rising & falling) edge
+*
+* @param[in]    sig         - Signal to check for trigger
+* @param[in]    th          - Trigger threshold
+* @return       detected    - True when triggers
+*/
+////////////////////////////////////////////////////////////////////////////////
+static bool cli_osci_trig_edge_both(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    (void) sig;
+    (void) th;
+
+    // TODO: Implement logic...
+
+    return detected;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
