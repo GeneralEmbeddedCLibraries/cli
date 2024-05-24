@@ -101,6 +101,7 @@ typedef struct
         float32_t       data[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE];       /**<Sample buffer data */
         int32_t         idx;                                        /**<Sample buffer index */
         uint32_t        downsample_factor;                          /**<Downsample factor */
+        uint32_t        num_of_samp;                                /**<Max samples, that is defined by max buffer size and number of channels*/
     } samp;
 
     cli_osci_state_t    state;      /**<Oscilloscope state */
@@ -273,7 +274,7 @@ static void osci_state_waiting_hndl(void)
         g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
 
         // We need to sample full buffer
-        g_cli_osci.samp.idx = CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE;
+        g_cli_osci.samp.idx = g_cli_osci.samp.num_of_samp;
     }
 
     // Trigger selected
@@ -301,7 +302,7 @@ static void osci_state_waiting_hndl(void)
 
                     // We don't need to sample full buffer as we have a pretrigger going on
                     // NOTE: One sample is already taken, therefore -1
-                    g_cli_osci.samp.idx = ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.trigger.trig_idx - 1U );
+                    g_cli_osci.samp.idx = ( g_cli_osci.samp.num_of_samp - g_cli_osci.trigger.trig_idx - 1U );
                 }
             }
         }
@@ -773,7 +774,12 @@ static void cli_osci_trigger(const uint8_t * p_attr)
                     g_cli_osci.trigger.par  		= par_num;
                     g_cli_osci.trigger.th   		= threshold;
                     g_cli_osci.trigger.pretrigger   = pretrigger;
-                    g_cli_osci.trigger.trig_idx     = (uint32_t)( pretrigger * CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE );
+
+                    // Calculate sample group interations
+                    g_cli_osci.samp.num_of_samp  = (uint32_t)( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / g_cli_osci.channel.num_of );
+
+                    // Calculate how many samples needs to be done in pre-trigger phase
+                    g_cli_osci.trigger.trig_idx = (uint32_t)( pretrigger * g_cli_osci.samp.num_of_samp );
 
                     cli_printf( "OK, Oscilloscope trigger set!" );
                 }
