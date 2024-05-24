@@ -96,6 +96,7 @@ typedef struct
         p_ring_buffer_t buf;                                        /**<Sample buffer - ring buffer */
         float32_t       data[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE];       /**<Sample buffer data */
         uint32_t        idx;                                        /**<Sample buffer index */
+        uint32_t        downsample_factor;                          /**<Downsample factor */
     } samp;
 
     cli_osci_state_t    state;      /**<Oscilloscope state */
@@ -178,7 +179,13 @@ static const cli_cmd_table_t g_cli_osci_table =
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Initializing oscilloscope sample buffer
+*
+* @return       status - Status of initialization
+*/
+////////////////////////////////////////////////////////////////////////////////
 static cli_status_t cli_osci_init_buf(void)
 {
     cli_status_t status = eCLI_OK;
@@ -189,7 +196,7 @@ static cli_status_t cli_osci_init_buf(void)
         .name       = "Osci",
         .p_mem      = (void*) &g_cli_osci.samp.data,
         .item_size  = sizeof(float32_t),
-        .override   = true,
+        .override   = true,                         // Dump old data
     };
 
     // Init ring buffer
@@ -201,7 +208,13 @@ static cli_status_t cli_osci_init_buf(void)
     return status;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Take sample and put it into sample buffer
+*
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_osci_take_sample(void)
 {
     // Take sample of each parameter in osci list
@@ -215,8 +228,15 @@ static void cli_osci_take_sample(void)
     }
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope in WAITING state
+*
+* @note     This function might be called from ISR!
+*
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void osci_state_waiting_hndl(void)
 {
     // Take sample
@@ -231,7 +251,15 @@ static void osci_state_waiting_hndl(void)
     }
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Oscilloscope in SAMPLING state
+*
+* @note     This function might be called from ISR!
+*
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void osci_state_sapling_hndl(void)
 {
     // Take sample
@@ -250,7 +278,6 @@ static void osci_state_sapling_hndl(void)
         g_cli_osci.samp.idx = 0;
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -399,7 +426,7 @@ static void cli_osci_data(const uint8_t * p_attr)
 *
 *           Command: >>>osci_channels [parId1,parId2,...parIdN]
 *
-*           where parX is Device Parameter ID number
+*           where parIdX is Device Parameter ID number
 *
 *
 * @note     Shall only be called when oscilloscope is not in running mode.
@@ -586,12 +613,11 @@ static void cli_osci_trigger(const uint8_t * p_attr)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
-* @brief        Get oscilloscope sampled data
+* @brief        Set oscilloscope downsample configuration
 *
-*           Command: >>>osci_downsample [factor]
+*           Command: >>>osci_rate [factor]
 *
-*               -factor:    Downsample factor
-*                           (0 - No downsampling, 2 - TBD:...)
+*               -factor:    Downsample factor. Valid: 1-1000
 *
 *
 * @note     Shall only be called when oscilloscope is not in running mode.
@@ -604,13 +630,32 @@ static void cli_osci_trigger(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_osci_downsample(const uint8_t * p_attr)
 {
+    uint32_t downsample = 0U;
+
     if ( NULL != p_attr )
     {
         // Osci idle
         if  (   ( eCLI_OSCI_STATE_IDLE  == g_cli_osci.state )
             ||  ( eCLI_OSCI_STATE_DONE  == g_cli_osci.state ))
         {
-            // TODO: ...
+            if ( 1U == sscanf((const char*) p_attr, "%d", (int*) &downsample ))
+            {
+                if  (   ( downsample > 0U )
+                    &&  ( downsample <= 1000U ))
+                {
+                    g_cli_osci.samp.downsample_factor = downsample;
+
+                    cli_printf( "OK, Oscilloscope downsample set!" );
+                }
+                else
+                {
+                    cli_printf( "ERR, Invalid downsample settings!" );
+                }
+            }
+            else
+            {
+                cli_printf( "ERR, Invalid downsample settings!" );
+            }
         }
         else
         {
@@ -688,6 +733,9 @@ cli_status_t cli_osci_init(void)
     // Initialize sample ring buffer
     status = cli_osci_init_buf();
 
+    // Init downsample rate
+    g_cli_osci.samp.downsample_factor = 1U;
+
     // Register Device Parameters CLI table
     cli_register_cmd_table((const cli_cmd_table_t*) &g_cli_osci_table );
 
@@ -707,9 +755,21 @@ cli_status_t cli_osci_init(void)
 ////////////////////////////////////////////////////////////////////////////////
 void cli_osci_samp_hndl(void)
 {
-    if ( NULL != g_cli_osci_state_hndl[g_cli_osci.state] )
+    static uint32_t samp_cnt = 0U;
+
+    // Handle downsample
+    if ( samp_cnt >= ( g_cli_osci.samp.downsample_factor - 1U ))
     {
-        g_cli_osci_state_hndl[g_cli_osci.state]();
+        if ( NULL != g_cli_osci_state_hndl[g_cli_osci.state] )
+        {
+            g_cli_osci_state_hndl[g_cli_osci.state]();
+        }
+
+        samp_cnt = 0U;
+    }
+    else
+    {
+        samp_cnt++;
     }
 }
 
