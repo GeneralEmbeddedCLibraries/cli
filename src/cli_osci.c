@@ -52,6 +52,9 @@ typedef enum
     eCLI_OSCI_TRIG_EDGE_RISING,     /**<Trigger on rising edge */
     eCLI_OSCI_TRIG_EDGE_FALLING,    /**<Trigger on falling edge */
     eCLI_OSCI_TRIG_EDGE_BOTH,       /**<Trigger on both (rising or falling) edge */
+    eCLI_OSCI_TRIG_EQUAL,           /**<Value equal to threshold value */
+    eCLI_OSCI_TRIG_ABOVE,           /**<Value above threshold value */
+    eCLI_OSCI_TRIG_BELOW,           /**<Value below threshold value */
 
     eCLI_OSCI_TRIG_NUM_OF,
 } cli_osci_trig_t;
@@ -77,10 +80,11 @@ typedef struct
     /**<Trigger */
     struct
     {
-        float32_t       th;         /**<Trigger threshold */
-        par_num_t       par;        /**<Device parameter used for triggering */
-        cli_osci_trig_t type;       /**<Trigger type*/
-        float32_t       pretrigger; /**<Pretrigger */
+        float32_t       th;         	/**<Trigger threshold */
+        par_num_t       par;        	/**<Device parameter used for triggering */
+        cli_osci_trig_t type;       	/**<Trigger type*/
+        float32_t       pretrigger; 	/**<Pretrigger */
+        uint32_t        trig_idx;       /**<Trigger sample buffer index */
     } trigger;
 
     /**<Channels */
@@ -126,8 +130,6 @@ static void cli_osci_state      (const uint8_t * p_attr);
 static void cli_osci_info       (const uint8_t * p_attr);
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +142,7 @@ static volatile cli_osci_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))
 /**
  *  Osci state handlers
  */
-static const pf_osci_state_hndl_t g_cli_osci_state_hndl[eCLI_OSCI_STATE_NUM_OF] =
+static const pf_osci_state_hndl_t gpf_cli_osci_state_hndl[eCLI_OSCI_STATE_NUM_OF] =
 {
     [eCLI_OSCI_STATE_IDLE]      = NULL,
     [eCLI_OSCI_STATE_WAITING]   = osci_state_waiting_hndl,
@@ -237,17 +239,113 @@ static void cli_osci_take_sample(void)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+typedef bool (*pf_cli_trig_check)(const float32_t sig, const float32_t th);
+
+
+static bool cli_osci_trig_equal (const float32_t sig, const float32_t th);
+static bool cli_osci_trig_above (const float32_t sig, const float32_t th);
+static bool cli_osci_trig_below (const float32_t sig, const float32_t th);
+
+
+
+static bool cli_osci_trig_equal(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    if ( sig == th )
+    {
+        detected = true;
+    }
+
+    return detected;
+}
+
+static bool cli_osci_trig_above(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    if ( sig > th )
+    {
+        detected = true;
+    }
+
+    return detected;
+}
+
+static bool cli_osci_trig_below(const float32_t sig, const float32_t th)
+{
+    bool detected = false;
+
+    if ( sig < th )
+    {
+        detected = true;
+    }
+
+    return detected;
+}
+
+
+static const pf_cli_trig_check gpf_cli_osci_check_trig[eCLI_OSCI_TRIG_NUM_OF] =
+{
+    [eCLI_OSCI_TRIG_NONE]           = NULL,
+    [eCLI_OSCI_TRIG_EDGE_RISING]    = NULL,
+    [eCLI_OSCI_TRIG_EDGE_FALLING]   = NULL,
+    [eCLI_OSCI_TRIG_EDGE_BOTH]      = NULL,
+    [eCLI_OSCI_TRIG_EQUAL]          = cli_osci_trig_equal,
+    [eCLI_OSCI_TRIG_ABOVE]          = cli_osci_trig_above,
+    [eCLI_OSCI_TRIG_BELOW]          = cli_osci_trig_below,
+};
+
+
+
+
 static void osci_state_waiting_hndl(void)
 {
-    // Take sample
-    cli_osci_take_sample();
-    cli_osci_take_sample();
-    cli_osci_take_sample();
+    static uint32_t pretrigger_samp_cnt = 0;
 
     // No trigger
     if ( eCLI_OSCI_TRIG_NONE == g_cli_osci.trigger.type )
     {
         g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
+
+        // Reset pretrigger samp
+        pretrigger_samp_cnt = 0U;
+    }
+
+    // Trigger selected
+    else
+    {
+        // Take sample
+        cli_osci_take_sample();
+
+        // Pretrigger sampling done
+        if ( pretrigger_samp_cnt >= g_cli_osci.trigger.trig_idx )
+        {
+            // Get trigger parameter value
+            const float32_t par_val = com_util_par_val_to_float( g_cli_osci.trigger.par );
+
+            if ( NULL != gpf_cli_osci_check_trig[g_cli_osci.trigger.type] )
+            {
+                // Check for trigger
+                if ( true == gpf_cli_osci_check_trig[g_cli_osci.trigger.type]( par_val, g_cli_osci.trigger.th ))
+                {
+                    // Enter sampling phase on trigger detection
+                    g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
+
+                    // Reset pretrigger samp
+                    pretrigger_samp_cnt = 0U;
+                }
+            }
+        }
+
+        // Waiting for pretrigger
+        else
+        {
+            pretrigger_samp_cnt++;
+        }
     }
 }
 
@@ -265,10 +363,15 @@ static void osci_state_sapling_hndl(void)
     // Take sample
     cli_osci_take_sample();
 
+    // Calculate sample group interations
+    // TODO: Move that out of ISR into CLI setting channels CLI command!!!
+    const uint32_t num_of_samp = (uint32_t)( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / g_cli_osci.channel.num_of );
+
+
     // Sample buffer not full
-    if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.channel.num_of ))
+    if ( g_cli_osci.samp.idx < ( num_of_samp - g_cli_osci.trigger.trig_idx - 2U ))  // NOTE: Make into acount that in case of trigger two samples are already been made at that point!!!
     {
-        g_cli_osci.samp.idx += g_cli_osci.channel.num_of;
+        g_cli_osci.samp.idx++;
     }
 
     // Sample buffer full
@@ -587,6 +690,7 @@ static void cli_osci_trigger(const uint8_t * p_attr)
                     g_cli_osci.trigger.par  		= par_num;
                     g_cli_osci.trigger.th   		= threshold;
                     g_cli_osci.trigger.pretrigger   = pretrigger;
+                    g_cli_osci.trigger.trig_idx     = (uint32_t)( pretrigger * CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE );
 
                     cli_printf( "OK, Oscilloscope trigger set!" );
                 }
@@ -760,9 +864,9 @@ void cli_osci_samp_hndl(void)
     // Handle downsample
     if ( samp_cnt >= ( g_cli_osci.samp.downsample_factor - 1U ))
     {
-        if ( NULL != g_cli_osci_state_hndl[g_cli_osci.state] )
+        if ( NULL != gpf_cli_osci_state_hndl[g_cli_osci.state] )
         {
-            g_cli_osci_state_hndl[g_cli_osci.state]();
+            gpf_cli_osci_state_hndl[g_cli_osci.state]();
         }
 
         samp_cnt = 0U;
