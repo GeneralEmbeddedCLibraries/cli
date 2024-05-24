@@ -220,7 +220,9 @@ static void cli_osci_take_sample(void)
 static void osci_state_waiting_hndl(void)
 {
     // Take sample
-    //cli_osci_take_sample();
+    cli_osci_take_sample();
+    cli_osci_take_sample();
+    cli_osci_take_sample();
 
     // No trigger
     if ( eCLI_OSCI_TRIG_NONE == g_cli_osci.trigger.type )
@@ -356,8 +358,11 @@ static void cli_osci_data(const uint8_t * p_attr)
                 // Loop thru parameter list
                 for ( uint8_t par_it = 0U; par_it < g_cli_osci.channel.num_of; par_it++ )
                 {
+                    // Calculate buffer index as inverse access
+                    const int32_t buf_idx = ( -CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE + (( samp_it * g_cli_osci.channel.num_of ) + par_it ));
+
                     // Get value from sample buffer
-                    if ( eRING_BUFFER_OK == ring_buffer_get_by_index( g_cli_osci.samp.buf, (float32_t*) &samp_val, (( samp_it * g_cli_osci.channel.num_of ) + par_it )))
+                    if ( eRING_BUFFER_OK == ring_buffer_get_by_index( g_cli_osci.samp.buf, (float32_t*) &samp_val, buf_idx ))
                     {
                         // Convert to string
                         sprintf((char*) p_tx_buf, "%g", samp_val );
