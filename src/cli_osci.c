@@ -63,6 +63,8 @@ typedef enum
     eCLI_OSCI_STATE_WAITING,        /**<Waiting for trigger */
     eCLI_OSCI_STATE_SAMPLING,       /**<Sampling phase */
     eCLI_OSCI_STATE_DONE,           /**<Sampling done */
+
+    eCLI_OSCI_STATE_NUM_OF,
 } cli_osci_state_t;
 
 /**
@@ -99,6 +101,10 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
+static void cli_osci_take_sample(void);
+
+
+// Cli functions
 static void cli_osci_start      (const uint8_t * p_attr);
 static void cli_osci_stop       (const uint8_t * p_attr);
 static void cli_osci_data       (const uint8_t * p_attr);
@@ -107,6 +113,8 @@ static void cli_osci_trigger    (const uint8_t * p_attr);
 static void cli_osci_downsample (const uint8_t * p_attr);
 static void cli_osci_state      (const uint8_t * p_attr);
 static void cli_osci_info       (const uint8_t * p_attr);
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +157,24 @@ static const cli_cmd_table_t g_cli_osci_table =
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
+
+
+static void cli_osci_take_sample(void)
+{
+    // Take sample of each parameter in osci list
+    for ( uint32_t par_it = 0U; par_it < g_cli_osci.channel.num_of; par_it++ )
+    {
+        // Get parameter value
+        const float32_t par_val = com_util_par_val_to_float( g_cli_osci.channel.list[par_it] );
+
+        // Set value to sample buffer
+        // TODO: Add to ring buffer
+
+        g_cli_osci.samp.buf[ ( g_cli_osci.samp.idx + par_it )] = par_val;
+    }
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -594,61 +620,63 @@ cli_status_t cli_osci_init(void)
 * @return       status - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
+
+
+typedef void (*pf_osci_state_hndl_t)(void);
+
+static void osci_state_waiting_hndl (void);
+static void osci_state_sapling_hndl (void);
+
+
+static const pf_osci_state_hndl_t g_cli_osci_state_hndl[eCLI_OSCI_STATE_NUM_OF] =
+{
+    [eCLI_OSCI_STATE_IDLE]      = NULL,
+    [eCLI_OSCI_STATE_WAITING]   = osci_state_waiting_hndl,
+    [eCLI_OSCI_STATE_SAMPLING]  = osci_state_sapling_hndl,
+    [eCLI_OSCI_STATE_DONE]      = NULL,
+};
+
+
+static void osci_state_waiting_hndl(void)
+{
+    // Take sample
+    cli_osci_take_sample();
+
+    // No trigger
+    if ( eCLI_OSCI_TRIG_NONE == g_cli_osci.trigger.type )
+    {
+        g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
+    }
+}
+
+
+static void osci_state_sapling_hndl(void)
+{
+    // Take sample
+    cli_osci_take_sample();
+
+    // Sample buffer not full
+    if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.channel.num_of ))
+    {
+        g_cli_osci.samp.idx += g_cli_osci.channel.num_of;
+    }
+
+    // Sample buffer full
+    else
+    {
+        g_cli_osci.state = eCLI_OSCI_STATE_DONE;
+        g_cli_osci.samp.idx = 0;
+    }
+}
+
+
+
 void cli_osci_samp_hndl(void)
 {
-
-    // TODO: Handle trigger here...
-
-
-    //=====================================================================================================
-    // PRE-TRIGGERING PART
-
-    if ( eCLI_OSCI_STATE_WAITING == g_cli_osci.state )
+    if ( NULL != g_cli_osci_state_hndl[g_cli_osci.state] )
     {
-        // No trigger
-        if ( eCLI_OSCI_TRIG_NONE == g_cli_osci.trigger.type )
-        {
-            g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
-        }
+        g_cli_osci_state_hndl[g_cli_osci.state]();
     }
-
-    //=====================================================================================================
-
-
-
-
-    //=====================================================================================================
-    // SAMPLING PART
-
-    // Sample data
-    if ( eCLI_OSCI_STATE_SAMPLING == g_cli_osci.state )
-    {
-        // Take sample of each parameter in osci list
-        for ( uint32_t par_it = 0U; par_it < g_cli_osci.channel.num_of; par_it++ )
-        {
-            // Get parameter value
-            const float32_t par_val = com_util_par_val_to_float( g_cli_osci.channel.list[par_it] );
-
-            // Set value to sample buffer
-            g_cli_osci.samp.buf[ ( g_cli_osci.samp.idx + par_it )] = par_val;
-        }
-
-        // Sample buffer not full
-        if ( g_cli_osci.samp.idx < ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.channel.num_of ))
-        {
-            g_cli_osci.samp.idx += g_cli_osci.channel.num_of;
-        }
-
-        // Sample buffer full
-        else
-        {
-            g_cli_osci.state = eCLI_OSCI_STATE_DONE;
-            g_cli_osci.samp.idx = 0;
-        }
-    }
-
-    //=====================================================================================================
-
 }
 
 #endif // ( 1 == CLI_CFG_PAR_USE_EN )
