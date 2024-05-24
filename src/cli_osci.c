@@ -99,7 +99,7 @@ typedef struct
     {
         p_ring_buffer_t buf;                                        /**<Sample buffer - ring buffer */
         float32_t       data[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE];       /**<Sample buffer data */
-        uint32_t        idx;                                        /**<Sample buffer index */
+        int32_t         idx;                                        /**<Sample buffer index */
         uint32_t        downsample_factor;                          /**<Downsample factor */
     } samp;
 
@@ -339,7 +339,8 @@ static void osci_state_waiting_hndl(void)
                     pretrigger_samp_cnt = 0U;
 
                     // We don't need to sample full buffer as we have a pretrigger going on
-                    g_cli_osci.samp.idx = ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.trigger.trig_idx );
+                    // NOTE: One sample is already taken, therefore -1
+                    g_cli_osci.samp.idx = ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.trigger.trig_idx - 1U );
                 }
             }
         }
@@ -366,16 +367,14 @@ static void osci_state_sapling_hndl(void)
     // Take sample
     cli_osci_take_sample();
 
-    // Sample buffer not full
-    if ( g_cli_osci.samp.idx > 0U )
-    {
-        g_cli_osci.samp.idx--;
-    }
+    // Decrement number of samples to do
+    g_cli_osci.samp.idx--;
 
-    // Sample buffer full
-    else
+    // All requested sampling done
+    if ( g_cli_osci.samp.idx <= 0 )
     {
         g_cli_osci.state = eCLI_OSCI_STATE_DONE;
+        g_cli_osci.samp.idx = 0;
     }
 }
 
