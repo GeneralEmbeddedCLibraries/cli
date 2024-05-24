@@ -311,8 +311,8 @@ static void osci_state_waiting_hndl(void)
     {
         g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
 
-        // Reset pretrigger samp
-        pretrigger_samp_cnt = 0U;
+        // We need to sample full buffer
+        g_cli_osci.samp.idx = CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE;
     }
 
     // Trigger selected
@@ -337,6 +337,9 @@ static void osci_state_waiting_hndl(void)
 
                     // Reset pretrigger samp
                     pretrigger_samp_cnt = 0U;
+
+                    // We don't need to sample full buffer as we have a pretrigger going on
+                    g_cli_osci.samp.idx = ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE - g_cli_osci.trigger.trig_idx );
                 }
             }
         }
@@ -363,22 +366,16 @@ static void osci_state_sapling_hndl(void)
     // Take sample
     cli_osci_take_sample();
 
-    // Calculate sample group interations
-    // TODO: Move that out of ISR into CLI setting channels CLI command!!!
-    const uint32_t num_of_samp = (uint32_t)( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / g_cli_osci.channel.num_of );
-
-
     // Sample buffer not full
-    if ( g_cli_osci.samp.idx < ( num_of_samp - g_cli_osci.trigger.trig_idx - 2U ))  // NOTE: Make into acount that in case of trigger two samples are already been made at that point!!!
+    if ( g_cli_osci.samp.idx > 0U )
     {
-        g_cli_osci.samp.idx++;
+        g_cli_osci.samp.idx--;
     }
 
     // Sample buffer full
     else
     {
         g_cli_osci.state = eCLI_OSCI_STATE_DONE;
-        g_cli_osci.samp.idx = 0;
     }
 }
 
