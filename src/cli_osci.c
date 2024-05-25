@@ -764,28 +764,35 @@ static void cli_osci_trigger(const uint8_t * p_attr)
         if  (   ( eCLI_OSCI_STATE_IDLE  == g_cli_osci.state )
             ||  ( eCLI_OSCI_STATE_DONE  == g_cli_osci.state ))
         {
-            if ( 4U == sscanf((const char*) p_attr, "%d,%d,%f,%f", (int*) &type, (int*) &par_id, (float*) &threshold, (float32_t*) &pretrigger ))
+            if ( g_cli_osci.channel.num_of > 0U )
             {
-                if  (   ( type < eCLI_OSCI_TRIG_NUM_OF )
-                    &&  ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
-                    &&  (( pretrigger >= 0.0f) && ( pretrigger <= 1.0f )))
+                if ( 4U == sscanf((const char*) p_attr, "%d,%d,%f,%f", (int*) &type, (int*) &par_id, (float*) &threshold, (float32_t*) &pretrigger ))
                 {
-                    g_cli_osci.trigger.type 		= (cli_osci_trig_t) type;
-                    g_cli_osci.trigger.par  		= par_num;
-                    g_cli_osci.trigger.th   		= threshold;
-                    g_cli_osci.trigger.pretrigger   = pretrigger;
+                    if  (   ( type < eCLI_OSCI_TRIG_NUM_OF )
+                        &&  ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
+                        &&  (( pretrigger >= 0.0f) && ( pretrigger <= 1.0f )))
+                    {
+                        g_cli_osci.trigger.type 		= (cli_osci_trig_t) type;
+                        g_cli_osci.trigger.par  		= par_num;
+                        g_cli_osci.trigger.th   		= threshold;
+                        g_cli_osci.trigger.pretrigger   = pretrigger;
 
-                    // Calculate sample group interations
-                    g_cli_osci.samp.num_of_samp  = (uint32_t)( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / g_cli_osci.channel.num_of );
+                        // Calculate sample group interations
+                        g_cli_osci.samp.num_of_samp  = (uint32_t)( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / g_cli_osci.channel.num_of );
 
-                    // Calculate how many samples needs to be done in pre-trigger phase
-                    g_cli_osci.trigger.trig_idx = (uint32_t)( pretrigger * g_cli_osci.samp.num_of_samp );
+                        // Calculate how many samples needs to be done in pre-trigger phase
+                        g_cli_osci.trigger.trig_idx = (uint32_t)( pretrigger * g_cli_osci.samp.num_of_samp );
 
-                    cli_printf( "OK, Oscilloscope trigger set!" );
+                        cli_printf( "OK, Oscilloscope trigger set!" );
+                    }
+                    else
+                    {
+                        cli_printf( "ERR, Invalid trigger settings!" );
+                    }
                 }
                 else
                 {
-                    cli_printf( "ERR, Invalid trigger settings!" );
+                    cli_printf( "ERR, Missing channels. Make channel configuration first!" );
                 }
             }
             else
