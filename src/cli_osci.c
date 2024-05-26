@@ -950,6 +950,13 @@ cli_status_t cli_osci_init(void)
 *
 *           Can be called from ISR!
 *
+*
+*           Execution time with -Ofast optimization on Cortex-M33 @150MHz:
+*
+*            - Idle:         1.74us
+*            - Waiting:     13.34us
+*            - Sampling:    10.48us*
+*
 * @return       status - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
