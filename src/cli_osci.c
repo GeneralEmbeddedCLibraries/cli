@@ -179,27 +179,20 @@ static const pf_cli_trig_check gpf_cli_osci_check_trig[eCLI_OSCI_TRIG_NUM_OF] =
 /**
  *      Oscilloscope CLI commands
  */
-static const cli_cmd_table_t g_cli_osci_table =
+static const cli_cmd_t g_cli_osci_table[] =
 {
-    // List of commands
-    .cmd =
-    {
-        // ----------------------------------------------------------------------------------------------------------------------
-        //  name                    function                    help string
-        // ----------------------------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------------------------
+    //  name                    function                    help string
+    // ----------------------------------------------------------------------------------------------------------------------
 
-        {   "osci_start",           cli_osci_start,         	"Start (trigger) oscilloscope"                                  },
-        {   "osci_stop",            cli_osci_stop,          	"Stop or cancel ongoing sampling"                               },
-        {   "osci_data",            cli_osci_data,          	"Get oscilloscope sampled data"                                 },
-        {   "osci_channel",         cli_osci_channel,       	"Set oscilloscope channels [parId1,parId2,...,parIdN]"          },
-        {   "osci_trigger",         cli_osci_trigger,       	"Set oscilloscope trigger [type,par,threshold,pre-trigger]"     },
-        {   "osci_downsample",      cli_osci_downsample,    	"Set oscilloscope downsample factor [downsample]"               },
-        {   "osci_state",           cli_osci_state,             "Get oscilloscope state"                                        },
-        {   "osci_info",            cli_osci_info,              "Get information of oscilloscope configuration"                 },
-    },
-
-    // Total number of listed commands
-    .num_of = 8
+    {   "osci_start",           cli_osci_start,         	"Start (trigger) oscilloscope"                                  },
+    {   "osci_stop",            cli_osci_stop,          	"Stop or cancel ongoing sampling"                               },
+    {   "osci_data",            cli_osci_data,          	"Get oscilloscope sampled data"                                 },
+    {   "osci_channel",         cli_osci_channel,       	"Set oscilloscope channels [parId1,parId2,...,parIdN]"          },
+    {   "osci_trigger",         cli_osci_trigger,       	"Set oscilloscope trigger [type,par,threshold,pre-trigger]"     },
+    {   "osci_downsample",      cli_osci_downsample,    	"Set oscilloscope downsample factor [downsample]"               },
+    {   "osci_state",           cli_osci_state,             "Get oscilloscope state"                                        },
+    {   "osci_info",            cli_osci_info,              "Get information of oscilloscope configuration"                 },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -937,7 +930,7 @@ cli_status_t cli_osci_init(void)
     g_cli_osci.samp.downsample_factor = 1U;
 
     // Register Device Parameters CLI table
-    cli_register_cmd_table((const cli_cmd_table_t*) &g_cli_osci_table );
+    cli_register_cmd_table((const cli_cmd_t*) &g_cli_osci_table, ( sizeof(g_cli_osci_table) / sizeof(cli_cmd_t)));
 
     return status;
 }

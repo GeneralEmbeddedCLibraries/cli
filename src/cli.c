@@ -67,7 +67,7 @@ static void cli_ch_en  			(const uint8_t * p_attr);
 static void	cli_send_intro		(const uint8_t * p_attr);
 #endif
 
-static bool 			cli_validate_user_table	(const cli_cmd_table_t * const p_cmd_table);
+static bool             cli_validate_user_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
 static const char * 	cli_find_char			(const char * const str, const char target_char, const uint32_t size);
 static int32_t 	        cli_find_char_pos		(const char * const str, const char target_char, const uint32_t size);
 
@@ -107,10 +107,21 @@ static cli_cmd_t g_cli_basic_table[] =
  */
 static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_table ) / sizeof( cli_cmd_t )));
 
+
+// TODO: Move that to definition sections...
 /**
- * 	Pointer array to user defined tables
+ *  CLI Command Table
  */
-static cli_cmd_table_t * gp_cli_user_tables[CLI_CFG_MAX_NUM_OF_USER_TABLES] = { NULL };
+typedef struct
+{
+    cli_cmd_t * p_cmd;      /**<Command table */
+    uint32_t    num_of;     /**<Number of commands */
+} cli_cmd_table_t;
+
+/**
+ * 	References to user defined CLI tables
+ */
+static cli_cmd_table_t g_cli_user_tables[CLI_CFG_MAX_NUM_OF_USER_TABLES] = { NULL };
 
 /**
  * 	User defined table counts
@@ -328,34 +339,30 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_
 	// Search thru user defined tables
 	for ( table_idx = 0; table_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; table_idx++ )
 	{
-		// Check if registered
-		if ( NULL != gp_cli_user_tables[table_idx] )
-		{
-			// Get number of user commands inside single table
-			const uint32_t num_of_user_cmd = gp_cli_user_tables[table_idx]->num_of;
+        // Get number of user commands inside single table
+        const uint32_t num_of_user_cmd = g_cli_user_tables[table_idx].num_of;
 
-			// Go thru command table
-			for ( cmd_idx = 0; cmd_idx < num_of_user_cmd; cmd_idx++ )
-			{
-				// Get cmd name
-				name_str = gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_name;
+        // Go thru command table
+        for ( cmd_idx = 0; cmd_idx < num_of_user_cmd; cmd_idx++ )
+        {
+            // Get cmd name
+            name_str = g_cli_user_tables[table_idx].p_cmd[cmd_idx].p_name;
 
-				// String size to compare
-				size_to_compare = CLI_MAX( cmd_size, strlen((const char*) name_str));
+            // String size to compare
+            size_to_compare = CLI_MAX( cmd_size, strlen((const char*) name_str));
 
-				// Valid command?
-				if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, size_to_compare )))
-				{
-					// Execute command
-					gp_cli_user_tables[table_idx]->cmd[cmd_idx].p_func((const uint8_t*) attr );
+            // Valid command?
+            if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, size_to_compare )))
+            {
+                // Execute command
+                g_cli_user_tables[table_idx].p_cmd[cmd_idx].p_func((const uint8_t*) attr );
 
-					// Command founded
-					cmd_found = true;
+                // Command founded
+                cmd_found = true;
 
-					break;
-				}
-			}
-		}
+                break;
+            }
+        }
 
 		// When command is found stop searching
 		if ( true == cmd_found )
@@ -429,26 +436,23 @@ static void cli_help(const uint8_t * p_attr)
 		// User defined tables
 		for ( cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
 		{
-			// Check if registered
-			if ( NULL != gp_cli_user_tables[cmd_idx] )
-			{
-				// Get number of user commands inside single table
-				const uint32_t num_of_user_cmd = gp_cli_user_tables[cmd_idx]->num_of;
+            // Are there any commands
+            if ( g_cli_user_tables[cmd_idx].num_of > 0U )
+            {
+                // Print separator between user commands
+                cli_printf( "--------------------------------------------------------" );
 
-				// Print separator between user commands
-				cli_printf( "--------------------------------------------------------" );
+                // Show help for that table
+                for ( user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
+                {
+                    // Get name and help string
+                    const char * name_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].p_name;
+                    const char * help_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].p_help;
 
-				// Show help for that table
-				for ( user_cmd_idx = 0; user_cmd_idx < num_of_user_cmd; user_cmd_idx++ )
-				{
-					// Get name and help string
-					const char * name_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_name;
-					const char * help_str = gp_cli_user_tables[cmd_idx]->cmd[user_cmd_idx].p_help;
-
-					// Left adjust for 25 chars
-					cli_printf( "%-25s%s", name_str, help_str );
-				}
-			}
+                    // Left adjust for 25 chars
+                    cli_printf( "%-25s%s", name_str, help_str );
+                }
+            }
 		}
 
 		// Print separator at the end
@@ -666,26 +670,21 @@ static void cli_ch_en(const uint8_t * p_attr)
 * @return		valid			- Validation flag
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_validate_user_table(const cli_cmd_table_t * const p_cmd_table)
+//static bool cli_validate_user_table(const cli_cmd_table_t * const p_cmd_table)
+static bool cli_validate_user_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd)
 {
-			bool 		valid = true;
-	const 	uint32_t	num_of = p_cmd_table->num_of;
+    bool valid = true;
 
 	// Check max. num of commands
-	if ( num_of <= CLI_CFG_MAX_NUM_OF_COMMANDS )
+	if ( num_of_cmd <= CLI_CFG_MAX_NUM_OF_COMMANDS )
 	{
 		// Roll thru all commands
-		for (uint32_t cmd_num = 0; cmd_num < num_of; cmd_num++)
+		for (uint32_t cmd = 0; cmd < num_of_cmd; cmd++)
 		{
-			// Get name, func and help
-			const char * name 	= p_cmd_table->cmd[cmd_num].p_name;
-			const char * help 	= p_cmd_table->cmd[cmd_num].p_help;
-			pf_cli_cmd func 	= p_cmd_table->cmd[cmd_num].p_func;
-
 			// Missing definitions?
-			if 	(	( NULL == name )
-				||	( NULL == help )
-				||	( NULL == func ))
+			if 	(	( NULL == p_cmd_table[cmd].p_name )
+				||	( NULL == p_cmd_table[cmd].p_help )
+				||	( NULL == p_cmd_table[cmd].p_func ))
 			{
 				valid = false;
 				break;
@@ -1102,7 +1101,8 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 * @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
+//cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
+cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd)
 {
 	cli_status_t status = eCLI_OK;
 
@@ -1117,10 +1117,17 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
             if ( gu32_user_table_count < CLI_CFG_MAX_NUM_OF_USER_TABLES )
             {
                 // User table defined OK
-                if ( true == cli_validate_user_table( p_cmd_table ))
+                //if ( true == cli_validate_user_table( p_cmd_table ))
+                if ( true == cli_validate_user_table( p_cmd_table, num_of_cmd ))
                 {
                     // Store
-                    gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
+                    //gp_cli_user_tables[gu32_user_table_count] = (cli_cmd_table_t *) p_cmd_table;
+
+                    // TODO: Clean up
+
+                    g_cli_user_tables[gu32_user_table_count].p_cmd    = (cli_cmd_t*) p_cmd_table;
+                    g_cli_user_tables[gu32_user_table_count].num_of   = num_of_cmd;
+
                     gu32_user_table_count++;
                 }
 
