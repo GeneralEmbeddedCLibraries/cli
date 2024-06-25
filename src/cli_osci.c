@@ -273,8 +273,9 @@ static void osci_state_waiting_hndl(void)
     // Trigger selected
     else
     {
-        // Take sample
+        // Take pre-trigger sample
         cli_osci_take_sample();
+        pretrigger_samp_cnt++;
 
         // Pretrigger sampling done
         if ( pretrigger_samp_cnt >= g_cli_osci.trigger.trig_idx )
@@ -294,16 +295,10 @@ static void osci_state_waiting_hndl(void)
                     pretrigger_samp_cnt = 0U;
 
                     // We don't need to sample full buffer as we have a pretrigger going on
-                    // NOTE: One sample is already taken, therefore -1
+                    // NOTE: One sample is taken in any case, therefore -1
                     g_cli_osci.samp.idx = ( g_cli_osci.samp.num_of_samp - g_cli_osci.trigger.trig_idx - 1U );
                 }
             }
-        }
-
-        // Waiting for pretrigger
-        else
-        {
-            pretrigger_samp_cnt++;
         }
     }
 }
@@ -560,13 +555,16 @@ static void cli_osci_data(const uint8_t * p_attr)
             // Calculate sample group interations
             const uint32_t num_of_samp = (uint32_t)( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / g_cli_osci.channel.num_of );
 
+            // Calculate offset needed due to total buffer space not divisible by number of channels
+            const uint32_t buf_offset = (uint32_t) ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE % g_cli_osci.channel.num_of );
+
             for ( uint32_t samp_it = 0U; samp_it < num_of_samp; samp_it++ )
             {
                 // Loop thru parameter list
                 for ( uint8_t par_it = 0U; par_it < g_cli_osci.channel.num_of; par_it++ )
                 {
                     // Calculate buffer index as inverse access
-                    const int32_t buf_idx = ( -CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE + (( samp_it * g_cli_osci.channel.num_of ) + par_it ));
+                    const int32_t buf_idx = ( -CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE + (( samp_it * g_cli_osci.channel.num_of ) + par_it ) + buf_offset );
 
                     // Get value from sample buffer
                     if ( eRING_BUFFER_OK == ring_buffer_get_by_index( g_cli_osci.samp.buf, (float32_t*) &samp_val, buf_idx ))
