@@ -115,7 +115,7 @@ typedef void (*pf_osci_state_hndl_t)(void);
 /**
  *  Trigger detection pointer function
  */
-typedef bool (*pf_cli_trig_check)(const float32_t sig, const float32_t th);
+typedef bool (*pf_cli_trig_check)(const float32_t sig, const float32_t sig_prev, const float32_t th);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
@@ -124,12 +124,12 @@ static cli_status_t cli_osci_init_buf       	(void);
 static void         cli_osci_take_sample    	(void);
 static void         osci_state_waiting_hndl 	(void);
 static void         osci_state_sapling_hndl 	(void);
-static bool         cli_osci_trig_equal     	(const float32_t sig, const float32_t th);
-static bool         cli_osci_trig_above     	(const float32_t sig, const float32_t th);
-static bool         cli_osci_trig_below         (const float32_t sig, const float32_t th);
-static bool         cli_osci_trig_edge_rising   (const float32_t sig, const float32_t th);
-static bool         cli_osci_trig_edge_falling  (const float32_t sig, const float32_t th);
-static bool         cli_osci_trig_edge_both     (const float32_t sig, const float32_t th);
+static bool         cli_osci_trig_equal     	(const float32_t sig, const float32_t sig_prev, const float32_t th);
+static bool         cli_osci_trig_above     	(const float32_t sig, const float32_t sig_prev, const float32_t th);
+static bool         cli_osci_trig_below         (const float32_t sig, const float32_t sig_prev, const float32_t th);
+static bool         cli_osci_trig_edge_rising   (const float32_t sig, const float32_t sig_prev, const float32_t th);
+static bool         cli_osci_trig_edge_falling  (const float32_t sig, const float32_t sig_prev, const float32_t th);
+static bool         cli_osci_trig_edge_both     (const float32_t sig, const float32_t sig_prev, const float32_t th);
 
 // Cli functions
 static void cli_osci_start      (const uint8_t * p_attr);
@@ -259,7 +259,8 @@ static void cli_osci_take_sample(void)
 ////////////////////////////////////////////////////////////////////////////////
 static void osci_state_waiting_hndl(void)
 {
-    static uint32_t pretrigger_samp_cnt = 0;
+    static uint32_t     pretrigger_samp_cnt = 0;
+    static float32_t    par_val_prev        = 0.0f;
 
     // No trigger
     if ( eCLI_OSCI_TRIG_NONE == g_cli_osci.trigger.type )
@@ -277,16 +278,16 @@ static void osci_state_waiting_hndl(void)
         cli_osci_take_sample();
         pretrigger_samp_cnt++;
 
+        // Get trigger parameter value
+        const float32_t par_val = cli_util_par_val_to_float( g_cli_osci.trigger.par );
+
         // Pretrigger sampling done
         if ( pretrigger_samp_cnt >= g_cli_osci.trigger.trig_idx )
         {
-            // Get trigger parameter value
-            const float32_t par_val = cli_util_par_val_to_float( g_cli_osci.trigger.par );
-
             if ( NULL != gpf_cli_osci_check_trig[g_cli_osci.trigger.type] )
             {
                 // Check for trigger
-                if ( true == gpf_cli_osci_check_trig[g_cli_osci.trigger.type]( par_val, g_cli_osci.trigger.th ))
+                if ( true == gpf_cli_osci_check_trig[g_cli_osci.trigger.type]( par_val, par_val_prev, g_cli_osci.trigger.th ))
                 {
                     // Enter sampling phase on trigger detection
                     g_cli_osci.state = eCLI_OSCI_STATE_SAMPLING;
@@ -300,6 +301,9 @@ static void osci_state_waiting_hndl(void)
                 }
             }
         }
+
+        // Store previous trigger parameter value
+        par_val_prev = par_val;
     }
 }
 
@@ -333,13 +337,17 @@ static void osci_state_sapling_hndl(void)
 * @brief        Oscilloscope trigger on equal threshold value
 *
 * @param[in]    sig         - Signal to check for trigger
+* @param[in]    sig_prev    - Previous signal sample value
 * @param[in]    th          - Trigger threshold
 * @return       detected    - True when triggers
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_osci_trig_equal(const float32_t sig, const float32_t th)
+static bool cli_osci_trig_equal(const float32_t sig, const float32_t sig_prev, const float32_t th)
 {
     bool detected = false;
+
+    // Unused
+    (void) sig_prev;
 
     if ( sig == th )
     {
@@ -354,13 +362,17 @@ static bool cli_osci_trig_equal(const float32_t sig, const float32_t th)
 * @brief        Oscilloscope trigger above threshold value
 *
 * @param[in]    sig         - Signal to check for trigger
+* @param[in]    sig_prev    - Previous signal sample value
 * @param[in]    th          - Trigger threshold
 * @return       detected    - True when triggers
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_osci_trig_above(const float32_t sig, const float32_t th)
+static bool cli_osci_trig_above(const float32_t sig, const float32_t sig_prev, const float32_t th)
 {
     bool detected = false;
+
+    // Unused
+    (void) sig_prev;
 
     if ( sig > th )
     {
@@ -375,13 +387,17 @@ static bool cli_osci_trig_above(const float32_t sig, const float32_t th)
 * @brief        Oscilloscope trigger below threshold value
 *
 * @param[in]    sig         - Signal to check for trigger
+* @param[in]    sig_prev    - Previous signal sample value
 * @param[in]    th          - Trigger threshold
 * @return       detected    - True when triggers
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_osci_trig_below(const float32_t sig, const float32_t th)
+static bool cli_osci_trig_below(const float32_t sig, const float32_t sig_prev, const float32_t th)
 {
     bool detected = false;
+
+    // Unused
+    (void) sig_prev;
 
     if ( sig < th )
     {
@@ -396,18 +412,20 @@ static bool cli_osci_trig_below(const float32_t sig, const float32_t th)
 * @brief        Oscilloscope trigger on rising edge
 *
 * @param[in]    sig         - Signal to check for trigger
+* @param[in]    sig_prev    - Previous signal sample value
 * @param[in]    th          - Trigger threshold
 * @return       detected    - True when triggers
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_osci_trig_edge_rising(const float32_t sig, const float32_t th)
+static bool cli_osci_trig_edge_rising(const float32_t sig, const float32_t sig_prev, const float32_t th)
 {
     bool detected = false;
 
-    (void) sig;
-    (void) th;
-
-    // TODO: Implement logic...
+    if  (   ( sig >= th )
+        &&  ( sig_prev < th ))
+    {
+        detected = true;
+    }
 
     return detected;
 }
@@ -417,18 +435,20 @@ static bool cli_osci_trig_edge_rising(const float32_t sig, const float32_t th)
 * @brief        Oscilloscope trigger on falling edge
 *
 * @param[in]    sig         - Signal to check for trigger
+* @param[in]    sig_prev    - Previous signal sample value
 * @param[in]    th          - Trigger threshold
 * @return       detected    - True when triggers
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_osci_trig_edge_falling(const float32_t sig, const float32_t th)
+static bool cli_osci_trig_edge_falling(const float32_t sig, const float32_t sig_prev, const float32_t th)
 {
     bool detected = false;
 
-    (void) sig;
-    (void) th;
-
-    // TODO: Implement logic...
+    if  (   ( sig <= th )
+        &&  ( sig_prev > th ))
+    {
+        detected = true;
+    }
 
     return detected;
 }
@@ -438,18 +458,17 @@ static bool cli_osci_trig_edge_falling(const float32_t sig, const float32_t th)
 * @brief        Oscilloscope trigger on both (rising & falling) edge
 *
 * @param[in]    sig         - Signal to check for trigger
+* @param[in]    sig_prev    - Previous signal sample value
 * @param[in]    th          - Trigger threshold
 * @return       detected    - True when triggers
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_osci_trig_edge_both(const float32_t sig, const float32_t th)
+static bool cli_osci_trig_edge_both(const float32_t sig, const float32_t sig_prev, const float32_t th)
 {
     bool detected = false;
 
-    (void) sig;
-    (void) th;
-
-    // TODO: Implement logic...
+    detected |= cli_osci_trig_edge_rising( sig, sig_prev, th );
+    detected |= cli_osci_trig_edge_falling( sig, sig_prev, th );
 
     return detected;
 }
