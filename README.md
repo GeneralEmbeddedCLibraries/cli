@@ -323,7 +323,7 @@ typedef enum
 
     // USER_CODE_END
 
-    eCLI_CH_NUM_OF		Leave unchange - Must be last! */
+    eCLI_CH_NUM_OF
 } cli_ch_opt_t;
 ```
 
