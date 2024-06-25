@@ -51,17 +51,21 @@ static void         cli_par_print_header        (void);
     static void         cli_par_print_header_legacy (void);
 #endif
 
-static void         cli_par_print               (const uint8_t * p_attr);
+// Device parameters CLI commands
+static void         cli_par_info                (const uint8_t * p_attr);
 static void         cli_par_set                 (const uint8_t * p_attr);
 static void         cli_par_get                 (const uint8_t * p_attr);
 static void         cli_par_def                 (const uint8_t * p_attr);
 static void         cli_par_def_all             (const uint8_t * p_attr);
 static void         cli_par_store               (const uint8_t * p_attr);
-static void         cli_status_start            (const uint8_t * p_attr);
-static void         cli_status_stop             (const uint8_t * p_attr);
-static void         cli_status_des              (const uint8_t * p_attr);
-static void         cli_status_rate             (const uint8_t * p_attr);
-static void         cli_status_info             (const uint8_t * p_attr);
+
+// Live watch CLI commands
+static void         cli_watch_start             (const uint8_t * p_attr);
+static void         cli_watch_stop              (const uint8_t * p_attr);
+static void         cli_watch_channel           (const uint8_t * p_attr);
+static void         cli_watch_rate              (const uint8_t * p_attr);
+static void         cli_watch_info              (const uint8_t * p_attr);
+
 static float32_t    cli_par_val_to_float        (const par_type_list_t par_type, const void * p_val);
 static void         cli_par_live_watch_hndl     (void);
 static void         cli_par_group_print         (const par_num_t par_num);
@@ -71,7 +75,7 @@ static void         cli_par_group_print         (const par_num_t par_num);
 #endif
 
 #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
-    static void cli_status_save(const uint8_t * p_attr);
+    static void cli_watch_save(const uint8_t * p_attr);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,29 +90,29 @@ static const cli_cmd_table_t g_cli_par_table =
     // List of commands
     .cmd =
     {
-        // ------------------------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------------------------
         //  name                    function                help string
-        // ------------------------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------------------------
 
-        {   "par_print",            cli_par_print,          "Prints parameters"                                 },
-        {   "par_set",              cli_par_set,            "Set parameter [parId,value]"                       },
-        {   "par_get",              cli_par_get,            "Get parameter [parId]"                             },
-        {   "par_def",              cli_par_def,            "Set parameter to default [parId]"                  },
-        {   "par_def_all",          cli_par_def_all,        "Set all parameters to default"                     },
-        {   "par_save",             cli_par_store,          "Save parameter to NVM"                             },
+        {   "par_info",             cli_par_info,           "Get device parameter informations"                     },
+        {   "par_set",              cli_par_set,            "Set parameter [parId,value]"                       	},
+        {   "par_get",              cli_par_get,            "Get parameter [parId]"                             	},
+        {   "par_def",              cli_par_def,            "Set parameter to default [parId]"                  	},
+        {   "par_def_all",          cli_par_def_all,        "Set all parameters to default"                     	},
+        {   "par_save",             cli_par_store,          "Save parameter to NVM"                             	},
 
     #if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
-        {   "par_save_clean",       cli_par_store_reset,    "Clean saved parameters space in NVM"               },
+        {   "par_save_clean",       cli_par_store_reset,    "Clean saved parameters space in NVM"                   },
     #endif
 
-        {   "status_start",         cli_status_start,       "Start data streaming"                              },
-        {   "status_stop",          cli_status_stop,        "Stop data streaming"                               },
-        {   "status_des",           cli_status_des,         "Status description [parId1,parId2,...,parIdN]"     },
-        {   "status_rate",          cli_status_rate,        "Change data streaming period [miliseconds]"        },
-        {   "status_info",          cli_status_info,        "Get streaming configuration info"                  },
+        {   "watch_start",          cli_watch_start,        "Start parameter value live watch"                      },
+        {   "watch_stop",           cli_watch_stop,         "Stop parameter value live watch"                       },
+        {   "watch_channel",        cli_watch_channel,      "Set live watch channels [parId1,parId2,...,parIdN]"    },
+        {   "watch_rate",           cli_watch_rate,         "Change live watch streaming period [miliseconds]"      },
+        {   "watch_info",           cli_watch_info,         "Get live watch configuration info"                     },
 
     #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
-        {   "status_save",          cli_status_save,        "Save streaming into to NVM"                        },
+        {   "watch_save",          cli_watch_save,          "Save live watch configuration into to NVM"             },
     #endif
     },
 
@@ -263,7 +267,7 @@ static void cli_par_print_header(void)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_print(const uint8_t * p_attr)
+static void cli_par_info(const uint8_t * p_attr)
 {
     par_cfg_t   par_cfg     = { 0 };
     uint32_t    par_num     = 0UL;
@@ -662,7 +666,7 @@ static void cli_par_store(const uint8_t * p_attr)
     * @return       void
     */
     ////////////////////////////////////////////////////////////////////////////////
-    static void cli_status_save(const uint8_t * p_attr)
+    static void cli_watch_save(const uint8_t * p_attr)
     {
         if ( NULL == p_attr )
         {
@@ -693,7 +697,7 @@ static void cli_par_store(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_status_start(const uint8_t * p_attr)
+static void cli_watch_start(const uint8_t * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -704,7 +708,7 @@ static void cli_status_start(const uint8_t * p_attr)
             cli_printf( "OK, Streaming started!" );
 
             #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
-                cli_status_save( NULL );
+                cli_watch_save( NULL );
             #endif
         }
         else
@@ -728,7 +732,7 @@ static void cli_status_start(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_status_stop(const uint8_t * p_attr)
+static void cli_watch_stop(const uint8_t * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -737,7 +741,7 @@ static void cli_status_stop(const uint8_t * p_attr)
         cli_printf( "OK, Streaming stopped!" );
 
         #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
-            cli_status_save( NULL );
+            cli_watch_save( NULL );
         #endif
     }
     else
@@ -757,7 +761,7 @@ static void cli_status_stop(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_status_des(const uint8_t * p_attr)
+static void cli_watch_channel(const uint8_t * p_attr)
 {
     uint32_t    ch_cnt      = 0;
     uint32_t    par_id      = 0;
@@ -835,7 +839,7 @@ static void cli_status_des(const uint8_t * p_attr)
             cli_printf("");
 
             #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
-                cli_status_save( NULL );
+                cli_watch_save( NULL );
             #endif
         }
 
@@ -868,7 +872,7 @@ static void cli_status_des(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_status_rate(const uint8_t * p_attr)
+static void cli_watch_rate(const uint8_t * p_attr)
 {
     uint32_t period;
 
@@ -889,7 +893,7 @@ static void cli_status_rate(const uint8_t * p_attr)
                     cli_printf( "OK, Period changed to %d ms", g_cli_live_watch.period );
 
                     #if ( 1 == CLI_CFG_PAR_AUTO_STREAM_STORE_EN )
-                        cli_status_save( NULL );
+                        cli_watch_save( NULL );
                     #endif
                 }
                 else
@@ -923,7 +927,7 @@ static void cli_status_rate(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_status_info(const uint8_t * p_attr)
+static void cli_watch_info(const uint8_t * p_attr)
 {
     uint16_t par_id = 0U;
 
