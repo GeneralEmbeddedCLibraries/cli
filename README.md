@@ -4,11 +4,11 @@ A Command Line Interface (CLI) is a general-purpose, console-based interpreter t
 
 CLI is build around command tables where command name, function and help message is specified. E.g.:
 ```C
-// -----------------------------------------------------------------------------
-// 	name			function		help string
-// -----------------------------------------------------------------------------
-{ 	"help", 		cli_help, 		"Print all commands help" },
-{ 	"reset", 		cli_reset,		"Reset device" 			  },
+// ----------------------------------------------------------
+//  name        function        help string
+// ----------------------------------------------------------
+{   "help",     cli_help,       "Print all commands help"   },
+{   "reset",    cli_reset,      "Reset device"              },
 ```
 
 CLI divides two types of command tables:
@@ -29,10 +29,10 @@ Example of CLI interface file when using FreeRTOS with CMSIS v2:
 // USER CODE BEGIN..
 
 /**
- *      CLI mutex timeout
- *
- *  Unit: ms
- */
+*      CLI mutex timeout
+*
+*  Unit: ms
+*/
 #define CLI_IF_MUTEX_TIMEOUT_MS                 ( 10U )
 
 // USER CODE END...
@@ -44,8 +44,8 @@ Example of CLI interface file when using FreeRTOS with CMSIS v2:
 // USER CODE BEGIN...
 
 /**
- *  CLI OS mutex
- */
+*  CLI OS mutex
+*/
 static osMutexId_t  g_cli_mutex_id = NULL;
 const osMutexAttr_t g_cli_mutex_attr =
 {
@@ -66,16 +66,16 @@ const osMutexAttr_t g_cli_mutex_attr =
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_init(void)
 {
-	cli_status_t status = eCLI_OK;
+    cli_status_t status = eCLI_OK;
 
-	// USER CODE BEGIN...
+    // USER CODE BEGIN...
 
-	if ( eUART_OK != uart_init( eUART_DBG ))
-	{
-		status = eCLI_ERROR_INIT;
-	}
-	else
-	{
+    if ( eUART_OK != uart_init( eUART_DBG ))
+    {
+        status = eCLI_ERROR_INIT;
+    }
+    else
+    {
         // Create mutex
         g_cli_mutex_id = osMutexNew( &g_cli_mutex_attr );
 
@@ -83,11 +83,11 @@ cli_status_t cli_if_init(void)
         {
             status = eCLI_ERROR;
         }
-	}
+    }
 
-	// USER CODE END...
+    // USER CODE END...
 
-	return status;
+    return status;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,9 +103,9 @@ cli_status_t cli_if_init(void)
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_aquire_mutex(void)
 {
-	cli_status_t status = eCLI_OK;
+    cli_status_t status = eCLI_OK;
 
-	// USER CODE BEGIN...
+    // USER CODE BEGIN...
 
     if ( osOK == osMutexAcquire( g_cli_mutex_id, CLI_IF_MUTEX_TIMEOUT_MS ))
     {
@@ -116,33 +116,33 @@ cli_status_t cli_if_aquire_mutex(void)
         status = eCLI_ERROR;
     }
 
-	// USER CODE END...
+    // USER CODE END...
 
-	return status;
+    return status;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*		Release mutex
+*       Release mutex
 *
 * @note	User shall provide definition of that function based on used platform!
 *
-*		If not being used leave empty.
+*       If not being used leave empty.
 *
-* @return 		status - Status of operation
+* @return   status - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_release_mutex(void)
 {
-	cli_status_t status = eCLI_OK;
+    cli_status_t status = eCLI_OK;
 
-	// USER CODE BEGIN...
+    // USER CODE BEGIN...
 
-	osMutexRelease( g_cli_mutex_id );
+    osMutexRelease( g_cli_mutex_id );
 
-	// USER CODE END...
+    // USER CODE END...
 
-	return status;
+    return status;
 }
 
 ```
@@ -243,8 +243,6 @@ root/middleware/cli/cli/"module_space"
 	}
 	```
 
-
-
 ### **Registration of user command**
 
 Registration of user command is done in run-time with no pre-conditions. Maximum number of commands is limited to *uint8_t* data type, meaning 255. Additionally there is also maximum number of all user table limitation. It is adjustable by *CLI_CFG_MAX_NUM_OF_USER_TABLES* macro inside *cli_cfg.h*.
@@ -255,47 +253,47 @@ Example of registration of user defined CLI command table:
 // User test_1 function definiton
 void test_1 (const uint8_t * attr)
 {
-	if ( NULL != attr ) cli_printf("User command test 1... Attr: <%s>", attr);
-	else                cli_printf("User command test 1... Attr: NULL");
+    if ( NULL != attr ) cli_printf("User command test 1... Attr: <%s>", attr);
+    else                cli_printf("User command test 1... Attr: NULL");
 }
 
 // User test_2 function definiton
 void test_2 (const uint8_t * attr)
 {
-	if ( NULL != attr ) cli_printf("User command test 2... Attr: <%s>", attr);
-	else                cli_printf("User command test 2... Attr: NULL");
+    if ( NULL != attr ) cli_printf("User command test 2... Attr: <%s>", attr);
+    else                cli_printf("User command test 2... Attr: NULL");
 }
 
 // User test_3 function definiton
 void test_3 (const uint8_t * attr)
 {
-	if ( NULL != attr ) cli_printf("User command test 3... Attr: <%s>", attr);
-	else                cli_printf("User command test 3... Attr: NULL");
+    if ( NULL != attr ) cli_printf("User command test 3... Attr: <%s>", attr);
+    else                cli_printf("User command test 3... Attr: NULL");
 }
 
 // User test_4 function definiton
 void test_4 (const uint8_t * attr)
 {
-	if ( NULL != attr ) cli_printf("User command test 4... Attr: <%s>", attr);
-	else                cli_printf("User command test 4... Attr: NULL");
+    if ( NULL != attr ) cli_printf("User command test 4... Attr: <%s>", attr);
+    else                cli_printf("User command test 4... Attr: NULL");
 }
 
 // Define user table
 static volatile const cli_cmd_t my_table[] =
 {
-	// ----------------------------------------------------------------------
-	//     name         function            help string
-	// ----------------------------------------------------------------------
-	{ "test_1",         test_1,             "Test 1 Help" },
-	{ "test_2",         test_2,             "Test 2 Help" },
-	{ "test_3",         test_3,             "Test 3 Help" },
-	{ "test_4",         test_4,             "Test 4 Help" },
-};
+    // ----------------------------------------------------------------------
+    //     name         function            help string
+    // ----------------------------------------------------------------------
+    { "test_1",         test_1,             "Test 1 Help" },
+    { "test_2",         test_2,             "Test 2 Help" },
+    { "test_3",         test_3,             "Test 3 Help" },
+    { "test_4",         test_4,             "Test 4 Help" },
+    };
 
 void register_my_cli_commands()
 {
-	// Register shell commands
-	cli_register_cmd_table((const cli_cmd_t*) &my_table, ( sizeof(my_table) / sizeof(cli_cmd_t)));
+    // Register shell commands
+    cli_register_cmd_table((const cli_cmd_t*) &my_table, ( sizeof(my_table) / sizeof(cli_cmd_t)));
 }
 ```
 
@@ -304,76 +302,73 @@ void register_my_cli_commands()
 NOTICE: Change only code between ***USER CODE BEGIN*** and ***USER CODE END*** sections:
 
 1. Define communication channels enumerations inside *cli_cfg.h*. 
-	```C
-	/**
-	 * 		List of communication channels
-	 *
-	 * @note	Warning and error communication channels must
-	 * 			always be present!
-	 *
-	 * 	@note	Change code only between "USER_CODE_BEGIN" and
-	 * 			"USER_CODE_END" section!
-	 */
-	typedef enum
-	{
-		eCLI_CH_WAR = 0,		/**<Warning channel */
-		eCLI_CH_ERR,			/**<Error channel */
+```C
+/**
+    * 		List of communication channels
+    *
+    * @note	Warning and error communication channels must
+    * 			always be present!
+    *
+    * 	@note	Change code only between "USER_CODE_BEGIN" and
+    * 			"USER_CODE_END" section!
+    */
+typedef enum
+{
+    eCLI_CH_WAR = 0,		/**<Warning channel */
+    eCLI_CH_ERR,			/**<Error channel */
 
-		// USER_CODE_BEGIN
+    // USER_CODE_BEGIN
 
-		eCLI_CH_SCP,
-		eCLI_CH_SICP_SER,
-		eCLI_CH_SICP,
-		eCLI_CH_APP,
+    eCLI_CH_SCP,
+    eCLI_CH_SICP_SER,
+    eCLI_CH_SICP,
+    eCLI_CH_APP,
 
-		// USER_CODE_END
+    // USER_CODE_END
 
-		eCLI_CH_NUM_OF			/**<Leave unchange - Must be last! */
-	} cli_ch_opt_t;
-	```
+    eCLI_CH_NUM_OF			/**<Leave unchange - Must be last! */
+} cli_ch_opt_t;
+```
 
 2. Define channel name and default state of each comunication channel inside *cli_cfg.c*:
-	```C
-	/**
-	* 		Communication channels names and default active
-	* 		state definition
-	*
-	* 	@note	Change code only between "USER_CODE_BEGIN" and
-	* 			"USER_CODE_END" section!
-	*/
-	static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
-	{
-		// --------------------------------------------------------------------------
-		//						Name of channel				Default state of channel
-		// --------------------------------------------------------------------------
-		[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = true 				},
-		[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = true 				},
+```C
+/**
+*       Communication channels names and default active
+*       state definition
+*
+*   @note   Change code only between "USER_CODE_BEGIN" and
+*           "USER_CODE_END" section!
+*/
+static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
+{
+    // --------------------------------------------------------------------------
+    //                      Name of channel             Default state of channel
+    // --------------------------------------------------------------------------
+    [eCLI_CH_WAR]       = { .name = "WARNING",          .en = true              },
+    [eCLI_CH_ERR]       = { .name = "ERROR",            .en = true              },
 
-		// USER_CODE_BEGIN
+    // USER_CODE_BEGIN
 
-		[eCLI_CH_SCP] 		= {	.name = "SCP", 				.en = true 				},
-		[eCLI_CH_SICP_SER] 	= {	.name = "SICP_Serial", 		.en = true 				},
-		[eCLI_CH_SICP] 		= {	.name = "SICP", 			.en = true 				},
-		[eCLI_CH_APP] 		= {	.name = "APP", 				.en = true 				},
+    [eCLI_CH_APP]       = {	.name = "APP",              .en = true              },
 
-		// USER_CODE_END
-	};
-	```
+    // USER_CODE_END
+};
+```
 
 ### **Using device parameters**
 
 1. Make sure to have [Device Parameter](https://github.com/GeneralEmbeddedCLibraries/parameters) up and running. It is mandatory to use *General Embedded C Libraries Ecosystem* path for parameters module (*root/middleware/parameters/parameters/*) !
 
 2. Enable following *CLI_CFG_PAR_USE_EN* macro by setting it to "1" inside *cli_cfg.h* file:
-	```C
-	/**
-	 * 	Enable/Disable parameters usage
-	 *
-	 * 	@brief	Usage of device parameters.
-	 * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
-	 */
-	#define CLI_CFG_PAR_USE_EN						( 1 )
-	```
+```C
+/**
+    *           Enable/Disable parameters usage
+    *
+    *   @brief	Usage of device parameters.
+    *           Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
+    */
+#define CLI_CFG_PAR_USE_EN						( 1 )
+```
 
 Now you have everything setup to use Device Parameters module in combination with CLI.
 
@@ -402,14 +397,12 @@ Code section from *nvm_cfg.h*:
  */
 static const nvm_region_t g_nvm_region[ eNVM_REGION_NUM_OF ] =
 {
-	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	//											Region Name						Start address			Size [byte]			Low level driver
-	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-	[eNVM_REGION_EEPROM_DEV_PAR]	=	{	.name = "Device Parameters",	.start_addr = 0x0,		.size = 1024,		.p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]	},
-	[eNVM_REGION_EEPROM_CLI]		=	{	.name = "CLI settings",			.start_addr = 0x400,	.size = 256,		.p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]	},
-
-	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //                                      Region Name                 Start address           Size [byte]         Low level driver
+    // -------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+    [eNVM_REGION_EEPROM_DEV_PAR]    =   { .name = "Device Parameters",  .start_addr = 0x000U,   .size = 1024U,      .p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]    },
+    [eNVM_REGION_EEPROM_CLI]        =   { .name = "CLI settings",       .start_addr = 0x400U,   .size = 256U,       .p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]    },  
+    // --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 };
 ```
 
@@ -419,15 +412,15 @@ Code section from *cli_cfg.h*:
  *      Enable/Disable storing streaming info to NVM
  *
  *  @note   When enabled NVM module must be part of the project!
- * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/nvm
+ *          Link to repository: https://github.com/GeneralEmbeddedCLibraries/nvm
  */
 #define CLI_CFG_STREAM_NVM_EN              ( 1 )
 
 /**
  *      NVM parameter region option
  *
- * 	@note 	User shall select region based on nvm_cfg.h region
- * 			definitions "nvm_region_name_t"
+ *  @note   User shall select region based on nvm_cfg.h region
+ *          definitions "nvm_region_name_t"
  */
 #define CLI_CFG_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
 ```
@@ -448,10 +441,10 @@ Code section from *cli_cfg.h*:
  *
  * @note   When enabled streaming info is stored on following 
  *         commands execution:
- *             - watch_channel
- *             - watch_start
- *             - watch_stop
- *			   - watch_rate
+ *              - watch_channel
+ *              - watch_start
+ *              - watch_stop
+ *              - watch_rate
  */
 #define CLI_CFG_PAR_AUTO_STREAM_STORE_EN      ( 0 )
 ```
