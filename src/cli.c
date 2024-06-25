@@ -64,7 +64,7 @@ static void cli_ch_info  		(const uint8_t * p_attr);
 static void cli_ch_en  			(const uint8_t * p_attr);
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
-	static void			cli_send_intro			(void);
+static void	cli_send_intro		(const uint8_t * p_attr);
 #endif
 
 static bool 			cli_validate_user_table	(const cli_cmd_table_t * const p_cmd_table);
@@ -88,7 +88,12 @@ static cli_cmd_t g_cli_basic_table[] =
 	// ------------------------------------------------------------------------------------------------------
 	// 	name					function				help string
 	// ------------------------------------------------------------------------------------------------------
-	{ 	"help", 				cli_help, 				"Print all commands help" 							},
+	{ 	"help", 				cli_help, 				"Print help message" 							    },
+
+#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+	{ 	"intro", 				cli_send_intro,         "Print intro message" 							    },
+#endif
+
 	{ 	"reset", 				cli_reset, 				"Reset device" 										},
 	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					},
 	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					},
@@ -407,7 +412,7 @@ static void cli_help(const uint8_t * p_attr)
 	if ( NULL == p_attr )
 	{
 		cli_printf( " " );
-		cli_printf( "    List of device commands " );
+		cli_printf( "    List of device commands" );
 		cli_printf( "--------------------------------------------------------" );
 
 		// Basic command table printout
@@ -635,8 +640,10 @@ static void cli_ch_en(const uint8_t * p_attr)
 	* @return       void
 	*/
 	////////////////////////////////////////////////////////////////////////////////
-	static void	cli_send_intro(void)
+	static void	cli_send_intro(const uint8_t * p_attr)
 	{
+	    (void) p_attr;
+
 		cli_printf( " " );
 		cli_printf( "********************************************************" );
 		cli_printf( "        %s", 	CLI_CFG_INTRO_PROJECT_NAME );
@@ -835,7 +842,7 @@ cli_status_t cli_init(void)
 			gb_is_init = true;
 
 			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-				cli_send_intro();
+				cli_send_intro( NULL );
 			#endif
 		}
 	}
