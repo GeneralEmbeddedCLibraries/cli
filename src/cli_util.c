@@ -99,61 +99,62 @@ uint8_t * cli_util_get_tx_buf(void)
 * @return       f32_par_val - Floating representation of parameter value
 */
 ////////////////////////////////////////////////////////////////////////////////
-float32_t com_util_par_val_to_float(const par_num_t par)
+float32_t cli_util_par_val_to_float(const par_num_t par)
 {
     float32_t   f32_par_val = 0.0f;
     par_cfg_t   par_cfg     = {0};
 
     // Get parameter type
-    par_get_config( par, &par_cfg );
-
-    // Based on type convert to float
-    switch ( par_cfg.type )
+    if ( ePAR_OK == par_get_config( par, &par_cfg ))
     {
-        case ePAR_TYPE_U8:
-            uint8_t u8_val = 0U;
-            (void) par_get( par, (uint8_t*) &u8_val );
-            f32_par_val = (float32_t) u8_val;
-            break;
+        // Based on type convert to float
+        switch ( par_cfg.type )
+        {
+            case ePAR_TYPE_U8:
+                uint8_t u8_val = 0U;
+                (void) par_get( par, (uint8_t*) &u8_val );
+                f32_par_val = (float32_t) u8_val;
+                break;
 
-        case ePAR_TYPE_I8:
-            int8_t i8_val = 0U;
-            (void) par_get( par, (int8_t*) &i8_val );
-            f32_par_val = (float32_t) i8_val;
-            break;
+            case ePAR_TYPE_I8:
+                int8_t i8_val = 0U;
+                (void) par_get( par, (int8_t*) &i8_val );
+                f32_par_val = (float32_t) i8_val;
+                break;
 
-        case ePAR_TYPE_U16:
-            uint16_t u16_val = 0U;
-            (void) par_get( par, (uint16_t*) &u16_val );
-            f32_par_val = (float32_t) u16_val;
-            break;
+            case ePAR_TYPE_U16:
+                uint16_t u16_val = 0U;
+                (void) par_get( par, (uint16_t*) &u16_val );
+                f32_par_val = (float32_t) u16_val;
+                break;
 
-        case ePAR_TYPE_I16:
-            int16_t i16_val = 0U;
-            (void) par_get( par, (int16_t*) &i16_val );
-            f32_par_val = (float32_t) i16_val;
-            break;
+            case ePAR_TYPE_I16:
+                int16_t i16_val = 0U;
+                (void) par_get( par, (int16_t*) &i16_val );
+                f32_par_val = (float32_t) i16_val;
+                break;
 
-        case ePAR_TYPE_U32:
-            uint32_t u32_val = 0U;
-            (void) par_get( par, (uint32_t*) &u32_val );
-            f32_par_val = (float32_t) u32_val;
-            break;
+            case ePAR_TYPE_U32:
+                uint32_t u32_val = 0U;
+                (void) par_get( par, (uint32_t*) &u32_val );
+                f32_par_val = (float32_t) u32_val;
+                break;
 
-        case ePAR_TYPE_I32:
-            int32_t i32_val = 0U;
-            (void) par_get( par, (int32_t*) &i32_val );
-            f32_par_val = (float32_t) i32_val;
-            break;
+            case ePAR_TYPE_I32:
+                int32_t i32_val = 0U;
+                (void) par_get( par, (int32_t*) &i32_val );
+                f32_par_val = (float32_t) i32_val;
+                break;
 
-        case ePAR_TYPE_F32:
-            (void) par_get( par, (float32_t*) &f32_par_val );
-            break;
+            case ePAR_TYPE_F32:
+                (void) par_get( par, (float32_t*) &f32_par_val );
+                break;
 
-        case ePAR_TYPE_NUM_OF:
-        default:
-            PAR_ASSERT( 0 );
-            break;
+            case ePAR_TYPE_NUM_OF:
+            default:
+                PAR_ASSERT( 0 );
+                break;
+        }
     }
 
     return f32_par_val;

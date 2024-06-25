@@ -241,7 +241,7 @@ static void cli_osci_take_sample(void)
     for ( uint32_t par_it = 0U; par_it < g_cli_osci.channel.num_of; par_it++ )
     {
         // Get parameter value
-        const float32_t par_val = com_util_par_val_to_float( g_cli_osci.channel.list[par_it] );
+        const float32_t par_val = cli_util_par_val_to_float( g_cli_osci.channel.list[par_it] );
 
         // Set value to sample buffer
         (void) ring_buffer_add( g_cli_osci.samp.buf, (float32_t*) &par_val );
@@ -281,7 +281,7 @@ static void osci_state_waiting_hndl(void)
         if ( pretrigger_samp_cnt >= g_cli_osci.trigger.trig_idx )
         {
             // Get trigger parameter value
-            const float32_t par_val = com_util_par_val_to_float( g_cli_osci.trigger.par );
+            const float32_t par_val = cli_util_par_val_to_float( g_cli_osci.trigger.par );
 
             if ( NULL != gpf_cli_osci_check_trig[g_cli_osci.trigger.type] )
             {
@@ -621,7 +621,6 @@ static void cli_osci_channel(const uint8_t * p_attr)
     uint32_t    par_id      = 0;
     par_cfg_t   par_cfg     = {0};
     par_num_t   par_num     = 0;
-    bool        invalid_par = false;
 
     if ( NULL != p_attr )
     {
@@ -659,9 +658,6 @@ static void cli_osci_channel(const uint8_t * p_attr)
                     // Reset watch list
                     g_cli_osci.channel.num_of = 0;
 
-                    // Raise invalid parameter flag
-                    invalid_par = true;
-
                     cli_printf( "ERR, Wrong parameter ID! ID: %d does not exsist!", par_id );
 
                     // Exit reading command
@@ -697,15 +693,11 @@ static void cli_osci_channel(const uint8_t * p_attr)
                 cli_printf("");
             }
 
-            // Raise error only if all valid parameters
-            else if ( false == invalid_par )
-            {
-                cli_printf( "ERR, Invalid number of osci channels!" );
-            }
-
             else
             {
-                // No actions...
+                g_cli_osci.channel.num_of = 0;
+
+                cli_printf( "ERR, Invalid number of osci channels!" );
             }
         }
         else

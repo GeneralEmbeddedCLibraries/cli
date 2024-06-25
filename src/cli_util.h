@@ -46,7 +46,7 @@ void        cli_util_unknown_cmd_rsp    (void);
 uint8_t *   cli_util_get_tx_buf         (void);
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-float32_t com_util_par_val_to_float(const par_num_t par);
+float32_t cli_util_par_val_to_float(const par_num_t par);
 #endif
 
 #endif // __CLI_UTIL_H
