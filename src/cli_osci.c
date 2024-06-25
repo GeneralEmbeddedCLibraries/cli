@@ -185,7 +185,7 @@ static const cli_cmd_t g_cli_osci_table[] =
     //  name                    function                    help string
     // ----------------------------------------------------------------------------------------------------------------------
 
-    {   "osci_start",           cli_osci_start,         	"Start (trigger) oscilloscope"                                  },
+    {   "osci_start",           cli_osci_start,         	"Start (run) oscilloscope"                                      },
     {   "osci_stop",            cli_osci_stop,          	"Stop or cancel ongoing sampling"                               },
     {   "osci_data",            cli_osci_data,          	"Get oscilloscope sampled data"                                 },
     {   "osci_channel",         cli_osci_channel,       	"Set oscilloscope channels [parId1,parId2,...,parIdN]"          },
