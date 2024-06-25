@@ -153,14 +153,14 @@
      #define CLI_CFG_PAR_NVM_REGION                 ( eNVM_REGION_INT_FLASH_CLI )
 
      /**
-      *     Enable/Disable automatic storage of streaming infor to NVM
+      *     Enable/Disable automatic storage of streaming info to NVM
       *
       * @note   When enabled streaming info is stored on following 
       *         commands execution:
-      *             - status_des
-      *             - status_start
-      *             - status_stop
-      *				- status_rate
+      *             - watch_channel
+      *             - watch_start
+      *             - watch_stop
+      *				- watch_rate
       */
       #define CLI_CFG_PAR_AUTO_STREAM_STORE_EN      ( 0 )
 

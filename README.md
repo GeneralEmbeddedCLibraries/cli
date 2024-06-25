@@ -1,6 +1,6 @@
 # **Command Line Interface - CLI**
 
-Command Line Interface (CLI) is general purpose console based interpretor independent from communication media. It purpose is to easily and quickly setup embedded device configurations and diagnosis via application defined communication channel. Only constrain for communication channel is usage od ASCII formated characters. 
+A Command Line Interface (CLI) is a general-purpose, console-based interpreter that is independent of the communication medium. Its purpose is to easily and quickly set up embedded device configurations and perform diagnostics via an application-defined communication channel. The only constraint for the communication channel is the usage of ASCII-formatted streams. A CLI also has the ability to adjust embedded device parameters and enables advanced diagnostics, allowing real-time monitoring of changes in device parameters. Furthermore, for fast hard real-time requirements, it can observe device parameter values using a software oscilloscope, providing high-resolution time period observations.
 
 CLI is build around command tables where command name, function and help message is specified. E.g.:
 ```C
@@ -178,14 +178,14 @@ root/middleware/cli/cli/"module_space"
 ## **API**
 | API Functions | Description | Prototype |
 | --- | ----------- | ----- |
-| **cli_init** | Initialization of CLI module | cli_status_t cli_init(void) |
-| **cli_deinit** | De-initialization of CLI module | cli_status_t cli_deinit				(void) |
-| **cli_is_init** | Get initialization status | cli_status_t cli_is_init(bool * const p_is_init) |
-| **cli_hndl** | Main handler for CLI module | cli_status_t cli_hndl(void) |
-| **cli_printf** | Print formated string thrugh CLI COM port | cli_status_t cli_printf(char * p_format, ...) |
-| **cli_printf_ch** | Print COM channel formated string thrugh CLI COM port | cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...) |
-| **cli_register_cmd_table** | Register user define CLI command table | cli_status_t cli_register_cmd_table (const cli_cmd_table_t * const p_cmd_table) |
-
+| **cli_init** 					| Initialization of CLI module 								| cli_status_t cli_init(void) |
+| **cli_deinit** 				| De-initialization of CLI module 							| cli_status_t cli_deinit				(void) |
+| **cli_is_init** 				| Get initialization status 								| cli_status_t cli_is_init(bool * const p_is_init) |
+| **cli_hndl** 					| Main handler for CLI module 								| cli_status_t cli_hndl(void) |
+| **cli_printf** 				| Print formated string thrugh CLI COM port 				| cli_status_t cli_printf(char * p_format, ...) |
+| **cli_printf_ch** 			| Print COM channel formated string thrugh CLI COM port 	| cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...) |
+| **cli_register_cmd_table** 	| Register user define CLI command table 					| cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd) |
+| **cli_osci_hndl** 			| Oscilloscope handler										| cli_status_t cli_osci_hndl(void)|
 
 ## **Usage**
 
@@ -204,7 +204,6 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_TERMINATION_STRING** 		| String that will be send after each "cli_printf" and "cli_printf_ch". |
 | **CLI_CFG_TX_BUF_SIZE** 				| Transmitting buffer size in bytes. |
 | **CLI_CFG_RX_BUF_SIZE** 				| Reception buffer size in bytes. |
-| **CLI_CFG_MAX_NUM_OF_COMMANDS** 		| Maximum number of user defined commands inside single table. |
 | **CLI_CFG_MAX_NUM_OF_USER_TABLES** 	| Maximum number of user define command tables. |
 | **CLI_CFG_MUTEX_EN** 					| Enable/Disable usage of mutex in order to protect low level communication driver. |
 | **CLI_CFG_PAR_USE_EN** 				| Enable/Disable usage of Device Parameters. |
@@ -214,7 +213,10 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_STREAM_NVM_EN** 			| Enable/Disable storing streaming info to NVM. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_NVM_REGION** 				| CLI NVM region space. (Applicable only if CLI_CFG_STREAM_NVM_EN=1) |
 | **CLI_CFG_AUTO_STREAM_STORE_EN** 		| Enable/Disable automatic storing of streaming info to NVM. (Applicable only if CLI_CFG_STREAM_NVM_EN=1). If enabled streaming info will be stored after following command is executed: *status_des*, *status_start*, *status_stop* and *status_rate*. |
-| **CLI_CFG_LEGACY_EN** 				| Enable/Disable legacy mode. (Legacy mode is compatible with PC tool up to V0.2.0) |
+| **CLI_CFG_PAR_OSCI_EN** 				| Enable/Disable usage of software oscilloscope |
+| **CLI_CFG_PAR_MAX_IN_OSCI** 			| Maximum number of parameters in oscilloscope list |
+| **CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE** 	| Oscilloscope sample buffer size. Unit: in multiple of 4 bytes |
+| **CLI_CFG_PAR_OSCI_SECTION** 			| Section name of Oscilloscope specific data linkage |
 | **CLI_CFG_DEBUG_EN** 					| Enable/Disable debugging mode. |
 | **CLI_CFG_ASSERT_EN** 				| Enable/Disable asserts. Shall be disabled in release build! |
 | **CLI_ASSERT** 						| Definition of assert |
@@ -245,7 +247,7 @@ root/middleware/cli/cli/"module_space"
 
 ### **Registration of user command**
 
-Registration of user command is done in run-time with no pre-conditions. Maximum number of commands inside table is defined by *CLI_CFG_MAX_NUM_OF_COMMANDS* macro inside *cli_cfg.h*. By default it is set to 10, meaning that up to 10 user commands can be registered inside single table. Additionally there is also maximum number of all user table limitation. It is adjustable by *CLI_CFG_MAX_NUM_OF_USER_TABLES* macro inside *cli_cfg.h*.
+Registration of user command is done in run-time with no pre-conditions. Maximum number of commands is limited to *uint8_t* data type, meaning 255. Additionally there is also maximum number of all user table limitation. It is adjustable by *CLI_CFG_MAX_NUM_OF_USER_TABLES* macro inside *cli_cfg.h*.
 
 Example of registration of user defined CLI command table:
 
@@ -279,29 +281,21 @@ void test_4 (const uint8_t * attr)
 }
 
 // Define user table
-// NOTE: .num_of must be lower or equal than CLI_CFG_MAX_NUM_OF_COMMANDS!
-static volatile const cli_cmd_table_t my_table =
+static volatile const cli_cmd_t my_table[] =
 {
-	// List of commands
-	.cmd =
-	{
-		// ----------------------------------------------------------------------
-		//     name         function            help string
-		// ----------------------------------------------------------------------
-		{ "test_1",         test_1,             "Test 1 Help" },
-		{ "test_2",         test_2,             "Test 2 Help" },
-		{ "test_3",         test_3,             "Test 3 Help" },
-		{ "test_4",         test_4,             "Test 4 Help" },
-	},
-
-	// Total number of listed commands
-	.num_of = 4
+	// ----------------------------------------------------------------------
+	//     name         function            help string
+	// ----------------------------------------------------------------------
+	{ "test_1",         test_1,             "Test 1 Help" },
+	{ "test_2",         test_2,             "Test 2 Help" },
+	{ "test_3",         test_3,             "Test 3 Help" },
+	{ "test_4",         test_4,             "Test 4 Help" },
 };
 
 void register_my_cli_commands()
 {
 	// Register shell commands
-	cli_register_cmd_table((const cli_cmd_table_t*) &my_table );
+	cli_register_cmd_table((const cli_cmd_t*) &my_table, ( sizeof(my_table) / sizeof(cli_cmd_t)));
 }
 ```
 
@@ -412,7 +406,7 @@ static const nvm_region_t g_nvm_region[ eNVM_REGION_NUM_OF ] =
 	//											Region Name						Start address			Size [byte]			Low level driver
 	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-	[eNVM_REGION_EEPROM_DEV_PAR]	=	{	.name = "device parameters",	.start_addr = 0x0,		.size = 1024,		.p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]	},
+	[eNVM_REGION_EEPROM_DEV_PAR]	=	{	.name = "Device Parameters",	.start_addr = 0x0,		.size = 1024,		.p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]	},
 	[eNVM_REGION_EEPROM_CLI]		=	{	.name = "CLI settings",			.start_addr = 0x400,	.size = 256,		.p_driver = &g_mem_driver[ eNVM_MEM_DRV_EEPROM ]	},
 
 	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -442,23 +436,40 @@ CLI NVM memory layout and field description is shown in picture below:
 ![](doc/cli_nvm_layout.png)
 
 Additional option is to enable automatic storage of streaming info via *CLI_CFG_AUTO_STREAM_STORE_EN* macro. This feature provides refreshing of streaming info inside NVM each time it changes in RAM. Meaning that each time either of streaming info data is being change by user it re-writes new streaming configuration to NVM. This routine is triggered on execution of following CLI command:
- - *status_des*
- - *status_start*
- - *status_stop*
- - *status_rate* 
+ - *watch_channel*
+ - *watch_start*
+ - *watch_stop*
+ - *watch_rate* 
 
 Code section from *cli_cfg.h*:
 ```C
 /**
- *     Enable/Disable automatic storage of streaming infor to NVM
+ *     Enable/Disable automatic storage of streaming info to NVM
  *
  * @note   When enabled streaming info is stored on following 
  *         commands execution:
- *             - status_des
- *             - status_start
- *             - status_stop
- *			   - status_rate
-*/
-#define CLI_CFG_AUTO_STREAM_STORE_EN      ( 1 )
+ *             - watch_channel
+ *             - watch_start
+ *             - watch_stop
+ *			   - watch_rate
+ */
+#define CLI_CFG_PAR_AUTO_STREAM_STORE_EN      ( 0 )
 ```
 
+
+### **Software Oscilloscope**
+
+TODO:...
+
+
+1. Describe how samples are stored into sample buffer
+
+2. Describe trigger and its options
+
+3. Describe usage of it, command by command
+
+4. Describe where to put "osci_hndl" to have high resolution capabilities
+
+5. Describe time constrations of execution of "osci_hndl" 
+
+6. Describe linking sample buffer to CCMRAM or other specific location...

@@ -5,15 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V1.4.0 - xx.05.2024
+## V2.0.0 - xx.06.2024
 
 ### Added 
  - Added software oscilloscope functionalities
+ - Added "intro" to basic command table
 
 ### Changed
  - Template interface files added RTOS mutex example
  - Complete module implementation re-work, spliting tasks by files
  - Transmit buffer is being shared between parameter and main CLI sub-component
+ - User CLI command table registration API changed, added input for number of commands
+ - Device parameters CLI command name changed
+     - "par_print" -> "par_info"
+     - Live watch commands: "status" -> "watch"
+
+### Removed
+ - Removing unused configuration switches (CLI_CFG_LEGACY_EN, CLI_CFG_MAX_NUM_OF_COMMANDS)
+ - Removed doxygen and licence files
 
 ---
 ## V1.3.0 - 17.02.2023
