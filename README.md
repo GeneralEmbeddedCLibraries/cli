@@ -314,19 +314,16 @@ NOTICE: Change only code between ***USER CODE BEGIN*** and ***USER CODE END*** s
     */
 typedef enum
 {
-    eCLI_CH_WAR = 0,		/**<Warning channel */
-    eCLI_CH_ERR,			/**<Error channel */
+    eCLI_CH_WAR = 0,    /**<Warning channel */
+    eCLI_CH_ERR,        /**<Error channel */
 
     // USER_CODE_BEGIN
 
-    eCLI_CH_SCP,
-    eCLI_CH_SICP_SER,
-    eCLI_CH_SICP,
-    eCLI_CH_APP,
+    eCLI_CH_APP,        /**<Application level channel */
 
     // USER_CODE_END
 
-    eCLI_CH_NUM_OF			/**<Leave unchange - Must be last! */
+    eCLI_CH_NUM_OF		Leave unchange - Must be last! */
 } cli_ch_opt_t;
 ```
 
@@ -349,7 +346,7 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 
     // USER_CODE_BEGIN
 
-    [eCLI_CH_APP]       = {	.name = "APP",              .en = true              },
+    [eCLI_CH_APP]       = { .name = "APP",              .en = true              },
 
     // USER_CODE_END
 };
@@ -367,7 +364,7 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
     *   @brief	Usage of device parameters.
     *           Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
     */
-#define CLI_CFG_PAR_USE_EN						( 1 )
+#define CLI_CFG_PAR_USE_EN                          ( 1 )
 ```
 
 Now you have everything setup to use Device Parameters module in combination with CLI.
