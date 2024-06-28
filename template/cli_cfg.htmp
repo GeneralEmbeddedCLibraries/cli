@@ -184,7 +184,7 @@
          *
          *    Unit: in multiple of 4 bytes
          */
-        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 2000 )
+        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 1000 )
 
         /**
          *     Section name of Oscilloscope specific data linkage
