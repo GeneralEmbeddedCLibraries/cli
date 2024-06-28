@@ -898,7 +898,7 @@ static void cli_osci_state(const uint8_t * p_attr)
 /*!
 * @brief        Get oscilloscope configuration info
 *
-* @note     Osci info is returned as "OK, TRIGGER INFO[parId,type,th,pre-trigger],STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
+* @note     Osci info is returned as "OK, TRIGGER INFO[parId,type,th,pre-trigger],DOWNSAMPLE,STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
 *
 * @param[in]    attr    - Inputed command attributes
 * @return       void
@@ -917,13 +917,14 @@ static void cli_osci_info(const uint8_t * p_attr)
         (void) par_get_id( g_cli_osci.trigger.par, &par_id );
 
         // Send streaming info as
-        // OK, TRIGGER_INFO[par,type,th,pre-trigger],STATE,NUM_OF_CH,
-        sprintf((char*) p_tx_buf, "OK, %d,%d,%f,%f,%d,%d",  (int) par_id,
-                                                            (int) g_cli_osci.trigger.type,
-                                                            (float) g_cli_osci.trigger.th,
-                                                            (float) g_cli_osci.trigger.pretrigger,
-                                                            (int) g_cli_osci.state,
-                                                            (int) g_cli_osci.channel.num_of );
+        // OK, TRIGGER_INFO[par,type,th,pre-trigger],DOWNSAMPLE,STATE,NUM_OF_CH,
+        sprintf((char*) p_tx_buf, "OK, %d,%d,%f,%f,%d,%d,%d",   (int) par_id,
+                                                                (int) g_cli_osci.trigger.type,
+                                                            	(float) g_cli_osci.trigger.th,
+                                                            	(float) g_cli_osci.trigger.pretrigger,
+                                                            	(int) g_cli_osci.samp.downsample_factor,
+                                                            	(int) g_cli_osci.state,
+                                                            	(int) g_cli_osci.channel.num_of );
         cli_send_str( p_tx_buf );
 
         // Print streaming parameters/variables
