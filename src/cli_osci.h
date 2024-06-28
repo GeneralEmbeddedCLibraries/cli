@@ -3,41 +3,44 @@
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@file      cli_if.h
-*@brief     Interface with Command Line Interface
+*@file      cli_osci.h
+*@brief     Command Line Interface Osciliscope
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      17.02.2023
-*@version   V1.3.0
+*@date      21.05.2024
+*@version   V1.4.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@addtogroup CLI_IF
+*@addtogroup CLI_OSCI_API
 * @{ <!-- BEGIN GROUP -->
+*
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CLI_IF_H
-#define __CLI_IF_H
+#ifndef __CLI_OSCI_H
+#define __CLI_OSCI_H
 
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
-#include "cli/src/cli.h"
+#include <stdint.h>
+#include <stdbool.h>
 
+#include "cli.h"
+
+////////////////////////////////////////////////////////////////////////////////
+// Definitions
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_if_init			(void);
-cli_status_t cli_if_deinit			(void);
-cli_status_t cli_if_receive			(uint8_t * const p_data);
-cli_status_t cli_if_transmit		(const uint8_t * const p_data);
-cli_status_t cli_if_aquire_mutex	(void);
-cli_status_t cli_if_release_mutex	(void);
-cli_status_t cli_if_device_reset	(void);
+cli_status_t    cli_osci_init       (void);
+cli_status_t    cli_osci_hndl       (void);
+void            cli_osci_samp_hndl  (void);
 
-#endif // __CLI_H
+#endif // __CLI_OSCI_H
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
