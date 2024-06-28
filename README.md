@@ -471,7 +471,7 @@ Sample buffer accumulates all samples (parameters values) into signle array in f
 
 #### **Usage**
 
-1. Software Oscilloscope needs to be enabled in ***cli_cfg.h**: 
+**1. Software Oscilloscope needs to be enabled in **cli_cfg.h**:**
 ```C
 /**
  *     Enable/Disable usage of software oscilloscope
@@ -481,7 +481,7 @@ Sample buffer accumulates all samples (parameters values) into signle array in f
 NOTICE: When using oscilloscope, it's mandatory to use [Device Parameters](https://github.com/GeneralEmbeddedCLibraries/parameters) module!
 
 
-2. (OPTIONAL) Link oscilloscope sample buffer to specific memory location:
+**2. (OPTIONAL) Link oscilloscope sample buffer to specific memory location:**
 
 Example of linking osci buffer to CCMRAM on STM32G431:
 ```C
@@ -514,7 +514,7 @@ Part of *STM32G432RBTX_FLASH.ld* linker script:
   /*--- End of CCMRAM linker section definition ---*/
 ```
 
-3. Handle oscilloscope :
+**3. Handle oscilloscope:**
 ```C
 // Typical ADC End-Of-Conversion ISR
 void ADC_EOC_ISR(void)
@@ -526,7 +526,7 @@ void ADC_EOC_ISR(void)
 }
 ```
 
-4. Configure, start and get data via CLI commands using your favourite terminal:
+4. Configure, start and get data via CLI commands using your preferred terminal:
 ```C
 // First stop osci
 osci_stop\r\n
