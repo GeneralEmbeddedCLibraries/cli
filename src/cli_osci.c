@@ -17,7 +17,6 @@
 *
 * @brief	This module contains software osciloscope functionalities coupled
 *           into CLI module.
-*
 */
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,10 +96,10 @@ typedef struct
     /**<Sample buffer */
     struct
     {
-        p_ring_buffer_t buf;                                        /**<Sample buffer - ring buffer */
-        int32_t         idx;                                        /**<Sample buffer index */
-        uint32_t        downsample_factor;                          /**<Downsample factor */
-        uint32_t        num_of_samp;                                /**<Max samples, that is defined by max buffer size and number of channels*/
+        p_ring_buffer_t buf;                /**<Sample buffer - ring buffer */
+        int32_t         idx;                /**<Sample buffer index */
+        uint32_t        downsample_factor;  /**<Downsample factor */
+        uint32_t        num_of_samp;        /**<Max samples, that is defined by max buffer size and number of channels*/
     } samp;
 
     cli_osci_state_t    state;      /**<Oscilloscope state */
@@ -139,7 +138,6 @@ static void cli_osci_trigger    (const uint8_t * p_attr);
 static void cli_osci_downsample (const uint8_t * p_attr);
 static void cli_osci_state      (const uint8_t * p_attr);
 static void cli_osci_info       (const uint8_t * p_attr);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -949,7 +947,6 @@ static void cli_osci_info(const uint8_t * p_attr)
         cli_util_unknown_cmd_rsp();
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
