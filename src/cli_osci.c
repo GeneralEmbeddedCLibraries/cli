@@ -185,14 +185,14 @@ static const cli_cmd_t g_cli_osci_table[] =
     //  name                    function                    help string
     // ----------------------------------------------------------------------------------------------------------------------
 
-    {   "osci_start",           cli_osci_start,         	"Start (run) oscilloscope"                                      },
-    {   "osci_stop",            cli_osci_stop,          	"Stop or cancel ongoing sampling"                               },
-    {   "osci_data",            cli_osci_data,          	"Get oscilloscope sampled data"                                 },
-    {   "osci_channel",         cli_osci_channel,       	"Set oscilloscope channels [parId1,parId2,...,parIdN]"          },
-    {   "osci_trigger",         cli_osci_trigger,       	"Set oscilloscope trigger [type,par,threshold,pre-trigger]"     },
-    {   "osci_downsample",      cli_osci_downsample,    	"Set oscilloscope downsample factor [downsample]"               },
-    {   "osci_state",           cli_osci_state,             "Get oscilloscope state"                                        },
-    {   "osci_info",            cli_osci_info,              "Get information of oscilloscope configuration"                 },
+    {   "osci_start",           cli_osci_start,         	"Start (run) oscilloscope"                                          },
+    {   "osci_stop",            cli_osci_stop,          	"Stop or cancel ongoing sampling"                                   },
+    {   "osci_data",            cli_osci_data,          	"Get oscilloscope sampled data"                                     },
+    {   "osci_channel",         cli_osci_channel,       	"Set oscilloscope channels. Args: [parId1,parId2,...,parIdN]"       },
+    {   "osci_trigger",         cli_osci_trigger,       	"Set oscilloscope trigger. Args: [type,par,threshold,pre-trigger]"  },
+    {   "osci_downsample",      cli_osci_downsample,    	"Set oscilloscope downsample factor. Args: [downsample]"            },
+    {   "osci_state",           cli_osci_state,             "Get oscilloscope state"                                            },
+    {   "osci_info",            cli_osci_info,              "Get information of oscilloscope configuration"                     },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +211,7 @@ static cli_status_t cli_osci_init_buf(void)
     cli_status_t status = eCLI_OK;
 
     // Static allocation of memory space, dump old samples
-    const ring_buffer_attr_t buf_attr =
+    static const ring_buffer_attr_t buf_attr =
     {
         .name       = "Osci",
         .p_mem      = (void*) &g_cli_osci.samp.data,
@@ -892,9 +892,20 @@ static void cli_osci_state(const uint8_t * p_attr)
     }
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Get oscilloscope configuration info
+*
+* @note     Osci info is returned as "OK, TRIGGER INFO[par,th,type,pre-trigger],STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
+*
+* @param[in]    attr    - Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
 static void cli_osci_info(const uint8_t * p_attr)
 {
+    //uint16_t par_id = 0U;
+
     if ( NULL == p_attr )
     {
         // TODO: ...

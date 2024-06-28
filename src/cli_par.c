@@ -86,9 +86,9 @@ static const cli_cmd_t g_cli_par_table[] =
     //  name                    function                help string
     // ----------------------------------------------------------------------------------------------------------
     {   "par_info",             cli_par_info,           "Get device parameter informations"                     },
-    {   "par_set",              cli_par_set,            "Set parameter [parId,value]"                       	},
-    {   "par_get",              cli_par_get,            "Get parameter [parId]"                             	},
-    {   "par_def",              cli_par_def,            "Set parameter to default [parId]"                  	},
+    {   "par_set",              cli_par_set,            "Set parameter. Args: [parId,value]"                    },
+    {   "par_get",              cli_par_get,            "Get parameter. Args: [parId]"                          },
+    {   "par_def",              cli_par_def,            "Set parameter to default. Args: [parId]"               },
     {   "par_def_all",          cli_par_def_all,        "Set all parameters to default"                     	},
     {   "par_save",             cli_par_store,          "Save parameter to NVM"                             	},
 
@@ -105,14 +105,14 @@ static const cli_cmd_t g_cli_watch_table[] =
     // ----------------------------------------------------------------------------------------------------------
     //  name                    function                help string
     // ----------------------------------------------------------------------------------------------------------
-    {   "watch_start",          cli_watch_start,        "Start parameter value live watch"                      },
-    {   "watch_stop",           cli_watch_stop,         "Stop parameter value live watch"                       },
-    {   "watch_channel",        cli_watch_channel,      "Set live watch channels [parId1,parId2,...,parIdN]"    },
-    {   "watch_rate",           cli_watch_rate,         "Change live watch streaming period [miliseconds]"      },
-    {   "watch_info",           cli_watch_info,         "Get live watch configuration info"                     },
+    {   "watch_start",          cli_watch_start,        "Start parameter value live watch"                              },
+    {   "watch_stop",           cli_watch_stop,         "Stop parameter value live watch"                               },
+    {   "watch_channel",        cli_watch_channel,      "Set live watch channels. Args: [parId1,parId2,...,parIdN]"     },
+    {   "watch_rate",           cli_watch_rate,         "Change live watch streaming period. Args: [miliseconds]"       },
+    {   "watch_info",           cli_watch_info,         "Get live watch configuration info"                             },
 
 #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
-    {   "watch_save",          cli_watch_save,          "Save live watch configuration into to NVM"             },
+    {   "watch_save",          cli_watch_save,          "Save live watch configuration into to NVM"                     },
 #endif
 };
 
@@ -587,7 +587,7 @@ static void cli_par_store(const uint8_t * p_attr)
     /*!
     * @brief        Store streaming informations to NVM
     *
-    * @note         Command format: >>>status_save
+    * @note         Command format: >>>watch_save
     *
     * @param[in]    attr    - Inputed command attributes
     * @return       void
@@ -618,7 +618,7 @@ static void cli_par_store(const uint8_t * p_attr)
 /*!
 * @brief        Start live watch streaming
 *
-* @note         Command format: >>>status_start
+* @note         Command format: >>>watch_start
 *
 * @param[in]    attr    - Inputed command attributes
 * @return       void
@@ -653,7 +653,7 @@ static void cli_watch_start(const uint8_t * p_attr)
 /*!
 * @brief        Stop live watch streaming
 *
-* @note         Command format: >>>status_stop
+* @note         Command format: >>>watch_stop
 *
 * @param[in]    attr    - Inputed command attributes
 * @return       void
@@ -681,7 +681,7 @@ static void cli_watch_stop(const uint8_t * p_attr)
 /*!
 * @brief        Put parameters to live watch
 *
-* @note         Command format: >>>status_des [parID1,parID2,..parIDn]
+* @note         Command format: >>>watch_des [parID1,parID2,..parIDn]
 *
 *
 * @param[in]    attr    - Inputed command attributes
@@ -791,7 +791,7 @@ static void cli_watch_channel(const uint8_t * p_attr)
 /*!
 * @brief        Change rate of live watch streaming period
 *
-* @note         Command format: >>>status_rate [period_in_ms]
+* @note         Command format: >>>watch_rate [period_in_ms]
 *
 * @example      >>>status_rate 100 --> Will change period to 100 ms
 *
@@ -848,7 +848,7 @@ static void cli_watch_rate(const uint8_t * p_attr)
 /*!
 * @brief        Get streaming configuration info
 *
-* @note         Command format: >>>status_info
+* @note         Command format: >>>watch_info
 *
 * @param[in]    attr    - Inputed command attributes
 * @return       void

@@ -108,7 +108,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					},
 	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						},
 	{ 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					},
-	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel [chEnum][en]" 			},
+	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]"    },
 };
 
 /**
