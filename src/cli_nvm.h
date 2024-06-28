@@ -7,8 +7,8 @@
 *@brief     Command Line Interface NVM storage
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      17.02.2023
-*@version   V1.3.0
+*@date      28.06.2024
+*@version   V2.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**

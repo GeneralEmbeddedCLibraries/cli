@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Utility
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      21.05.2024
-*@version   V1.4.0
+*@date      28.06.2024
+*@version   V2.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!

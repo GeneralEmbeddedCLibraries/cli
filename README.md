@@ -166,7 +166,7 @@ NVM module must take following path:
 ## **Limitations**
 
 ### **1. ASCII Base Interface**
-CLI is ASCII based communication interface therefore all received command shall be fully in ASCII format. Limitation here is that CLI module do no support binary data stream in command attributes nor in comamnd name.
+CLI is ASCII based communication interface therefore all received command shall be fully in ASCII format. Limitation here is that CLI module do no support binary data stream in command attributes nor in command name.
 
 ## **General Embedded C Libraries Ecosystem**
 In order to be part of *General Embedded C Libraries Ecosystem* this module must be placed in following path: 
@@ -179,9 +179,10 @@ root/middleware/cli/cli/"module_space"
 | API Functions | Description | Prototype |
 | --- | ----------- | ----- |
 | **cli_init** 					| Initialization of CLI module 								| cli_status_t cli_init(void) |
-| **cli_deinit** 				| De-initialization of CLI module 							| cli_status_t cli_deinit				(void) |
+| **cli_deinit** 				| De-initialization of CLI module 							| cli_status_t cli_deinit(void) |
 | **cli_is_init** 				| Get initialization status 								| cli_status_t cli_is_init(bool * const p_is_init) |
 | **cli_hndl** 					| Main handler for CLI module 								| cli_status_t cli_hndl(void) |
+| **cli_send_str** 				| Send string thrugh CLI COM port 				            | cli_status_t cli_send_str(const uint8_t * const p_str) |
 | **cli_printf** 				| Print formated string thrugh CLI COM port 				| cli_status_t cli_printf(char * p_format, ...) |
 | **cli_printf_ch** 			| Print COM channel formated string thrugh CLI COM port 	| cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...) |
 | **cli_register_cmd_table** 	| Register user define CLI command table 					| cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd) |
@@ -212,10 +213,10 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_PAR_MAX_IN_LIVE_WATCH** 	| Maximum number of parameter in streaming list. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_STREAM_NVM_EN** 			| Enable/Disable storing streaming info to NVM. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_NVM_REGION** 				| CLI NVM region space. (Applicable only if CLI_CFG_STREAM_NVM_EN=1) |
-| **CLI_CFG_AUTO_STREAM_STORE_EN** 		| Enable/Disable automatic storing of streaming info to NVM. (Applicable only if CLI_CFG_STREAM_NVM_EN=1). If enabled streaming info will be stored after following command is executed: *status_des*, *status_start*, *status_stop* and *status_rate*. |
+| **CLI_CFG_AUTO_STREAM_STORE_EN** 		| Enable/Disable automatic storing of streaming info to NVM. (Applicable only if CLI_CFG_STREAM_NVM_EN=1). If enabled streaming info will be stored after following command is executed: *watch_des*, *watch_start*, *watch_stop* and *watch_rate*. |
 | **CLI_CFG_PAR_OSCI_EN** 				| Enable/Disable usage of software oscilloscope |
 | **CLI_CFG_PAR_MAX_IN_OSCI** 			| Maximum number of parameters in oscilloscope list |
-| **CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE** 	| Oscilloscope sample buffer size. Unit: in multiple of 4 bytes |
+| **CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE** 	| Oscilloscope sample buffer size. Unit: byte |
 | **CLI_CFG_PAR_OSCI_SECTION** 			| Section name of Oscilloscope specific data linkage |
 | **CLI_CFG_DEBUG_EN** 					| Enable/Disable debugging mode. |
 | **CLI_CFG_ASSERT_EN** 				| Enable/Disable asserts. Shall be disabled in release build! |
@@ -470,7 +471,7 @@ Sample buffer accumulates all samples (parameters values) into signle array in f
 
 #### **Usage**
 
-1. Software Oscilloscope needs to be enabled in ***cli_cfg.h**: 
+**1. Software Oscilloscope needs to be enabled in **cli_cfg.h**:**
 ```C
 /**
  *     Enable/Disable usage of software oscilloscope
@@ -480,7 +481,7 @@ Sample buffer accumulates all samples (parameters values) into signle array in f
 NOTICE: When using oscilloscope, it's mandatory to use [Device Parameters](https://github.com/GeneralEmbeddedCLibraries/parameters) module!
 
 
-2. (OPTIONAL) Link oscilloscope sample buffer to specific memory location:
+**2. (OPTIONAL) Link oscilloscope sample buffer to specific memory location:**
 
 Example of linking osci buffer to CCMRAM on STM32G431:
 ```C
@@ -513,7 +514,7 @@ Part of *STM32G432RBTX_FLASH.ld* linker script:
   /*--- End of CCMRAM linker section definition ---*/
 ```
 
-3. Handle oscilloscope :
+**3. Handle oscilloscope:**
 ```C
 // Typical ADC End-Of-Conversion ISR
 void ADC_EOC_ISR(void)
@@ -525,7 +526,7 @@ void ADC_EOC_ISR(void)
 }
 ```
 
-4. Configure, start and get data via CLI commands using your favourite terminal:
+**4. Configure, start and get data via CLI commands using your preferred terminal:**
 ```C
 // First stop osci
 osci_stop\r\n

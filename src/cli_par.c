@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Device Parameters
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      21.05.2024
-*@version   V1.4.0
+*@date      28.06.2024
+*@version   V2.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -1076,6 +1076,12 @@ cli_status_t cli_par_init(void)
         {
             // Read streaming info
             status = cli_nvm_read( &g_cli_live_watch );
+
+            // If at init CLI nvm is corrupted -> override it with default
+            if ( eCLI_OK != status )
+            {
+                status = cli_nvm_write( &g_cli_live_watch );
+            }
         }
         else
         {

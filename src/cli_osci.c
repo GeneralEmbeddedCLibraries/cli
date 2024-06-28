@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Osciloscope
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      21.05.2024
-*@version   V1.4.0
+*@date      28.06.2024
+*@version   V2.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -151,7 +151,7 @@ static volatile cli_osci_t g_cli_osci = {0};
 /**
  *  Oscilloscope sample buffer
  */
-static volatile float32_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))) gf32_cli_osci_samp_buf[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE] = {0};
+static volatile uint8_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))) gu8_cli_osci_samp_buf[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE] = {0};
 
 /**
  *  Osci state handlers
@@ -216,13 +216,13 @@ static cli_status_t cli_osci_init_buf(void)
     static const ring_buffer_attr_t buf_attr =
     {
         .name       = "Osci",
-        .p_mem      = (void*) &gf32_cli_osci_samp_buf,
+        .p_mem      = (void*) &gu8_cli_osci_samp_buf,
         .item_size  = sizeof(float32_t),
         .override   = true,                         // Dump old data
     };
 
     // Init ring buffer
-    if ( eRING_BUFFER_OK != ring_buffer_init((p_ring_buffer_t*) &g_cli_osci.samp.buf, CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE, &buf_attr ))
+    if ( eRING_BUFFER_OK != ring_buffer_init((p_ring_buffer_t*) &g_cli_osci.samp.buf, ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)), &buf_attr ))
     {
         status = eCLI_ERROR;
     }
@@ -898,7 +898,7 @@ static void cli_osci_state(const uint8_t * p_attr)
 /*!
 * @brief        Get oscilloscope configuration info
 *
-* @note     Osci info is returned as "OK, TRIGGER INFO[parId,type,th,pre-trigger],STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
+* @note     Osci info is returned as "OK, TRIGGER INFO[parId,type,th,pre-trigger],DOWNSAMPLE,STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
 *
 * @param[in]    attr    - Inputed command attributes
 * @return       void
@@ -917,13 +917,14 @@ static void cli_osci_info(const uint8_t * p_attr)
         (void) par_get_id( g_cli_osci.trigger.par, &par_id );
 
         // Send streaming info as
-        // OK, TRIGGER_INFO[par,type,th,pre-trigger],STATE,NUM_OF_CH,
-        sprintf((char*) p_tx_buf, "OK, %d,%d,%f,%f,%d,%d",  (int) par_id,
-                                                            (int) g_cli_osci.trigger.type,
-                                                            (float) g_cli_osci.trigger.th,
-                                                            (float) g_cli_osci.trigger.pretrigger,
-                                                            (int) g_cli_osci.state,
-                                                            (int) g_cli_osci.channel.num_of );
+        // OK, TRIGGER_INFO[par,type,th,pre-trigger],DOWNSAMPLE,STATE,NUM_OF_CH,
+        sprintf((char*) p_tx_buf, "OK, %d,%d,%f,%f,%d,%d,%d",   (int) par_id,
+                                                                (int) g_cli_osci.trigger.type,
+                                                            	(float) g_cli_osci.trigger.th,
+                                                            	(float) g_cli_osci.trigger.pretrigger,
+                                                            	(int) g_cli_osci.samp.downsample_factor,
+                                                            	(int) g_cli_osci.state,
+                                                            	(int) g_cli_osci.channel.num_of );
         cli_send_str( p_tx_buf );
 
         // Print streaming parameters/variables
