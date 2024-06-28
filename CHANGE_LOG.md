@@ -13,9 +13,9 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 ### Added 
  - Added software oscilloscope functionalities
  - Added "intro" to basic command table
+ - Added RTOS mutex example to template interface file
 
 ### Changed
- - Template interface files added RTOS mutex example
  - Complete module implementation re-work, spliting tasks by files
  - Transmit buffer is being shared between parameter and main CLI sub-component
  - User CLI command table registration API changed, added input for number of commands
