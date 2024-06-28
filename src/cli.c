@@ -7,8 +7,8 @@
 *@brief     Command Line Interface
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      17.02.2023
-*@version   V1.3.0
+*@date      28.06.2024
+*@version   V2.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -1156,7 +1156,9 @@ cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const u
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_osci_hndl(void)
 {
+#if ( 1 == CLI_CFG_PAR_OSCI_EN )
     cli_osci_samp_hndl();
+#endif
 
     return eCLI_OK;
 }
