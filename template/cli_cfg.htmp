@@ -182,9 +182,9 @@
         /**
          *      Oscilloscope sample buffer size
          *
-         *    Unit: in multiple of 4 bytes
+         *    Unit: byte
          */
-        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 1000 )
+        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 4000 )
 
         /**
          *     Section name of Oscilloscope specific data linkage
