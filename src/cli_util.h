@@ -3,8 +3,8 @@
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@file      cli_if.h
-*@brief     Interface with Command Line Interface
+*@file      cli_util.h
+*@brief     Command Line Interface Utility
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
 *@date      28.06.2024
@@ -12,32 +12,44 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@addtogroup CLI_IF
+*@addtogroup CLI_UTIL_API
 * @{ <!-- BEGIN GROUP -->
+*
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CLI_IF_H
-#define __CLI_IF_H
+#ifndef __CLI_UTIL_H
+#define __CLI_UTIL_H
 
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
-#include "cli/src/cli.h"
+#include <stdint.h>
+#include <stdbool.h>
 
+#include "cli.h"
+#include "cli_par.h"
+
+////////////////////////////////////////////////////////////////////////////////
+// Definitions
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ *  Floating type
+ */
+typedef float float32_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_if_init			(void);
-cli_status_t cli_if_deinit			(void);
-cli_status_t cli_if_receive			(uint8_t * const p_data);
-cli_status_t cli_if_transmit		(const uint8_t * const p_data);
-cli_status_t cli_if_aquire_mutex	(void);
-cli_status_t cli_if_release_mutex	(void);
-cli_status_t cli_if_device_reset	(void);
+void        cli_util_unknown_cmd_rsp    (void);
+uint8_t *   cli_util_get_tx_buf         (void);
 
-#endif // __CLI_H
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+float32_t cli_util_par_val_to_float(const par_num_t par);
+#endif
+
+#endif // __CLI_UTIL_H
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

@@ -3,8 +3,8 @@
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@file      cli_if.h
-*@brief     Interface with Command Line Interface
+*@file      cli_par.h
+*@brief     Command Line Interface Device Parameters
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
 *@date      28.06.2024
@@ -12,32 +12,48 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@addtogroup CLI_IF
+*@addtogroup CLI_PAR_API
 * @{ <!-- BEGIN GROUP -->
+*
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CLI_IF_H
-#define __CLI_IF_H
+#ifndef __CLI_PAR_H
+#define __CLI_PAR_H
 
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
-#include "cli/src/cli.h"
+#include <stdint.h>
+#include <stdbool.h>
 
+#include "cli.h"
+
+#if ( 1 == CLI_CFG_PAR_USE_EN )
+
+#include "middleware/parameters/parameters/src/par.h"
+
+/**
+ *  Compatibility check with Parameters module
+ *
+ *  Support version V2.0.x
+ */
+_Static_assert( 2 == PAR_VER_MAJOR );
+_Static_assert( 0 <= PAR_VER_MINOR );
+
+////////////////////////////////////////////////////////////////////////////////
+// Definitions
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_if_init			(void);
-cli_status_t cli_if_deinit			(void);
-cli_status_t cli_if_receive			(uint8_t * const p_data);
-cli_status_t cli_if_transmit		(const uint8_t * const p_data);
-cli_status_t cli_if_aquire_mutex	(void);
-cli_status_t cli_if_release_mutex	(void);
-cli_status_t cli_if_device_reset	(void);
+cli_status_t cli_par_init(void);
+cli_status_t cli_par_hndl(void);
 
-#endif // __CLI_H
+#endif // 1 == CLI_CFG_PAR_USE_EN
+
+#endif // __CLI_PAR_H
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
