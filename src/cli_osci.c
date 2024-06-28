@@ -904,11 +904,55 @@ static void cli_osci_state(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_osci_info(const uint8_t * p_attr)
 {
-    //uint16_t par_id = 0U;
+    int par_id = 0U;
 
     if ( NULL == p_attr )
     {
-        // TODO: ...
+#if 1
+
+        // Get pointer to Tx buffer
+        uint8_t * p_tx_buf = cli_util_get_tx_buf();
+
+        // Send streaming info as
+        // OK, TRIGGER_INFO[par,th,type,pre-trigger],STATE,NUM_OF_CH,
+#if 0
+       // int par             = g_cli_osci.trigger.par;
+      //  int type            = g_cli_osci.trigger.type;
+       // int state           = g_cli_osci.state;
+        //int num_of          = g_cli_osci.channel.num_of;
+        //float th            = g_cli_osci.trigger.th;
+        //float pretrigger    = g_cli_osci.trigger.pretrigger;
+
+        sprintf((char*) p_tx_buf, "OK, %d,%d,%d",  (int) g_cli_osci.trigger.par,
+                                                            //(float) th,
+                                                            //(int) type,
+                                                            //(float) pretrigger,
+                                                            (int) g_cli_osci.state,
+                                                            (int) g_cli_osci.channel.num_of );
+#endif
+
+        //int type = g_cli_osci.trigger.type;
+        //sprintf((char*) p_tx_buf, "OK, %d,%d",  (int)g_cli_osci.trigger.par, (int)type );
+
+        //cli_send_str( p_tx_buf );
+
+        // Print streaming parameters/variables
+        for ( uint8_t ch_it = 0; ch_it < g_cli_osci.channel.num_of; ch_it++ )
+        {
+            // Get parameter ID
+            (void) par_get_id( g_cli_osci.channel.list[ch_it], (uint16_t*) &par_id );
+
+            // Format string with parameters info
+            sprintf((char*) p_tx_buf, ",%d", (int) par_id );
+
+            // Send
+            cli_send_str( p_tx_buf );
+        }
+
+        // Terminate line
+        cli_printf("");
+
+#endif
     }
     else
     {
