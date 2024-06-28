@@ -151,7 +151,7 @@ static volatile cli_osci_t g_cli_osci = {0};
 /**
  *  Oscilloscope sample buffer
  */
-static volatile float32_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))) gf32_cli_osci_samp_buf[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE] = {0};
+static volatile uint8_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))) gu8_cli_osci_samp_buf[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE] = {0};
 
 /**
  *  Osci state handlers
@@ -216,13 +216,13 @@ static cli_status_t cli_osci_init_buf(void)
     static const ring_buffer_attr_t buf_attr =
     {
         .name       = "Osci",
-        .p_mem      = (void*) &gf32_cli_osci_samp_buf,
+        .p_mem      = (void*) &gu8_cli_osci_samp_buf,
         .item_size  = sizeof(float32_t),
         .override   = true,                         // Dump old data
     };
 
     // Init ring buffer
-    if ( eRING_BUFFER_OK != ring_buffer_init((p_ring_buffer_t*) &g_cli_osci.samp.buf, CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE, &buf_attr ))
+    if ( eRING_BUFFER_OK != ring_buffer_init((p_ring_buffer_t*) &g_cli_osci.samp.buf, ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)), &buf_attr ))
     {
         status = eCLI_ERROR;
     }
