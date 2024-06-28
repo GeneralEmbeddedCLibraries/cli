@@ -468,25 +468,81 @@ Sample buffer constains all channels (parameters values) into signle array in fo
 ![](doc/osci_buffer.png)
 
 
+#### **Usage**
 
+1. Software Oscilloscope needs to be enabled in ***cli_cfg.h**: 
+```C
+/**
+ *     Enable/Disable usage of software oscilloscope
+ */
+#define CLI_CFG_PAR_OSCI_EN                   ( 1 )
+```
+NOTICE: When using oscilloscope, it's mandatory to use [Device Parameters](https://github.com/GeneralEmbeddedCLibraries/parameters) module!
+
+
+2. (OPTIONAL) Link oscilloscope sample buffer to specific memory location:
+
+Example of linking osci buffer to CCMRAM on STM32G431:
+```C
+/**
+ *     Section name of Oscilloscope specific data linkage
+ */
+#define CLI_CFG_PAR_OSCI_SECTION                ( ".ccmData" )
+```
+
+Part of *STM32G432RBTX_FLASH.ld* linker script:
+```
+  /*--- New CCMRAM linker section definition ---*/
+  _siccmram = LOADADDR(.ccmram);
+  
+  /* Program CCMRAM section */
+  .ccmram :
+  {
+    . = ALIGN(4);
+    _sccmram = .; /* define a global symbols at ccmram start */
+    *(.ccmData)
+    *(.ccmData*)
+    *(.ccmFunc)
+    *(.ccmFunc*)
+    
+    . = ALIGN(4);
+    _eccmram = .; /* define a global symbols at ccmram end */
+    
+  } >CCMRAM AT> FLASH
+  
+  /*--- End of CCMRAM linker section definition ---*/
+```
+
+3. Handle oscilloscope :
+```C
+// Typical ADC End-Of-Conversion ISR
+void ADC_EOC_ISR(void)
+{
+    // Other hard real-time stuff...
+
+    // Handle Oscilloscope
+    cli_osci_hndl();
+}
+```
+
+4. Configure, start and get data via CLI commands using your favourite terminal:
+```C
+// First stop osci
+osci_stop\r\n
+
+// Configure osci
+osci_channel 201,202\r\n
+osci_trigger 0,201,0.025,0.5\r\n
+osci_downsample 1\r\n
+
+// Run osci
+osci_start\r\n
+
+// Wait for sampling to finish...
+
+osci_data\r\n   // Get data
+```
 
 Example of software oscilloscope usage in real life case, sample frequency was 8kHz with falling edge trigger:
 
 ![](doc/usage_example.png)
-
-
-
-TODO:...
-
-
-1. Describe how samples are stored into sample buffer
-
-2. Describe trigger and its options
-
-3. Describe usage of it, command by command
-
-4. Describe where to put "osci_hndl" to have high resolution capabilities
-
-5. Describe time constrations of execution of "osci_hndl" 
-
-6. Describe linking sample buffer to CCMRAM or other specific location...
