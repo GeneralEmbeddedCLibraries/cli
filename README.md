@@ -526,7 +526,7 @@ void ADC_EOC_ISR(void)
 }
 ```
 
-4. Configure, start and get data via CLI commands using your preferred terminal:
+**4. Configure, start and get data via CLI commands using your preferred terminal:**
 ```C
 // First stop osci
 osci_stop\r\n
