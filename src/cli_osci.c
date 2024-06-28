@@ -98,7 +98,6 @@ typedef struct
     struct
     {
         p_ring_buffer_t buf;                                        /**<Sample buffer - ring buffer */
-        float32_t       data[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE];       /**<Sample buffer data */
         int32_t         idx;                                        /**<Sample buffer index */
         uint32_t        downsample_factor;                          /**<Downsample factor */
         uint32_t        num_of_samp;                                /**<Max samples, that is defined by max buffer size and number of channels*/
@@ -149,7 +148,12 @@ static void cli_osci_info       (const uint8_t * p_attr);
 /**
  *  Oscilloscope control block
  */
-static volatile cli_osci_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))) g_cli_osci = {0};
+static volatile cli_osci_t g_cli_osci = {0};
+
+/**
+ *  Oscilloscope sample buffer
+ */
+static volatile float32_t __attribute__ (( section( CLI_CFG_PAR_OSCI_SECTION ))) gf32_cli_osci_samp_buf[CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE] = {0};
 
 /**
  *  Osci state handlers
@@ -214,7 +218,7 @@ static cli_status_t cli_osci_init_buf(void)
     static const ring_buffer_attr_t buf_attr =
     {
         .name       = "Osci",
-        .p_mem      = (void*) &g_cli_osci.samp.data,
+        .p_mem      = (void*) &gf32_cli_osci_samp_buf,
         .item_size  = sizeof(float32_t),
         .override   = true,                         // Dump old data
     };
@@ -799,7 +803,7 @@ static void cli_osci_trigger(const uint8_t * p_attr)
             }
             else
             {
-                cli_printf( "ERR, Invalid trigger settings!" );
+                cli_printf( "ERR, Invalid trigger settings! Set channels first!" );
             }
         }
         else
@@ -896,7 +900,7 @@ static void cli_osci_state(const uint8_t * p_attr)
 /*!
 * @brief        Get oscilloscope configuration info
 *
-* @note     Osci info is returned as "OK, TRIGGER INFO[par,th,type,pre-trigger],STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
+* @note     Osci info is returned as "OK, TRIGGER INFO[parId,type,th,pre-trigger],STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
 *
 * @param[in]    attr    - Inputed command attributes
 * @return       void
@@ -904,43 +908,31 @@ static void cli_osci_state(const uint8_t * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_osci_info(const uint8_t * p_attr)
 {
-    int par_id = 0U;
+    uint16_t par_id = 0U;
 
     if ( NULL == p_attr )
     {
-#if 1
-
         // Get pointer to Tx buffer
         uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
-        // Send streaming info as
-        // OK, TRIGGER_INFO[par,th,type,pre-trigger],STATE,NUM_OF_CH,
-#if 0
-       // int par             = g_cli_osci.trigger.par;
-      //  int type            = g_cli_osci.trigger.type;
-       // int state           = g_cli_osci.state;
-        //int num_of          = g_cli_osci.channel.num_of;
-        //float th            = g_cli_osci.trigger.th;
-        //float pretrigger    = g_cli_osci.trigger.pretrigger;
+        // Get parameter ID
+        (void) par_get_id( g_cli_osci.trigger.par, &par_id );
 
-        sprintf((char*) p_tx_buf, "OK, %d,%d,%d",  (int) g_cli_osci.trigger.par,
-                                                            //(float) th,
-                                                            //(int) type,
-                                                            //(float) pretrigger,
+        // Send streaming info as
+        // OK, TRIGGER_INFO[par,type,th,pre-trigger],STATE,NUM_OF_CH,
+        sprintf((char*) p_tx_buf, "OK, %d,%d,%f,%f,%d,%d",  (int) par_id,
+                                                            (int) g_cli_osci.trigger.type,
+                                                            (float) g_cli_osci.trigger.th,
+                                                            (float) g_cli_osci.trigger.pretrigger,
                                                             (int) g_cli_osci.state,
                                                             (int) g_cli_osci.channel.num_of );
-#endif
-
-        //int type = g_cli_osci.trigger.type;
-        //sprintf((char*) p_tx_buf, "OK, %d,%d",  (int)g_cli_osci.trigger.par, (int)type );
-
-        //cli_send_str( p_tx_buf );
+        cli_send_str( p_tx_buf );
 
         // Print streaming parameters/variables
         for ( uint8_t ch_it = 0; ch_it < g_cli_osci.channel.num_of; ch_it++ )
         {
             // Get parameter ID
-            (void) par_get_id( g_cli_osci.channel.list[ch_it], (uint16_t*) &par_id );
+            (void) par_get_id( g_cli_osci.channel.list[ch_it], &par_id );
 
             // Format string with parameters info
             sprintf((char*) p_tx_buf, ",%d", (int) par_id );
@@ -951,8 +943,6 @@ static void cli_osci_info(const uint8_t * p_attr)
 
         // Terminate line
         cli_printf("");
-
-#endif
     }
     else
     {
