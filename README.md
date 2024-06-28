@@ -288,7 +288,7 @@ static volatile const cli_cmd_t my_table[] =
     { "test_2",         test_2,             "Test 2 Help" },
     { "test_3",         test_3,             "Test 3 Help" },
     { "test_4",         test_4,             "Test 4 Help" },
-    };
+};
 
 void register_my_cli_commands()
 {
@@ -463,7 +463,7 @@ Software oscilloscope features following trigger types:
 
 Oscilloscpe has also pre-trigger ability, to store signal before triggering. It can be configured from 0% - 100%, where 0% means zero pre-trigger samples.
 
-Sample buffer constains all channels (parameters values) into signle array in form of a sequential order in respect to channel configuration. In picture below there is example of osci configured with 3 channels:
+Sample buffer accumulates all samples (parameters values) into signle array in form of a sequential order in respect to channel configuration. In picture below there is example of osci configured with 3 channels:
 
 ![](doc/osci_buffer.png)
 
