@@ -448,25 +448,31 @@ Code section from *cli_cfg.h*:
 
 
 ### **Software Oscilloscope**
-Software oscilloscope enable us to observe device paramater value in high resolution (based on how fast osci handle is being called), it enables various triggering options and option to downsample.
+Software oscilloscope enable us to observe device paramater value in high resolution (based on how fast osci handle is being called), it enables various triggering options and option to downsample as well.
 
 Software oscilloscope features following trigger types:
- 1. None: Continous mode
- 2. Rising edge: Gets triggered when signal raises above threshold value
- 3. Falling edge: Gets triggered when signal falls below threshold value
- 4. Both edges: Gets triggered either if signal falls or raises below/above threshold value
- 5. Equal: Gets triggered when signal equals threshold value
- 6. Above: Gets triggered when signal is lower than threshold value
- 7. Below: Gets triggered when signal is higher that thresold value
+ 1. **None**: Continous mode
+ 2. **Rising edge**: Gets triggered when signal raises above threshold value
+ 3. **Falling edge**: Gets triggered when signal falls below threshold value
+ 4. **Both edges**: Gets triggered either if signal falls or raises below/above threshold value
+ 5. **Equal**: Gets triggered when signal equals threshold value
+ 6. **Above**: Gets triggered when signal is lower than threshold value
+ 7. **Below**: Gets triggered when signal is higher that thresold value
 
 ![](doc/osci_triggers.png)
 
+Oscilloscpe has also pre-trigger ability, to store signal before triggering. It can be configured from 0% - 100%, where 0% means zero pre-trigger samples.
 
 Sample buffer constains all channels (parameters values) into signle array in form of a sequential order in respect to channel configuration. In picture below there is example of osci configured with 3 channels:
 
 ![](doc/osci_buffer.png)
 
 
+
+
+Example of software oscilloscope usage in real life case, sample frequency was 8kHz with falling edge trigger:
+
+![](doc/usage_example.png)
 
 
 
