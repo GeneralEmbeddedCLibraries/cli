@@ -5,7 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V2.0.0 - xx.06.2024
+## V2.0.0 - 28.06.2024
+
+### Notice 
+ CLI V2.0.0 is compatible with PC tool V0.4.1 and newer versions.
 
 ### Added 
  - Added software oscilloscope functionalities

@@ -448,6 +448,27 @@ Code section from *cli_cfg.h*:
 
 
 ### **Software Oscilloscope**
+Software oscilloscope enable us to observe device paramater value in high resolution (based on how fast osci handle is being called), it enables various triggering options and option to downsample.
+
+Software oscilloscope features following trigger types:
+ 1. None: Continous mode
+ 2. Rising edge: Gets triggered when signal raises above threshold value
+ 3. Falling edge: Gets triggered when signal falls below threshold value
+ 4. Both edges: Gets triggered either if signal falls or raises below/above threshold value
+ 5. Equal: Gets triggered when signal equals threshold value
+ 6. Above: Gets triggered when signal is lower than threshold value
+ 7. Below: Gets triggered when signal is higher that thresold value
+
+![](doc/osci_triggers.png)
+
+
+Sample buffer constains all channels (parameters values) into signle array in form of a sequential order in respect to channel configuration. In picture below there is example of osci configured with 3 channels:
+
+![](doc/osci_buffer.png)
+
+
+
+
 
 TODO:...
 
