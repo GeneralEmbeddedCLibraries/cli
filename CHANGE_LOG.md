@@ -8,7 +8,7 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 ## V2.0.0 - 28.06.2024
 
 ### Notice 
- CLI V2.0.0 is compatible with PC tool V0.4.1 and newer versions.
+ CLI V2.0.0 is compatible with PC tool V0.4.1 or newer.
 
 ### Added 
  - Added software oscilloscope functionalities
@@ -22,6 +22,7 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
  - Device parameters CLI command name changed
      - "par_print" -> "par_info"
      - Live watch commands: "status" -> "watch"
+ - In case watch config in NVM is corrupted, then it will override with default watch config
 
 ### Removed
  - Removing unused configuration switches (CLI_CFG_LEGACY_EN, CLI_CFG_MAX_NUM_OF_COMMANDS)
