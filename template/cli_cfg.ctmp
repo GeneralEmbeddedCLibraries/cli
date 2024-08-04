@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Configuration
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      28.06.2024
-*@version   V2.0.0
+*@date      04.08.2024
+*@version   V2.0.1
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -98,6 +98,9 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
         // General system measurement & diagnostics
         {   .par_num = ePAR_PS_24V_FC,                  .name="24V POWER SUPPLY CONTROL"                },
         {   .par_num = ePAR_PS_24V_ADC,                 .name="24V POWER SUPPLY STATUS"                 },
+        {   .par_num = ePAR_TEMP_BRIDGE_LIM,            .name="TEMPERATURE CONTROL"                     },
+        {   .par_num = ePAR_TEMP_BRIDGE_RAW,            .name="TEMPERATURE STATUS"                      },
+        {   .par_num = ePAR_MAIN_DOOR_STATE,            .name="MAIN DOOR STATUS"                        },
 
         // Spiral motor control & diagnostics
         {   .par_num = ePAR_SPIRAL_SAMPLE_FREQ,         .name="SPIRAL MOTOR CONTROL"                    },

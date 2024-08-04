@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Osciloscope
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      28.06.2024
-*@version   V2.0.0
+*@date      04.08.2024
+*@version   V2.0.1
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -41,6 +41,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ *      Number of reserved samples in sample buffer
+ *
+ *  @note   One sample is 4bytes in size, as sample has single precision
+ *          floating point data type.
+ */
+#define CLI_OSCI_SAMP_BUF_NUM_OF_SAMP           ((uint32_t)( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)))
 
 /**
  *  Oscilloscope triggers
@@ -222,7 +230,7 @@ static cli_status_t cli_osci_init_buf(void)
     };
 
     // Init ring buffer
-    if ( eRING_BUFFER_OK != ring_buffer_init((p_ring_buffer_t*) &g_cli_osci.samp.buf, ( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)), &buf_attr ))
+    if ( eRING_BUFFER_OK != ring_buffer_init((p_ring_buffer_t*) &g_cli_osci.samp.buf, CLI_OSCI_SAMP_BUF_NUM_OF_SAMP, &buf_attr ))
     {
         status = eCLI_ERROR;
     }
@@ -574,10 +582,10 @@ static void cli_osci_data(const uint8_t * p_attr)
             uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
             // Calculate sample group interations
-            const uint32_t num_of_samp = (uint32_t)(( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)) / g_cli_osci.channel.num_of );
+            const uint32_t num_of_samp = (uint32_t)( CLI_OSCI_SAMP_BUF_NUM_OF_SAMP / g_cli_osci.channel.num_of );
 
             // Calculate offset needed due to total buffer space not divisible by number of channels
-            const uint32_t buf_offset = (uint32_t) (( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)) % g_cli_osci.channel.num_of );
+            const uint32_t buf_offset = (uint32_t) ( CLI_OSCI_SAMP_BUF_NUM_OF_SAMP % g_cli_osci.channel.num_of );
 
             for ( uint32_t samp_it = 0U; samp_it < num_of_samp; samp_it++ )
             {
@@ -585,7 +593,7 @@ static void cli_osci_data(const uint8_t * p_attr)
                 for ( uint8_t par_it = 0U; par_it < g_cli_osci.channel.num_of; par_it++ )
                 {
                     // Calculate buffer index as inverse access
-                    const int32_t buf_idx = ( -( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)) + (( samp_it * g_cli_osci.channel.num_of ) + par_it ) + buf_offset );
+                    const int32_t buf_idx = ( -CLI_OSCI_SAMP_BUF_NUM_OF_SAMP + (( samp_it * g_cli_osci.channel.num_of ) + par_it ) + buf_offset );
 
                     // Get value from sample buffer
                     if ( eRING_BUFFER_OK == ring_buffer_get_by_index( g_cli_osci.samp.buf, (float32_t*) &samp_val, buf_idx ))
@@ -782,7 +790,7 @@ static void cli_osci_trigger(const uint8_t * p_attr)
                         g_cli_osci.trigger.pretrigger   = pretrigger;
 
                         // Calculate sample group interations
-                        g_cli_osci.samp.num_of_samp  = (uint32_t)(( CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE / sizeof(float32_t)) / g_cli_osci.channel.num_of );
+                        g_cli_osci.samp.num_of_samp  = (uint32_t)( CLI_OSCI_SAMP_BUF_NUM_OF_SAMP / g_cli_osci.channel.num_of );
 
                         // Calculate how many samples needs to be done in pre-trigger phase
                         g_cli_osci.trigger.trig_idx = (uint32_t)( pretrigger * g_cli_osci.samp.num_of_samp );

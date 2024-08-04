@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      28.06.2024
-*@version   V2.0.0
+*@date      04.08.2024
+*@version   V2.0.1
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -150,7 +150,7 @@
      * 	@note 	User shall select region based on nvm_cfg.h region
      * 			definitions "nvm_region_name_t"
      */
-     #define CLI_CFG_PAR_NVM_REGION                 ( eNVM_REGION_INT_FLASH_CLI )
+     #define CLI_CFG_PAR_NVM_REGION                 ( eNVM_REGION_FRAM_CLI )
 
      /**
       *     Enable/Disable automatic storage of streaming info to NVM
@@ -182,9 +182,11 @@
         /**
          *      Oscilloscope sample buffer size
          *
+         * @note    Recommended to be multiple of 4!
+         *
          *    Unit: byte
          */
-        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 4000 )
+        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 8*1024 )
 
         /**
          *     Section name of Oscilloscope specific data linkage
