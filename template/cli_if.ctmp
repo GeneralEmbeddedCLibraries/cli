@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Ziga Miklosic
+// Copyright (c) 2024 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,8 @@
 *@brief     Interface with Command Line Interface
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      17.02.2023
-*@version   V1.3.0
+*@date      04.08.2024
+*@version   V2.0.1
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -29,11 +29,16 @@
 
 // USER CODE BEGIN...
 
+#include <string.h>
+
+// RTOS
+#include <cmsis_os2.h>
+
 // Communication driver
-#include "drivers/peripheral/uart/uart_dbg.h"
+#include "drivers/peripheral/uart/uart/src/uart.h"
 
 // For reset
-#include "nrf_nvic.h"
+#include "stm32g4xx_hal.h"
 
 // USER CODE END...
 
@@ -43,6 +48,12 @@
 
 // USER CODE BEGIN..
 
+/**
+ *      CLI mutex timeout
+ *
+ *  Unit: ms
+ */
+#define CLI_IF_MUTEX_TIMEOUT_MS                 ( 10U )
 
 // USER CODE END...
 
@@ -52,13 +63,21 @@
 
 // USER CODE BEGIN...
 
+/**
+ *  CLI OS mutex
+ */
+static osMutexId_t  g_cli_mutex_id = NULL;
+const osMutexAttr_t g_cli_mutex_attr =
+{
+    .name       = "cli",
+    .attr_bits  = ( osMutexPrioInherit | osMutexRecursive ),
+};
 
 // USER CODE END...
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -77,9 +96,19 @@ cli_status_t cli_if_init(void)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_init())
+	if ( eUART_OK != uart_init( eUART_DBG ))
 	{
 		status = eCLI_ERROR_INIT;
+	}
+	else
+	{
+        // Create mutex
+        g_cli_mutex_id = osMutexNew( &g_cli_mutex_attr );
+
+        if ( NULL == g_cli_mutex_id )
+        {
+            status = eCLI_ERROR;
+        }
 	}
 
 	// USER CODE END...
@@ -120,7 +149,7 @@ cli_status_t cli_if_receive(uint8_t * const p_data)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_get((char*) p_data))
+	if ( eUART_OK != uart_receive_it( eUART_DBG, (uint8_t*) p_data))
 	{
 		status = eCLI_ERROR;
 	}
@@ -144,10 +173,30 @@ cli_status_t cli_if_transmit(const uint8_t * const p_data)
 
 	// USER CODE BEGIN...
 
-	if ( eUART_DBG_OK != uart_dbg_write((const char*) p_data))
-	{
-		status = eCLI_ERROR;
-	}
+    // Calculate size of string
+    const uint32_t str_size = strlen((const char*) p_data );
+
+    /**
+     *  Try to transmit many times in case transmission buffer is full
+     *
+     *  NOTE:   In case of "par_print" command there may be a lot of information
+     *          to send over to PC and tx buffer might get full. Therefore it is
+     *          mandatory to wait to get empty enough to fill it with new message!
+     */
+    uint32_t now = HAL_GetTick();
+
+    while ( eUART_WAR_FULL == uart_transmit_it( eUART_DBG, (const uint8_t*) p_data, str_size ))
+    {
+        // Check for timeout
+        if ((uint32_t) ( HAL_GetTick() - now ) >= 100U )
+        {
+            status = eCLI_ERROR;
+            break;
+        }
+
+        // This task needs a break as it waits for UART Hw to pump out data -> scheduler should go to next task...
+        osDelay(2);
+    }
 
 	// USER CODE END...
 
@@ -162,9 +211,6 @@ cli_status_t cli_if_transmit(const uint8_t * const p_data)
 *
 *		If not being used leave empty.
 *
-*		This function does not have an affect if "CLI_CFG_MUTEX_EN"
-* 		is set to 0.
-*
 * @return 		status - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +220,14 @@ cli_status_t cli_if_aquire_mutex(void)
 
 	// USER CODE BEGIN...
 
+    if ( osOK == osMutexAcquire( g_cli_mutex_id, CLI_IF_MUTEX_TIMEOUT_MS ))
+    {
+        // No action
+    }
+    else
+    {
+        status = eCLI_ERROR;
+    }
 
 	// USER CODE END...
 
@@ -188,9 +242,6 @@ cli_status_t cli_if_aquire_mutex(void)
 *
 *		If not being used leave empty.
 *
-*		This function does not have an affect if "CLI_CFG_MUTEX_EN"
-* 		is set to 0.
-*
 * @return 		status - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +250,8 @@ cli_status_t cli_if_release_mutex(void)
 	cli_status_t status = eCLI_OK;
 
 	// USER CODE BEGIN...
+
+	osMutexRelease( g_cli_mutex_id );
 
 	// USER CODE END...
 
@@ -224,7 +277,6 @@ cli_status_t cli_if_device_reset(void)
 
 	// Reset device
 	NVIC_SystemReset();
-
 
 	// USER CODE END...
 

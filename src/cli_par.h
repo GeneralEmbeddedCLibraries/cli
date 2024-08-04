@@ -3,8 +3,8 @@
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@file      cli_nvm.h
-*@brief     Command Line Interface NVM storage
+*@file      cli_par.h
+*@brief     Command Line Interface Device Parameters
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
 *@date      04.08.2024
@@ -12,14 +12,14 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
-*@addtogroup CLI_NVM_API
+*@addtogroup CLI_PAR_API
 * @{ <!-- BEGIN GROUP -->
 *
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CLI_NVM_H
-#define __CLI_NVM_H
+#ifndef __CLI_PAR_H
+#define __CLI_PAR_H
 
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
@@ -29,49 +29,31 @@
 
 #include "cli.h"
 
-#if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
+#if ( 1 == CLI_CFG_PAR_USE_EN )
 
-#include "middleware/nvm/nvm/src/nvm.h"
+#include "middleware/parameters/parameters/src/par.h"
 
 /**
- * 	Check NVM module compatibility
+ *  Compatibility check with Parameters module
+ *
+ *  Support version V2.0.x
  */
-_Static_assert( 2 == NVM_VER_MAJOR );
-_Static_assert( 1 <= NVM_VER_MINOR );
-
-#endif // ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
+_Static_assert( 2 == PAR_VER_MAJOR );
+_Static_assert( 0 <= PAR_VER_MINOR );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
-#if ( 1 == CLI_CFG_PAR_USE_EN )
-
-/**
- *  Streaming info
- */
-typedef struct
-{
-    uint16_t	par_list[CLI_CFG_PAR_MAX_IN_LIVE_WATCH];	/**<Parameters number inside live watch queue. Values are paraemters enumeration not parameter ID! */
-    uint32_t    period;                                     /**<Period of streaming in ms */
-    uint32_t    period_cnt;                                 /**<Period of streaming in multiple of CLI_CFG_HNDL_PERIOD_MS */
-    uint8_t		num_of;                                     /**<Number of parameters inside live watch */
-    bool 		active;                                     /**<Active flag */
-} cli_live_watch_t;
-
-#endif // ( 1 == CLI_CFG_PAR_USE_EN )
-
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-#if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
+cli_status_t cli_par_init(void);
+cli_status_t cli_par_hndl(void);
 
-cli_status_t cli_nvm_read   (cli_live_watch_t * const p_watch_info);
-cli_status_t cli_nvm_write  (const cli_live_watch_t * const p_watch_info);
+#endif // 1 == CLI_CFG_PAR_USE_EN
 
-#endif // ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
-
-#endif // __CLI_NVM_H
+#endif // __CLI_PAR_H
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

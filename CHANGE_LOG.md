@@ -5,7 +5,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V1.3.0 - 17.02.2022
+## V2.0.1 - 04.08.2024
+
+### Fixed
+ - Bug in osci pre-trigger configurations due to invalid buffer indexing
+
+---
+## V2.0.0 - 28.06.2024
+
+### Notice 
+ CLI V2.0.0 is compatible with PC tool V0.4.1 or newer.
+
+### Added 
+ - Added software oscilloscope functionalities
+ - Added "intro" to basic command table
+ - Added RTOS mutex example to template interface file
+
+### Changed
+ - Complete module implementation re-work, spliting tasks by files
+ - Transmit buffer is being shared between parameter and main CLI sub-component
+ - User CLI command table registration API changed, added input for number of commands
+ - Device parameters CLI command name changed
+     - "par_print" -> "par_info"
+     - Live watch commands: "status" -> "watch"
+ - In case watch config in NVM is corrupted, then it will override with default watch config
+
+### Removed
+ - Removing unused configuration switches (CLI_CFG_LEGACY_EN, CLI_CFG_MAX_NUM_OF_COMMANDS)
+ - Removed doxygen and licence files
+
+---
+## V1.3.0 - 17.02.2023
 
 ### Added 
  - Streaming configuration info

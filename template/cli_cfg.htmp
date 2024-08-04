@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Ziga Miklosic
+// Copyright (c) 2024 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      17.02.2023
-*@version   V1.3.0
+*@date      04.08.2024
+*@version   V2.0.1
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -32,8 +32,10 @@
 
 // USER CODE BEGIN...
 
-#include "project_config.h"
+// Global project settings
+#include "config/proj_cfg.h"
 
+// Software revision module
 #include "revision/revision/src/version.h"
 
 // USER CODE END...
@@ -57,7 +59,7 @@
 	/**
 	 * 	Intro strings
 	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "nRF52840 Dev Board Base Code" )
+	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "SCS Application" )
 	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
 	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
 	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
@@ -84,72 +86,55 @@
 #define CLI_CFG_RX_BUF_SIZE						( 512 )
 
 /**
- * 	Maximum number of commands within a single table
- *
- * @note	Space for table command is allocated statically in compile time therefore
- * 			take special care defining that number. It is recommended to set
- * 			to a minimum as needed.
- *
- * 	@note 	Size of single table will increase with CLI_CFG_MAX_NUM_OF_COMMANDS
- * 			macro by following formula:
- *
- * 			size_of_cmd_table = ( 12 * CLI_CFG_MAX_NUM_OF_COMMANDS ) [bytes]
- */
-#define CLI_CFG_MAX_NUM_OF_COMMANDS				( 10 )
-
-/**
  * 	Maximum number of user defined command tables
  *
  * @note	Space for table command is allocated statically in compile time therefore
  * 			take special care defining that number. It is recommended to set
  * 			to a minimum as needed.
  *
- * 	@note 	Total size of all command table  will increase with CLI_CFG_MAX_NUM_OF_COMMANDS
- * 			and CLI_CFG_MAX_NUM_OF_USER_TABLES macro by following formula:
+ * @note    When using "Device Parameters" (CLI_CFG_PAR_USE_EN = 1), then TWO entries of
+ *          CLI user command is consumed by CLI parameter implementation.
  *
- * 			tatal_size_of_all_cmd_tables = ( CLI_CFG_MAX_NUM_OF_USER_TABLES * (( 12 * CLI_CFG_MAX_NUM_OF_COMMANDS [bytes] ) + 4 )) [bytes]
- *
- * 	@note
+ * @note    When using "Oscilloscope" (CLI_CFG_PAR_OSCI_EN = 1), then ONE entry of
+ *          CLI user command is consumed by Oscilloscope implementation.
  */
 #define CLI_CFG_MAX_NUM_OF_USER_TABLES			( 8 )
 
 /**
- * 	Enable/Disable multiple access protection
- */
-#define CLI_CFG_MUTEX_EN						( 0 )
-
-/**
- * 	Enable/Disable parameters usage
+ * 	Enable/Disable Device Parameters usage
  *
- * 	@note	When enabled Device Parameters must be part of the project!
+ * 	@note	When enabled, Device Parameters must be part of the project!
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
 #define CLI_CFG_PAR_USE_EN						( 1 )
 
+/**
+ *  Following configuration switches are directly connected to Device Parameters
+ */
 #if ( 1 == CLI_CFG_PAR_USE_EN )
 
-	/**
-	 *    	Time period of "cli_hndl()" function call
-	 *
-	 *    @note		Used for parameter streaming purposes!
-	 *
-	 *    Unit: ms
-	 */
-	#define CLI_CFG_HNDL_PERIOD_MS          	( 10UL )
+    /**
+     *    	Time period of "cli_hndl()" function call
+     *
+     *    @note		Used for parameter streaming purposes!
+     *
+     *    Unit: ms
+     */
+    #define CLI_CFG_PAR_HNDL_PERIOD_MS          	( 10UL )
 
-	/**
-	 *    	Default streaming period
+    /**
+     *    	Default live watch (streaming) period
      *
      *    @note     Must be in "CLI_CFG_HNDL_PERIOD_MS" resolution!
-	 *
-	 *    Unit: ms
-	 */
-	#define CLI_CFG_DEF_STREAM_PER_MS          	( 100UL )
+     *
+     *    Unit: ms
+     */
+    #define CLI_CFG_PAR_DEF_LIVE_WATCH_PER_MS       ( 100UL )
 
-	/**
-	 *      Maxumum number of parameters in streaming list
-	 */
-	#define CLI_CFG_PAR_MAX_IN_LIVE_WATCH       ( 32 )
+    /**
+     *      Maximum number of parameters in live watch (streaming) list
+     */
+    #define CLI_CFG_PAR_MAX_IN_LIVE_WATCH           ( 32 )
 
     /**
      *      Enable/Disable storing streaming info to NVM
@@ -157,36 +142,60 @@
      *  @note   When enabled NVM module must be part of the project!
      * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/nvm
      */
-     #define CLI_CFG_STREAM_NVM_EN              ( 1 )
+     #define CLI_CFG_PAR_STREAM_NVM_EN              ( 1 )
 
     /**
-	 *      NVM parameter region option
-	 *
-	 * 	@note 	User shall select region based on nvm_cfg.h region
-	 * 			definitions "nvm_region_name_t"
-	 */
-     #define CLI_CFG_NVM_REGION                 ( eNVM_REGION_INT_FLASH_CLI )
+     *      NVM parameter region option
+     *
+     * 	@note 	User shall select region based on nvm_cfg.h region
+     * 			definitions "nvm_region_name_t"
+     */
+     #define CLI_CFG_PAR_NVM_REGION                 ( eNVM_REGION_FRAM_CLI )
 
      /**
-      *     Enable/Disable automatic storage of streaming infor to NVM
+      *     Enable/Disable automatic storage of streaming info to NVM
       *
       * @note   When enabled streaming info is stored on following 
       *         commands execution:
-      *             - status_des
-      *             - status_start
-      *             - status_stop
-	  *				- status_rate
+      *             - watch_channel
+      *             - watch_start
+      *             - watch_stop
+      *				- watch_rate
       */
-      #define CLI_CFG_AUTO_STREAM_STORE_EN      ( 0 )
+      #define CLI_CFG_PAR_AUTO_STREAM_STORE_EN      ( 0 )
 
-#endif
+     /**
+      *     Enable/Disable usage of software oscilloscope
+      */
+      #define CLI_CFG_PAR_OSCI_EN                   ( 1 )
 
-/**
- *  Enable/Disable legacy mode
- *
- * @note    Legacy mode is compatible with PC tool V0.2.0!
- */
-#define CLI_CFG_LEGACY_EN                       ( 0 )
+    /**
+     *  Following configuration switches are directly connected to Oscilloscope
+     */
+    #if ( 1 == CLI_CFG_PAR_OSCI_EN )
+
+        /**
+         *      Maximum number of parameters in oscilloscope list
+         */
+        #define CLI_CFG_PAR_MAX_IN_OSCI                 ( 8 )
+
+        /**
+         *      Oscilloscope sample buffer size
+         *
+         * @note    Recommended to be multiple of 4!
+         *
+         *    Unit: byte
+         */
+        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 8*1024 )
+
+        /**
+         *     Section name of Oscilloscope specific data linkage
+         */
+        #define CLI_CFG_PAR_OSCI_SECTION                ( ".ccmData" )
+
+    #endif // ( 1 == CLI_CFG_PAR_OSCI_EN )
+
+#endif // ( 1 == CLI_CFG_PAR_USE_EN )
 
 /**
  * 	Enable/Disable debug mode
@@ -199,10 +208,20 @@
 #define CLI_CFG_ASSERT_EN						( 1 )
 
 /**
+ *  Debug communication port macros
+ */
+#if ( 1 == CLI_CFG_DEBUG_EN )
+    #define CLI_DBG_PRINT(...)                  ( cli_printf((char*) __VA_ARGS__ ))
+#else
+    #define CLI_DBG_PRINT(...)                  { ; }
+
+#endif
+
+/**
  * 	 Assertion macros
  */
 #if ( 1 == CLI_CFG_ASSERT_EN )
-	#define CLI_ASSERT(x)						PROJECT_CONFIG_ASSERT(x)
+	#define CLI_ASSERT(x)						PROJ_CFG_ASSERT(x)
 #else
 	#define CLI_ASSERT(x)						{ ; }
 #endif
@@ -223,9 +242,6 @@ typedef enum
 
 	// USER_CODE_BEGIN
 
-	eCLI_CH_APP,
-    eCLI_CH_BLE_P,
-    eCLI_CH_BLE_C,
 
 	// USER_CODE_END
 
@@ -254,15 +270,15 @@ typedef struct
 	#error "CLI Reception buffer size must be larger than 32 bytes! Adjust <CLI_CFG_RX_BUF_SIZE> macro inside cli_cfg.h file!"
 #endif
 
-#if (( 1 == CLI_CFG_PAR_USE_EN ) && (( CLI_CFG_DEF_STREAM_PER_MS < 10 ) || (( CLI_CFG_DEF_STREAM_PER_MS % CLI_CFG_HNDL_PERIOD_MS ) != 0 )))
-	#error "Invalid default streaming period! Adjust <CLI_CFG_DEF_STREAM_PER_MS> macro inside cli_cfg.h file!"
+#if (( 1 == CLI_CFG_PAR_USE_EN ) && (( CLI_CFG_PAR_DEF_LIVE_WATCH_PER_MS < 10 ) || (( CLI_CFG_PAR_DEF_LIVE_WATCH_PER_MS % CLI_CFG_PAR_HNDL_PERIOD_MS ) != 0 )))
+	#error "Invalid default streaming period! Adjust <CLI_CFG_PAR_DEF_LIVE_WATCH_PER_MS> macro inside cli_cfg.h file!"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 const char* cli_cfg_get_ch_name	(const cli_ch_opt_t ch);
-const bool 	cli_cfg_get_ch_en	(const cli_ch_opt_t ch);
+bool 		cli_cfg_get_ch_en	(const cli_ch_opt_t ch);
 void 		cli_cfg_set_ch_en	(const cli_ch_opt_t ch, const bool en);
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
