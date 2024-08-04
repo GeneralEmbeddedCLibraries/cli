@@ -7,11 +7,8 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 ---
 ## V2.0.1 - 04.08.2024
 
-### Notice 
- CLI V2.0.0 is compatible with PC tool V0.4.1 or newer.
-
 ### Fixed
- - Bug in pre-trigger configurations due to invalid buffer indexing
+ - Bug in osci pre-trigger configurations due to invalid buffer indexing
 
 ### Removed
  - Removing unused configuration switches (CLI_CFG_LEGACY_EN, CLI_CFG_MAX_NUM_OF_COMMANDS)
