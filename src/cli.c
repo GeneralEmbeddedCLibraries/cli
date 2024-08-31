@@ -68,6 +68,7 @@ static void cli_help		  	(const uint8_t * p_attr);
 static void cli_reset	   	  	(const uint8_t * p_attr);
 static void cli_sw_version  	(const uint8_t * p_attr);
 static void cli_hw_version  	(const uint8_t * p_attr);
+static void cli_boot_version  	(const uint8_t * p_attr);
 static void cli_proj_info  		(const uint8_t * p_attr);
 static void cli_ch_info  		(const uint8_t * p_attr);
 static void cli_ch_en  			(const uint8_t * p_attr);
@@ -106,6 +107,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	{ 	"reset", 				cli_reset, 				"Reset device" 										},
 	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					},
 	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					},
+	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version" 		        },
 	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						},
 	{ 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					},
 	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]"    },
@@ -528,6 +530,30 @@ static void cli_hw_version(const uint8_t * p_attr)
 	{
 		cli_util_unknown_cmd_rsp();
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show bootloader (SW) version
+*
+* @param[in]    attr    - Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_boot_version(const uint8_t * p_attr)
+{
+    if ( NULL == p_attr )
+    {
+        #if ( 1 == CLI_CFG_INTRO_STRING_EN )
+            cli_printf( "OK, %s", CLI_CFG_INTRO_BOOT_VER );
+        #else
+            cli_printf( "WAR, Not used..." );
+        #endif
+    }
+    else
+    {
+        cli_util_unknown_cmd_rsp();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
