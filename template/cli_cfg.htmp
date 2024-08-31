@@ -62,6 +62,7 @@
 	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "SCS Application" )
 	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
 	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
+	#define CLI_CFG_INTRO_BOOT_VER				((const char*) version_get_boot_str())
 	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
 #endif
 
@@ -106,7 +107,7 @@
  * 	@note	When enabled, Device Parameters must be part of the project!
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
-#define CLI_CFG_PAR_USE_EN						( 1 )
+#define CLI_CFG_PAR_USE_EN						( 0 )
 
 /**
  *  Following configuration switches are directly connected to Device Parameters
@@ -167,7 +168,7 @@
      /**
       *     Enable/Disable usage of software oscilloscope
       */
-      #define CLI_CFG_PAR_OSCI_EN                   ( 1 )
+      #define CLI_CFG_PAR_OSCI_EN                   ( 0 )
 
     /**
      *  Following configuration switches are directly connected to Oscilloscope
