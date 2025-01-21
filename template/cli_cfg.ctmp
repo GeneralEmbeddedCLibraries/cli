@@ -95,20 +95,8 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 		//	Group start parameter						Group name
 		// --------------------------------------------------------------------------------------------
 		
-        // General system measurement & diagnostics
-        {   .par_num = ePAR_PS_24V_FC,                  .name="24V POWER SUPPLY CONTROL"                },
-        {   .par_num = ePAR_PS_24V_ADC,                 .name="24V POWER SUPPLY STATUS"                 },
-        {   .par_num = ePAR_TEMP_BRIDGE_LIM,            .name="TEMPERATURE CONTROL"                     },
-        {   .par_num = ePAR_TEMP_BRIDGE_RAW,            .name="TEMPERATURE STATUS"                      },
-        {   .par_num = ePAR_MAIN_DOOR_STATE,            .name="MAIN DOOR STATUS"                        },
+		{ 	.par_num = ePAR_BTN_1,						.name="BUTTON STATE" 						},
 
-        // Spiral motor control & diagnostics
-        {   .par_num = ePAR_SPIRAL_SAMPLE_FREQ,         .name="SPIRAL MOTOR CONTROL"                    },
-        {   .par_num = ePAR_SPIRAL_1_CUR_RAW,           .name="SPIRAL MOTOR GROUP 1 STATUS"             },
-        {   .par_num = ePAR_SPIRAL_2_CUR_RAW,           .name="SPIRAL MOTOR GROUP 2 STATUS"             },
-
-        // General system
-        {   .par_num = ePAR_SYS_STATUS,                 .name="GENERAL SYSTEM STATUS"                       },
 
 		// USER CODE END
 	};
