@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Ziga Miklosic
+// Copyright (c) 2025 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,8 @@
 *@brief     Command Line Interface NVM storage
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      04.08.2024
-*@version   V2.0.1
+*@date      21.01.2025
+*@version   V2.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
