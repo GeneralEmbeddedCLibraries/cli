@@ -159,11 +159,12 @@ static cli_status_t cli_parser_hndl(void)
 			// Replace all termination character with NULL
             memset((char*) p_term_str_start, 0, strlen( CLI_CFG_TERMINATION_STRING ));
 
-			// Reset buffer index
-			buf_idx = 0;
+            // Execute command
+            cli_execute_cmd( rx_buffer );
 
-			// Execute command
-			cli_execute_cmd( rx_buffer );
+            // Reset buffer
+			memset( &rx_buffer, 0U, sizeof( rx_buffer ));
+            buf_idx = 0;
 
 			break;
 		}
@@ -180,8 +181,9 @@ static cli_status_t cli_parser_hndl(void)
 			CLI_DBG_PRINT( "CLI: Overrun Error!" );
 			CLI_ASSERT( 0 );
 
-			// Reset index
-			buf_idx = 0;
+            // Reset buffer
+            memset( &rx_buffer, 0U, sizeof( rx_buffer ));
+            buf_idx = 0;
 
 			status = eCLI_ERROR;
 
