@@ -70,6 +70,8 @@ static void cli_sw_version  	(const uint8_t * p_attr);
 static void cli_hw_version  	(const uint8_t * p_attr);
 static void cli_boot_version  	(const uint8_t * p_attr);
 static void cli_proj_info  		(const uint8_t * p_attr);
+static void cli_get_uptime 		(const uint8_t * p_attr);
+
 static void cli_ch_info  		(const uint8_t * p_attr);
 static void cli_ch_en  			(const uint8_t * p_attr);
 
@@ -114,7 +116,9 @@ static cli_cmd_t g_cli_basic_table[] =
 	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					        },
 	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version" 		                },
 	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						        },
-	{ 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					        },
+	{ 	"get_uptime",			cli_get_uptime,			"Get device uptime [ms]"                                    },
+
+    { 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					        },
 	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]"            },
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
@@ -583,6 +587,26 @@ static void cli_proj_info(const uint8_t * p_attr)
 		#else
 			cli_printf( "WAR, Not used..." );
 		#endif
+	}
+	else
+	{
+		cli_util_unknown_cmd_rsp();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Get device uptime [ms]
+*
+* @param[in]	attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_get_uptime(const uint8_t * p_attr)
+{
+	if ( NULL == p_attr )
+	{
+        cli_printf( "%llu", cli_if_get_uptime() );
 	}
 	else
 	{
