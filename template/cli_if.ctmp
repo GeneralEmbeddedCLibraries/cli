@@ -285,6 +285,33 @@ cli_status_t cli_if_device_reset(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
+*		Check if specified RAM address range is valid and can be accessed
+*
+* @param[in]    addr   - RAM address
+* @param[in]    size   - Range size [byte]
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_check_ram_addr_range(const uint32_t addr, const uint32_t size)
+{
+    // Linker symbols specifying entire RAM range, including SoftDevice reserved region
+    extern uint32_t __RAM1_segment_start__[];
+    extern uint32_t __RAM1_segment_end__[];
+
+    cli_status_t status = eCLI_OK;
+
+    // Start address is inclusive and end address is exclusive.
+    // Additionally check for range overflow.
+    if ((addr < (uint32_t)__RAM1_segment_start__) || ((addr + size) > (uint32_t)__RAM1_segment_end__) || ((addr + size) < addr))
+    {
+        status = eCLI_ERROR;
+    }
+
+    return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/**
 * @} <!-- END GROUP -->
 */
 ////////////////////////////////////////////////////////////////////////////////

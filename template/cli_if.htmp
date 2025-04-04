@@ -29,13 +29,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_if_init			(void);
-cli_status_t cli_if_deinit			(void);
-cli_status_t cli_if_receive			(uint8_t * const p_data);
-cli_status_t cli_if_transmit		(const uint8_t * const p_data);
-cli_status_t cli_if_aquire_mutex	(void);
-cli_status_t cli_if_release_mutex	(void);
-cli_status_t cli_if_device_reset	(void);
+cli_status_t cli_if_init			    (void);
+cli_status_t cli_if_deinit			    (void);
+cli_status_t cli_if_receive			    (uint8_t * const p_data);
+cli_status_t cli_if_transmit		    (const uint8_t * const p_data);
+cli_status_t cli_if_aquire_mutex	    (void);
+cli_status_t cli_if_release_mutex	    (void);
+cli_status_t cli_if_device_reset	    (void);
+cli_status_t cli_if_check_ram_addr_range(const uint32_t addr, const uint32_t size);
 
 #endif // __CLI_H
 

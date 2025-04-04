@@ -67,6 +67,11 @@
 #endif
 
 /**
+ * 	Enable/Disable arbitrary RAM access functionality
+ */
+#define CLI_CFG_ARBITRARY_RAM_ACCESS_EN         ( 1 )
+
+/**
  * 	Termination string
  *
  * 	@note	Each "cli_printf" will have termination string appended to
