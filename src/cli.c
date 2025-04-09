@@ -744,9 +744,13 @@ static void cli_ram_write(const uint8_t * p_attr)
     uint32_t size;
 	uint32_t val;
 
+    // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
+    // for example unsigned long to unsigned int
+    STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+
 	if ( NULL != p_attr )
 	{
-		if ( 3U == sscanf((const char*) p_attr, "0x%x,%u,0x%x", &addr, &size, &val ))
+		if ( 3U == sscanf((const char*) p_attr, "0x%x,%u,0x%x", (unsigned int *)&addr, (unsigned int *)&size, (unsigned int *)&val ))
 		{
             if ((1 == size) || (2 == size) || (4 == size))
             {
@@ -816,9 +820,13 @@ static void cli_ram_read(const uint8_t * p_attr)
 	uint32_t addr;
     uint32_t size;
 
+    // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
+    // for example unsigned long to unsigned int
+    STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+
 	if ( NULL != p_attr )
 	{
-		if ( 2U == sscanf((const char*) p_attr, "0x%x,%u", &addr, &size ))
+		if ( 2U == sscanf((const char*) p_attr, "0x%x,%u", (unsigned int *)&addr, (unsigned int *)&size ))
 		{
             if ((1 == size) || (2 == size) || (4 == size))
             {
