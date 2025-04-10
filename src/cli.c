@@ -88,7 +88,6 @@ static void cli_ram_read        (const uint8_t * p_attr);
 
 static bool             cli_validate_user_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
 static const char * 	cli_find_char			(const char * const str, const char target_char, const uint32_t size);
-static int32_t 	        cli_find_char_pos		(const char * const str, const char target_char, const uint32_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -411,7 +410,11 @@ static uint32_t	cli_calc_cmd_size(const char * p_cmd, const char * attr)
     // Combined command - must have a empty space
     else
     {
-    	size = cli_find_char_pos( p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
+    	const char * p_cmd_end = cli_find_char( p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
+        if (NULL != p_cmd_end)
+        {
+            size = (uint32_t)(p_cmd_end - p_cmd - 1); // -1 because find character function returns position +1
+        }
     }
 
 	return size;
@@ -954,50 +957,6 @@ static const char * cli_find_char(const char * const str, const char target_char
 	}
 
 	return sub_str;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*!
-* @brief        Find character inside string
-*
-* @note			E.g: 	str 			= "Hello World"
-* 						target_char 	= ' '
-* 						pos				= 6
-*
-* @note			If "target_char" is not found it returns -1!
-*
-* @param[in]	str				- Search string
-* @param[in]	target_char		- Character to find
-* @param[in]	size			- Total size to search for
-* @return		pos				- Position of target char inside string
-*/
-////////////////////////////////////////////////////////////////////////////////
-static int32_t cli_find_char_pos(const char * const str, const char target_char, const uint32_t size)
-{
-	int32_t 	pos = -1;
-	uint32_t 	ch 	= 0;
-
-	for ( ch = 0; ch < size; ch++)
-	{
-		// End string reached
-		if ( '\0' == str[ch] )
-		{
-			break;
-		}
-
-		// Target char found
-		else if ( target_char == str[ch] )
-		{
-			pos = ch;
-			break;
-		}
-		else
-		{
-			// No actions...
-		}
-	}
-
-	return pos;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
