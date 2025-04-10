@@ -761,13 +761,13 @@ static void cli_ram_write(const uint8_t * p_attr)
                     switch (size)
                     {
                         case 1:
-                            *(uint8_t *)addr = val;
+                            *(uint8_t *)addr = (uint8_t)val;
                             break;
                         case 2:
-                            *(uint16_t *)addr = val;
+                            *(uint16_t *)addr = (uint16_t)val;
                             break;
                         case 4:
-                            *(uint32_t *)addr = val;
+                            *(uint32_t *)addr = (uint32_t)val;
                             break;
                         default:
                             // Internal inconsistency. Should not reach here since we check

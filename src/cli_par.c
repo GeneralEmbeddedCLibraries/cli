@@ -746,7 +746,7 @@ static void cli_watch_channel(const uint8_t * p_attr)
             uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
             // Send sample time
-            snprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( g_cli_live_watch.period / 1000.0f ));
+            snprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( (float32_t)g_cli_live_watch.period / 1000.0f ));
             cli_send_str( p_tx_buf );
 
             // Print streaming parameters/variables
@@ -924,11 +924,13 @@ static float32_t cli_par_val_to_float(const par_type_list_t par_type, const void
             break;
 
         case ePAR_TYPE_U32:
-            f32_par_val = *(uint32_t*) p_val;
+            PROJ_CFG_ASSERT(F32_MAX_INT_RANGE >= *(uint32_t*)p_val);
+            f32_par_val = (float32_t)(*(uint32_t*) p_val);
             break;
 
         case ePAR_TYPE_I32:
-            f32_par_val = *(int32_t*) p_val;
+            PROJ_CFG_ASSERT((F32_MAX_INT_RANGE >= *(int32_t*)p_val) && (-F32_MAX_INT_RANGE <= *(int32_t*)p_val));
+            f32_par_val = (float32_t)(*(int32_t*) p_val);
             break;
 
         case ePAR_TYPE_F32:
