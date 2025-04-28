@@ -117,7 +117,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					        },
 	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version" 		                },
 	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						        },
-	{ 	"get_uptime",			cli_get_uptime,			"Get device uptime [ms]"                                    },
+	{ 	"uptime",               cli_get_uptime,			"Get device uptime [ms]"                                    },
 
     { 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					        },
 	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]"            },
@@ -613,7 +613,7 @@ static void cli_get_uptime(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-        cli_printf( "%llu", cli_if_get_uptime() );
+        cli_printf( "OK, %llu", cli_if_get_uptime() );
 	}
 	else
 	{
