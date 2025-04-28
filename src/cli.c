@@ -613,7 +613,7 @@ static void cli_get_uptime(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-        cli_printf( "OK, %llu", cli_if_get_uptime() );
+        cli_printf( "OK, %llums", cli_if_get_uptime() );
 	}
 	else
 	{
@@ -777,7 +777,7 @@ static void cli_ram_write(const uint8_t * p_attr)
                         default:
                             // Internal inconsistency. Should not reach here since we check
                             // size above.
-                            PROJ_CFG_ASSERT(0);
+                            CLI_ASSERT(0);
                             break;
                     }
 
@@ -855,7 +855,7 @@ static void cli_ram_read(const uint8_t * p_attr)
                         default:
                             // Internal inconsistency. Should not reach here since we check
                             // size above.
-                            PROJ_CFG_ASSERT(0);
+                            CLI_ASSERT(0);
                             break;
                     }
 
