@@ -92,7 +92,7 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 		// USER CODE BEGIN...
 
 		// --------------------------------------------------------------------------------------------
-		//	Group start parameter						Group name
+		//	Group start parameter                           Group name
 		// --------------------------------------------------------------------------------------------
 		
 		{ 	.par_num = ePAR_BTN_1,						.name="BUTTON STATE" 						},

@@ -37,6 +37,7 @@ cli_status_t cli_if_aquire_mutex	    (void);
 cli_status_t cli_if_release_mutex	    (void);
 cli_status_t cli_if_device_reset	    (void);
 cli_status_t cli_if_check_ram_addr_range(const uint32_t addr, const uint32_t size);
+uint64_t     cli_if_get_uptime          (void);
 
 #endif // __CLI_H
 
