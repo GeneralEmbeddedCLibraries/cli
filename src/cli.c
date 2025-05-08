@@ -157,14 +157,20 @@ static uint32_t	gu32_user_table_count = 0;
 static cli_status_t cli_parser_hndl(void)
 {
 			cli_status_t 	status      = eCLI_OK;
-	static 	uint32_t  		buf_idx 	= 0;
+	 static uint32_t  		buf_idx 	= 0;
             uint32_t        escape_cnt  = 0;
      static uint8_t         rx_buffer[CLI_CFG_RX_BUF_SIZE] = {0};
+     static uint32_t        first_byte_time = 0U;
 
 	// Take all data from reception buffer
 	while   (   ( eCLI_OK == cli_if_receive( &rx_buffer[buf_idx] ))
             &&  ( escape_cnt < 10000UL ))
 	{
+	    if( 0 == buf_idx )
+	    {
+	        first_byte_time = CLI_GET_SYSTICK();
+	    }
+
 		// Find termination character
         char * p_term_str_start = strstr((char*) &rx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
         
@@ -207,6 +213,18 @@ static cli_status_t cli_parser_hndl(void)
 
 		// Increment escape count in order to prevent infinite loop
         escape_cnt++;
+
+        // Check for timeout
+        if ((uint32_t)( CLI_GET_SYSTICK() - first_byte_time ) >= 100U )
+        {
+            CLI_DBG_PRINT( "CLI: Timeout!" );
+
+            // Reset buffer
+            memset( &rx_buffer, 0U, sizeof( rx_buffer ));
+            buf_idx = 0;
+            status = eCLI_ERROR;
+            break;
+        }
 	}
 
 	return status;

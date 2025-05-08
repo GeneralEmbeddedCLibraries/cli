@@ -936,14 +936,10 @@ static float32_t cli_par_val_to_float(const par_type_list_t par_type, const void
             break;
 
         case ePAR_TYPE_U32:
-            // ZIGA: Matej please check this!!! Fails on "par_info" command...
-            //CLI_ASSERT(F32_MAX_INT_RANGE >= *(uint32_t*)p_val);
             f32_par_val = (float32_t)(*(uint32_t*) p_val);
             break;
 
         case ePAR_TYPE_I32:
-            // ZIGA: Matej please check this!!!
-            //CLI_ASSERT((F32_MAX_INT_RANGE >= *(int32_t*)p_val) && (-F32_MAX_INT_RANGE <= *(int32_t*)p_val));
             f32_par_val = (float32_t)(*(int32_t*) p_val);
             break;
 

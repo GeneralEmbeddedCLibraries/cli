@@ -212,6 +212,7 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_TERMINATION_STRING** 		| String that will be send after each "cli_printf" and "cli_printf_ch". |
 | **CLI_CFG_TX_BUF_SIZE** 				| Transmitting buffer size in bytes. |
 | **CLI_CFG_RX_BUF_SIZE** 				| Reception buffer size in bytes. |
+| **CLI_GET_SYSTICK** 				    | Get system timetick in 32-bit unsigned integer form. |
 | **CLI_CFG_MAX_NUM_OF_USER_TABLES** 	| Maximum number of user define command tables. |
 | **CLI_CFG_MUTEX_EN** 					| Enable/Disable usage of mutex in order to protect low level communication driver. |
 | **CLI_CFG_PAR_USE_EN** 				| Enable/Disable usage of Device Parameters. |

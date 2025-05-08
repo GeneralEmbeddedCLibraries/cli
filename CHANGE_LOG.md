@@ -11,6 +11,10 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
  - Added support for writting/reading from arbitrary RAM location
  - Added support to retrieve device uptime
  - Added "utils" dependency 
+ - Added timeout functionality for received commands
+
+### Fixed
+ - Fixed compiler warnings (implicit conversions)
 
 ---
 ## V2.1.0 - 21.01.2025
