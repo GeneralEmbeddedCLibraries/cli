@@ -550,7 +550,7 @@ osci_start\r\n
 // Wait for sampling to finish...
 
 osci_data\r\n   // Get data
-```C
+```
 
 Example of software oscilloscope usage in real life case, sample frequency was 8kHz with falling edge trigger:
 
