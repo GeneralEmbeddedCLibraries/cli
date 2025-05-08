@@ -7,8 +7,8 @@
 *@brief     Interface with Command Line Interface
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      21.01.2025
-*@version   V2.1.0
+*@date      08.05.2025
+*@version   V2.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -128,7 +128,6 @@ cli_status_t cli_if_deinit(void)
 	cli_status_t status = eCLI_OK;
 
 	// USER CODE BEGIN...
-
 
 	// USER CODE END...
 
@@ -294,20 +293,11 @@ cli_status_t cli_if_device_reset(void)
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_if_check_ram_addr_range(const uint32_t addr, const uint32_t size)
 {
-    // Linker symbols specifying entire RAM range, including SoftDevice reserved region
-    extern uint32_t __RAM1_segment_start__[];
-    extern uint32_t __RAM1_segment_end__[];
+    UNUSED(addr);
+    UNUSED(size);
 
-    cli_status_t status = eCLI_OK;
-
-    // Start address is inclusive and end address is exclusive.
-    // Additionally check for range overflow.
-    if ((addr < (uint32_t)__RAM1_segment_start__) || ((addr + size) > (uint32_t)__RAM1_segment_end__) || ((addr + size) < addr))
-    {
-        status = eCLI_ERROR;
-    }
-
-    return status;
+	// No support for RAM access for now
+    return eCLI_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
