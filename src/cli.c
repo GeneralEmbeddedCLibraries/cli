@@ -205,27 +205,23 @@ static cli_status_t cli_parser_hndl(void)
             // Reset buffer
             memset( &rx_buffer, 0U, sizeof( rx_buffer ));
             buf_idx = 0;
-
 			status = eCLI_ERROR;
-
 			break;
 		}
 
 		// Increment escape count in order to prevent infinite loop
         escape_cnt++;
-
-        // Check for timeout
-        if ((uint32_t)( CLI_GET_SYSTICK() - first_byte_time ) >= 100U )
-        {
-            CLI_DBG_PRINT( "CLI: Timeout!" );
-
-            // Reset buffer
-            memset( &rx_buffer, 0U, sizeof( rx_buffer ));
-            buf_idx = 0;
-            status = eCLI_ERROR;
-            break;
-        }
 	}
+
+    // Expected that complete command will be received within 100ms
+    if  (   ((uint32_t)( CLI_GET_SYSTICK() - first_byte_time ) >= 100U ) 
+        &&  ( buf_idx > 0 ))    // Reception ongoing
+    {
+        CLI_DBG_PRINT( "CLI: Timeout!" );
+        memset( &rx_buffer, 0U, sizeof( rx_buffer ));
+        buf_idx = 0;
+        status = eCLI_ERROR;
+    }
 
 	return status;
 }
