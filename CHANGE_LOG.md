@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V2.x.y - dd.mm.2025
+## V2.2.0 - 08.05.2025
 
 ### Added
  - Added support for writting/reading from arbitrary RAM location

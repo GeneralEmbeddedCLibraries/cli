@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      21.01.2025
-*@version   V2.1.0
+*@date      08.05.2025
+*@version   V2.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -37,6 +37,9 @@
 
 // Software revision module
 #include "revision/revision/src/version.h"
+
+// System
+#include "application/sys/sys.h"
 
 // USER CODE END...
 
@@ -69,7 +72,7 @@
 /**
  * 	Enable/Disable arbitrary RAM access functionality
  */
-#define CLI_CFG_ARBITRARY_RAM_ACCESS_EN         ( 1 )
+#define CLI_CFG_ARBITRARY_RAM_ACCESS_EN         ( 0 )
 
 /**
  * 	Termination string
@@ -90,6 +93,13 @@
  * 	Reception buffer size in bytes
  */
 #define CLI_CFG_RX_BUF_SIZE						( 512 )
+
+/**
+ *  Get system timetick in 32-bit unsigned integer form
+ *
+ *  Unit: ms
+ */
+#define CLI_GET_SYSTICK()                      ( sys_systick_get_ms())
 
 /**
  * 	Maximum number of user defined command tables
