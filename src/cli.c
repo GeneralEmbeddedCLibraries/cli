@@ -7,8 +7,8 @@
 *@brief     Command Line Interface
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      21.01.2025
-*@version   V2.1.0
+*@date      08.05.2025
+*@version   V2.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -35,6 +35,8 @@
 
 #include "../../cli_cfg.h"
 #include "../../cli_if.h"
+
+#include "common/utils/src/utils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -70,6 +72,8 @@ static void cli_sw_version  	(const uint8_t * p_attr);
 static void cli_hw_version  	(const uint8_t * p_attr);
 static void cli_boot_version  	(const uint8_t * p_attr);
 static void cli_proj_info  		(const uint8_t * p_attr);
+static void cli_uptime 		    (const uint8_t * p_attr);
+
 static void cli_ch_info  		(const uint8_t * p_attr);
 static void cli_ch_en  			(const uint8_t * p_attr);
 
@@ -77,9 +81,13 @@ static void cli_ch_en  			(const uint8_t * p_attr);
 static void	cli_send_intro		(const uint8_t * p_attr);
 #endif
 
+#if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
+static void cli_ram_write       (const uint8_t * p_attr);
+static void cli_ram_read        (const uint8_t * p_attr);
+#endif
+
 static bool             cli_validate_user_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
 static const char * 	cli_find_char			(const char * const str, const char target_char, const uint32_t size);
-static int32_t 	        cli_find_char_pos		(const char * const str, const char target_char, const uint32_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -95,22 +103,29 @@ static bool gb_is_init = false;
  */
 static cli_cmd_t g_cli_basic_table[] =
 {
-	// ------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------
 	// 	name					function				help string
-	// ------------------------------------------------------------------------------------------------------
-	{ 	"help", 				cli_help, 				"Print help message" 							    },
+	// -------------------------------------------------------------------------------------------------------------
+	{ 	"help", 				cli_help, 				"Print help message"                                        },
 
 #if ( 1 == CLI_CFG_INTRO_STRING_EN )
-	{ 	"intro", 				cli_send_intro,         "Print intro message" 							    },
+	{ 	"intro", 				cli_send_intro,         "Print intro message"                                       },
 #endif
 
-	{ 	"reset", 				cli_reset, 				"Reset device" 										},
-	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					},
-	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					},
-	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version" 		        },
-	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						},
-	{ 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					},
-	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]"    },
+	{ 	"reset", 				cli_reset, 				"Reset device" 										        },
+	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					        },
+	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					        },
+	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version" 		                },
+	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						        },
+	{ 	"uptime",               cli_uptime,			    "Get device uptime [ms]"                                    },
+
+    { 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					        },
+	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]"            },
+
+#if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
+    { 	"ram_write", 			cli_ram_write,			"Write data to RAM. Args: [address<hex>][size][value<hex>]" },
+    { 	"ram_read", 			cli_ram_read,			"Read data from RAM. Args: [address<hex>][size]"            },
+#endif
 };
 
 /**
@@ -142,14 +157,20 @@ static uint32_t	gu32_user_table_count = 0;
 static cli_status_t cli_parser_hndl(void)
 {
 			cli_status_t 	status      = eCLI_OK;
-	static 	uint32_t  		buf_idx 	= 0;
+	 static uint32_t  		buf_idx 	= 0;
             uint32_t        escape_cnt  = 0;
      static uint8_t         rx_buffer[CLI_CFG_RX_BUF_SIZE] = {0};
+     static uint32_t        first_byte_time = 0U;
 
 	// Take all data from reception buffer
 	while   (   ( eCLI_OK == cli_if_receive( &rx_buffer[buf_idx] ))
             &&  ( escape_cnt < 10000UL ))
 	{
+	    if( 0 == buf_idx )
+	    {
+	        first_byte_time = CLI_GET_SYSTICK();
+	    }
+
 		// Find termination character
         char * p_term_str_start = strstr((char*) &rx_buffer, (char*) CLI_CFG_TERMINATION_STRING );
         
@@ -159,11 +180,12 @@ static cli_status_t cli_parser_hndl(void)
 			// Replace all termination character with NULL
             memset((char*) p_term_str_start, 0, strlen( CLI_CFG_TERMINATION_STRING ));
 
-			// Reset buffer index
-			buf_idx = 0;
+            // Execute command
+            cli_execute_cmd( rx_buffer );
 
-			// Execute command
-			cli_execute_cmd( rx_buffer );
+            // Reset buffer
+			memset( &rx_buffer, 0U, sizeof( rx_buffer ));
+            buf_idx = 0;
 
 			break;
 		}
@@ -180,17 +202,26 @@ static cli_status_t cli_parser_hndl(void)
 			CLI_DBG_PRINT( "CLI: Overrun Error!" );
 			CLI_ASSERT( 0 );
 
-			// Reset index
-			buf_idx = 0;
-
+            // Reset buffer
+            memset( &rx_buffer, 0U, sizeof( rx_buffer ));
+            buf_idx = 0;
 			status = eCLI_ERROR;
-
 			break;
 		}
 
 		// Increment escape count in order to prevent infinite loop
         escape_cnt++;
 	}
+
+    // Expected that complete command will be received within 100ms
+    if  (   ((uint32_t)( CLI_GET_SYSTICK() - first_byte_time ) >= 100U ) 
+        &&  ( buf_idx > 0 ))    // Reception ongoing
+    {
+        CLI_DBG_PRINT( "CLI: Timeout!" );
+        memset( &rx_buffer, 0U, sizeof( rx_buffer ));
+        buf_idx = 0;
+        status = eCLI_ERROR;
+    }
 
 	return status;
 }
@@ -395,7 +426,11 @@ static uint32_t	cli_calc_cmd_size(const char * p_cmd, const char * attr)
     // Combined command - must have a empty space
     else
     {
-    	size = cli_find_char_pos( p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
+    	const char * p_cmd_end = cli_find_char( p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
+        if (NULL != p_cmd_end)
+        {
+            size = (uint32_t)(p_cmd_end - p_cmd - 1); // -1 because find character function returns position +1
+        }
     }
 
 	return size;
@@ -582,6 +617,27 @@ static void cli_proj_info(const uint8_t * p_attr)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
+* @brief        Get device uptime [ms]
+*
+* @param[in]	attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_uptime(const uint8_t * p_attr)
+{
+	if ( NULL == p_attr )
+	{
+        const uint64_t uptime = cli_if_get_uptime();
+        cli_printf("OK, %lu%09lums", (uint32_t)(uptime / 1000000000ULL), (uint32_t)(uptime % 1000000000ULL));
+	}
+	else
+	{
+		cli_util_unknown_cmd_rsp();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
 * @brief        Show communication channel info
 *
 * @note			Command format: >>>cli_ch_info
@@ -685,6 +741,163 @@ static void cli_ch_en(const uint8_t * p_attr)
 
 #endif
 
+#if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Write data to RAM
+*
+*
+* @note			Command format: >>>cli_ram_write [address,size,value]
+*               Address and value arguments must be inputed in hexadecimal format
+*               with '0x' prefix and followed by lowercase characters.
+*               Size must be in decimal format, with only valid values being:
+*               1, 2 and 4.
+*
+* 				E.g.:	>>>cli_ram_write 0xabcdef01,2,0x1234
+* 				E.g.:	>>>cli_ram_write 0x1234,4,0xab112233
+*
+* @param[in]	attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_ram_write(const uint8_t * p_attr)
+{
+	uint32_t addr;
+    uint32_t size;
+	uint32_t val;
+
+    // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
+    // for example unsigned long to unsigned int
+    STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+
+	if ( NULL != p_attr )
+	{
+		if ( 3U == sscanf((const char*) p_attr, "0x%x,%u,0x%x", (unsigned int *)&addr, (unsigned int *)&size, (unsigned int *)&val ))
+		{
+            if ((1 == size) || (2 == size) || (4 == size))
+            {
+                if (cli_if_check_ram_addr_range(addr, size) == eCLI_OK)
+                {
+                    switch (size)
+                    {
+                        case 1:
+                            *(uint8_t *)addr = (uint8_t)val;
+                            break;
+                        case 2:
+                            *(uint16_t *)addr = (uint16_t)val;
+                            break;
+                        case 4:
+                            *(uint32_t *)addr = (uint32_t)val;
+                            break;
+                        default:
+                            // Internal inconsistency. Should not reach here since we check
+                            // size above.
+                            CLI_ASSERT(0);
+                            break;
+                    }
+
+                    cli_printf( "OK, [0x%08x,0x%08x] = 0x%x", addr, addr + size - 1, val);
+                }
+                else
+                {
+                    cli_printf( "ERR, Invalid address!" );
+                }
+            }
+            else
+            {
+                cli_printf( "ERR, Invalid size!" );
+            }
+		}
+		else
+		{
+			cli_util_unknown_cmd_rsp();
+		}
+	}
+	else
+	{
+		cli_util_unknown_cmd_rsp();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Read data from RAM
+*
+*
+* @note			Command format: >>>cli_ram_read [address,size]
+*               Address argument must be inputed in hexadecimal format with '0x'
+*               prefix and followed by lowercase characters.
+*               Size must be in decimal format, with only valid values being:
+*               1, 2 and 4.
+*
+* 				E.g.:	>>>cli_ram_read 0xabcdef01,1
+* 				E.g.:	>>>cli_ram_read 0x1234,4
+*
+* @param[in]	attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_ram_read(const uint8_t * p_attr)
+{
+	uint32_t addr;
+    uint32_t size;
+
+    // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
+    // for example unsigned long to unsigned int
+    STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+
+	if ( NULL != p_attr )
+	{
+		if ( 2U == sscanf((const char*) p_attr, "0x%x,%u", (unsigned int *)&addr, (unsigned int *)&size ))
+		{
+            if ((1 == size) || (2 == size) || (4 == size))
+            {
+                if (cli_if_check_ram_addr_range(addr, size) == eCLI_OK)
+                {
+                    uint32_t val;
+
+                    switch (size)
+                    {
+                        case 1:
+                            val = *(uint8_t *)addr;
+                            break;
+                        case 2:
+                            val = *(uint16_t *)addr;
+                            break;
+                        case 4:
+                            val = *(uint32_t *)addr;
+                            break;
+                        default:
+                            // Internal inconsistency. Should not reach here since we check
+                            // size above.
+                            CLI_ASSERT(0);
+                            break;
+                    }
+
+                    cli_printf( "0x%x", val);
+                }
+                else
+                {
+                    cli_printf( "ERR, Invalid address!" );
+                }
+            }
+            else
+            {
+                cli_printf( "ERR, Invalid size!" );
+            }
+		}
+		else
+		{
+			cli_util_unknown_cmd_rsp();
+		}
+	}
+	else
+	{
+		cli_util_unknown_cmd_rsp();
+	}
+}
+#endif // CLI_CFG_ARBITRARY_RAM_ACCESS_EN
+
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        Validate user defined table
@@ -761,50 +974,6 @@ static const char * cli_find_char(const char * const str, const char target_char
 	}
 
 	return sub_str;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*!
-* @brief        Find character inside string
-*
-* @note			E.g: 	str 			= "Hello World"
-* 						target_char 	= ' '
-* 						pos				= 6
-*
-* @note			If "target_char" is not found it returns -1!
-*
-* @param[in]	str				- Search string
-* @param[in]	target_char		- Character to find
-* @param[in]	size			- Total size to search for
-* @return		pos				- Position of target char inside string
-*/
-////////////////////////////////////////////////////////////////////////////////
-static int32_t cli_find_char_pos(const char * const str, const char target_char, const uint32_t size)
-{
-	int32_t 	pos = -1;
-	uint32_t 	ch 	= 0;
-
-	for ( ch = 0; ch < size; ch++)
-	{
-		// End string reached
-		if ( '\0' == str[ch] )
-		{
-			break;
-		}
-
-		// Target char found
-		else if ( target_char == str[ch] )
-		{
-			pos = ch;
-			break;
-		}
-		else
-		{
-			// No actions...
-		}
-	}
-
-	return pos;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

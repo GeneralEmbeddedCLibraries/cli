@@ -163,6 +163,12 @@ NVM module must take following path:
 "root/middleware/nvm/nvm/src/nvm.h"
 ```
 
+### **3. Utils Module**
+Utils module must take following path:
+```
+"root/common/utils/src/utils.h"
+```
+
 ## **Limitations**
 
 ### **1. ASCII Base Interface**
@@ -202,9 +208,11 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_INTRO_SW_VER** 				| Software version. Part of intro string. |
 | **CLI_CFG_INTRO_HW_VER** 				| Hardware version. Part of intro string. |
 | **CLI_CFG_INTRO_PROJ_INFO** 			| Project detailed info. Part of "revision" module. |
+| **CLI_CFG_ARBITRARY_RAM_ACCESS_EN**   | Enable/Disable arbitrary RAM access functionality |
 | **CLI_CFG_TERMINATION_STRING** 		| String that will be send after each "cli_printf" and "cli_printf_ch". |
 | **CLI_CFG_TX_BUF_SIZE** 				| Transmitting buffer size in bytes. |
 | **CLI_CFG_RX_BUF_SIZE** 				| Reception buffer size in bytes. |
+| **CLI_GET_SYSTICK** 				    | Get system timetick in 32-bit unsigned integer form. |
 | **CLI_CFG_MAX_NUM_OF_USER_TABLES** 	| Maximum number of user define command tables. |
 | **CLI_CFG_MUTEX_EN** 					| Enable/Disable usage of mutex in order to protect low level communication driver. |
 | **CLI_CFG_PAR_USE_EN** 				| Enable/Disable usage of Device Parameters. |
@@ -547,3 +555,47 @@ osci_data\r\n   // Get data
 Example of software oscilloscope usage in real life case, sample frequency was 8kHz with falling edge trigger:
 
 ![](doc/usage_example.png)
+
+
+### **Direct RAM access**
+When *CLI_CFG_ARBITRARY_RAM_ACCESS_EN* is enabled then make sure to provide *cli_if_check_ram_addr_range* interface function so that valid RAM address can be accesed by the user over the CLI.
+
+Enable given switch in *cli_cfg.h*:
+```C
+/**
+ * 	Enable/Disable arbitrary RAM access functionality
+ */
+#define CLI_CFG_ARBITRARY_RAM_ACCESS_EN         ( 1 )
+```
+
+Provide RAM valid address for access checking in *cli_if.c*:
+```C
+////////////////////////////////////////////////////////////////////////////////
+/**
+*		Check if specified RAM address range is valid and can be accessed
+*
+* @param[in]    addr   - RAM address
+* @param[in]    size   - Range size [byte]
+* @return 		status - Status of operation
+*/
+////////////////////////////////////////////////////////////////////////////////
+cli_status_t cli_if_check_ram_addr_range(const uint32_t addr, const uint32_t size)
+{
+    // NOTICE: Following example is for nRF52840 chipset using Segger Embedded Studio IDE!
+
+    // Linker symbols specifying entire RAM range, including SoftDevice reserved region
+    extern uint32_t __RAM1_segment_start__[];
+    extern uint32_t __RAM1_segment_end__[];
+
+    cli_status_t status = eCLI_OK;
+
+    // Start address is inclusive and end address is exclusive.
+    // Additionally check for range overflow.
+    if ((addr < (uint32_t)__RAM1_segment_start__) || ((addr + size) > (uint32_t)__RAM1_segment_end__) || ((addr + size) < addr))
+    {
+        status = eCLI_ERROR;
+    }
+
+    return status;
+}
+```
