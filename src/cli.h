@@ -7,8 +7,8 @@
 *@brief     Command Line Interface API
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      21.01.2025
-*@version   V2.1.0
+*@date      08.05.2025
+*@version   V2.2.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -37,7 +37,7 @@
  * 	Module version
  */
 #define CLI_VER_MAJOR		( 2 )
-#define CLI_VER_MINOR		( 1 )
+#define CLI_VER_MINOR		( 2 )
 #define CLI_VER_DEVELOP		( 0 )
 
 /**
