@@ -1173,24 +1173,50 @@ cli_status_t cli_printf(char * p_format, ...)
 	{
 		if ( NULL != p_format )
 		{
-		    // Get pointer to Tx buffer
-		    uint8_t * p_tx_buf = cli_util_get_tx_buf();
+            // Get pointer to Tx buffer
+            uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
             // Mutex obtain
             if ( eCLI_OK == cli_if_aquire_mutex())
             {
                 // Taking args from stack
                 va_start(args, p_format);
-                vsprintf((char*) p_tx_buf, (const char*) p_format, args);
+
+                // Use vsnprintf to prevent buffer overflow and get the length written
+                const int printed_len = vsnprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, (const char*) p_format, args);
                 va_end(args);
 
-                // Send string
-                status = cli_send_str((const uint8_t*) p_tx_buf );
-                status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
+                // Handle buffer overflow or encoding error from vsnprintf
+                // The string might be truncated or invalid
+                if  (   ( printed_len < 0 ) 
+                    ||  ( printed_len >= CLI_CFG_TX_BUF_SIZE )) 
+                {
+                    status = eCLI_ERROR;
+                    CLI_ASSERT(0);
+                } 
+                else 
+                {
+                    // Append the termination string to the buffer
+                    // Check if there's enough space left for the termination string
+                    const size_t term_len = strlen(CLI_CFG_TERMINATION_STRING);
+
+                    if ((size_t)printed_len + term_len < CLI_CFG_TX_BUF_SIZE ) 
+                    {
+                        // Append termination string and send
+                        strcat((char*) p_tx_buf, (const char*) CLI_CFG_TERMINATION_STRING);
+                        status = cli_send_str((const uint8_t*) p_tx_buf );
+                    } 
+                    else 
+                    {
+                        // Not enough space for termination string
+                        status = eCLI_ERROR;
+                        CLI_ASSERT(0);
+                    }
+                }
 
                 // Release mutex
                 cli_if_release_mutex();
-            }
+            }   
             else
             {
                 status = eCLI_ERROR;
