@@ -101,7 +101,7 @@ static bool gb_is_init = false;
 /**
  * 		Basic CLI commands
  */
-static cli_cmd_t g_cli_basic_table[] =
+static const cli_cmd_t g_cli_basic_table[] =
 {
 	// -------------------------------------------------------------------------------------------------------------
 	// 	name					function				help string
