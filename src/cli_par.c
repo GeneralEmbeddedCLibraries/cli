@@ -49,30 +49,30 @@ static void         cli_par_print_info          (const par_cfg_t * const p_par_c
 static void         cli_par_print_header        (void);
 
 // Device parameters CLI commands
-static void         cli_par_info                (const uint8_t * p_attr);
-static void         cli_par_set                 (const uint8_t * p_attr);
-static void         cli_par_get                 (const uint8_t * p_attr);
-static void         cli_par_def                 (const uint8_t * p_attr);
-static void         cli_par_def_all             (const uint8_t * p_attr);
-static void         cli_par_store               (const uint8_t * p_attr);
+static void         cli_par_info                (const char * p_attr);
+static void         cli_par_set                 (const char * p_attr);
+static void         cli_par_get                 (const char * p_attr);
+static void         cli_par_def                 (const char * p_attr);
+static void         cli_par_def_all             (const char * p_attr);
+static void         cli_par_store               (const char * p_attr);
 
 // Live watch CLI commands
-static void         cli_watch_start             (const uint8_t * p_attr);
-static void         cli_watch_stop              (const uint8_t * p_attr);
-static void         cli_watch_channel           (const uint8_t * p_attr);
-static void         cli_watch_rate              (const uint8_t * p_attr);
-static void         cli_watch_info              (const uint8_t * p_attr);
+static void         cli_watch_start             (const char * p_attr);
+static void         cli_watch_stop              (const char * p_attr);
+static void         cli_watch_channel           (const char * p_attr);
+static void         cli_watch_rate              (const char * p_attr);
+static void         cli_watch_info              (const char * p_attr);
 
 static float32_t    cli_par_val_to_float        (const par_type_list_t par_type, const void * p_val);
 static void         cli_par_live_watch_hndl     (void);
 static void         cli_par_group_print         (const par_num_t par_num);
 
 #if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
-    static void cli_par_store_reset(const uint8_t * p_attr);
+    static void cli_par_store_reset(const char * p_attr);
 #endif
 
 #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
-    static void cli_watch_save(const uint8_t * p_attr);
+    static void cli_watch_save(const char * p_attr);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +204,7 @@ static void cli_par_print_header(void)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_info(const uint8_t * p_attr)
+static void cli_par_info(const char * p_attr)
 {
     par_cfg_t   par_cfg     = { 0 };
     uint32_t    par_num     = 0UL;
@@ -250,7 +250,7 @@ static void cli_par_info(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_set(const uint8_t * p_attr)
+static void cli_par_set(const char * p_attr)
 {
     uint16_t        par_id      = 0;
     par_num_t       par_num     = 0;
@@ -281,37 +281,37 @@ static void cli_par_set(const uint8_t * p_attr)
                     switch( par_cfg.type )
                     {
                         case ePAR_TYPE_U8:
-                            (void) sscanf((const char*) p_attr, "%hu,%hhu", &par_id, &par_data.u8 );
+                            (void) sscanf( p_attr, "%hu,%hhu", &par_id, &par_data.u8 );
                             status = par_set( par_num, &par_data.u8 );
                             cli_printf( "OK,PAR_SET=%hhu", par_data.u8);
                         break;
 
                         case ePAR_TYPE_I8:
-                            sscanf((const char*) p_attr, "%hu,%hhi", &par_id, &par_data.i8 );
+                            sscanf( p_attr, "%hu,%hhi", &par_id, &par_data.i8 );
                             status = par_set( par_num, &par_data.i8 );
                             cli_printf( "OK,PAR_SET=%hhi", par_data.i8);
                         break;
 
                         case ePAR_TYPE_U16:
-                            sscanf((const char*) p_attr, "%hu,%hu", &par_id, &par_data.u16 );
+                            sscanf( p_attr, "%hu,%hu", &par_id, &par_data.u16 );
                             status = par_set( par_num, &par_data.u16 );
                             cli_printf( "OK,PAR_SET=%hu", par_data.u16);
                         break;
 
                         case ePAR_TYPE_I16:
-                            sscanf((const char*) p_attr, "%hu,%hi", &par_id, &par_data.i16 );
+                            sscanf( p_attr, "%hu,%hi", &par_id, &par_data.i16 );
                             status = par_set( par_num, &par_data.i16 );
                             cli_printf( "OK,PAR_SET=%hi", par_data.i16);
                         break;
 
                         case ePAR_TYPE_U32:
-                            sscanf((const char*) p_attr, "%hu,%u", &par_id, (unsigned int*)&par_data.u32 );
+                            sscanf( p_attr, "%hu,%u", &par_id, (unsigned int*)&par_data.u32 );
                             status = par_set( par_num, &par_data.u32 );
                             cli_printf( "OK,PAR_SET=%u", par_data.u32);
                         break;
 
                         case ePAR_TYPE_I32:
-                            sscanf((const char*) p_attr, "%hu,%i", &par_id, (int*)&par_data.i32 );
+                            sscanf( p_attr, "%hu,%i", &par_id, (int*)&par_data.i32 );
                             status = par_set( par_num, &par_data.i32 );
                             cli_printf( "OK,PAR_SET=%i", par_data.i32);
                         break;
@@ -364,7 +364,7 @@ static void cli_par_set(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_get(const uint8_t * p_attr)
+static void cli_par_get(const char * p_attr)
 {
     uint16_t        par_id      = 0;
     par_num_t       par_num     = 0;
@@ -380,7 +380,7 @@ static void cli_par_get(const uint8_t * p_attr)
     if ( NULL != p_attr )
     {
         // Check input command
-        if ( 1U == sscanf((const char*) p_attr, "%hu", &par_id ))
+        if ( 1U == sscanf( p_attr, "%hu", &par_id ))
         {
             // Check if parameter exist
             if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
@@ -464,7 +464,7 @@ static void cli_par_get(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_def(const uint8_t * p_attr)
+static void cli_par_def(const char * p_attr)
 {
     par_num_t   par_num = 0UL;
     uint16_t    par_id  = 0UL;
@@ -472,7 +472,7 @@ static void cli_par_def(const uint8_t * p_attr)
     if ( NULL != p_attr )
     {
         // Check input command
-        if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
+        if ( 1U == sscanf( p_attr, "%u", (unsigned int*)&par_id ))
         {
             // Check if parameter exist
             if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
@@ -509,7 +509,7 @@ static void cli_par_def(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_def_all(const uint8_t * p_attr)
+static void cli_par_def_all(const char * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -535,7 +535,7 @@ static void cli_par_def_all(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_store(const uint8_t * p_attr)
+static void cli_par_store(const char * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -572,7 +572,7 @@ static void cli_par_store(const uint8_t * p_attr)
     * @return       void
     */
     ////////////////////////////////////////////////////////////////////////////////
-    static void cli_par_store_reset(const uint8_t * p_attr)
+    static void cli_par_store_reset(const char * p_attr)
     {
         if ( NULL == p_attr )
         {
@@ -605,7 +605,7 @@ static void cli_par_store(const uint8_t * p_attr)
     * @return       void
     */
     ////////////////////////////////////////////////////////////////////////////////
-    static void cli_watch_save(const uint8_t * p_attr)
+    static void cli_watch_save(const char * p_attr)
     {
         if ( NULL == p_attr )
         {
@@ -636,7 +636,7 @@ static void cli_par_store(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_start(const uint8_t * p_attr)
+static void cli_watch_start(const char * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -671,7 +671,7 @@ static void cli_watch_start(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_stop(const uint8_t * p_attr)
+static void cli_watch_stop(const char * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -700,7 +700,7 @@ static void cli_watch_stop(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_channel(const uint8_t * p_attr)
+static void cli_watch_channel(const char * p_attr)
 {
     uint32_t    ch_cnt      = 0;
     uint16_t    par_id      = 0;
@@ -715,7 +715,7 @@ static void cli_watch_channel(const uint8_t * p_attr)
 
         // Parse live watch request command
         while(      ( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH )
-                &&  ( 1U == sscanf((const char*) p_attr, "%hu%n", &par_id, (int*) &ch_cnt )))
+                &&  ( 1U == sscanf( p_attr, "%hu%n", &par_id, (int*) &ch_cnt )))
         {
             // Get parameter ID by number
             if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
@@ -811,13 +811,13 @@ static void cli_watch_channel(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_rate(const uint8_t * p_attr)
+static void cli_watch_rate(const char * p_attr)
 {
     uint32_t period;
 
     if ( NULL != p_attr )
     {
-        if ( 1U == sscanf((const char*) p_attr, "%d", (int*) &period ))
+        if ( 1U == sscanf( p_attr, "%d", (int*) &period ))
         {
             // Check if within wanted range
             if  (   ( period >= CLI_CFG_PAR_HNDL_PERIOD_MS )
@@ -866,7 +866,7 @@ static void cli_watch_rate(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_info(const uint8_t * p_attr)
+static void cli_watch_info(const char * p_attr)
 {
     uint16_t par_id = 0U;
 

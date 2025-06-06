@@ -138,14 +138,14 @@ static bool         cli_osci_trig_edge_falling  (const float32_t sig, const floa
 static bool         cli_osci_trig_edge_both     (const float32_t sig, const float32_t sig_prev, const float32_t th);
 
 // Cli functions
-static void cli_osci_start      (const uint8_t * p_attr);
-static void cli_osci_stop       (const uint8_t * p_attr);
-static void cli_osci_data       (const uint8_t * p_attr);
-static void cli_osci_channel    (const uint8_t * p_attr);
-static void cli_osci_trigger    (const uint8_t * p_attr);
-static void cli_osci_downsample (const uint8_t * p_attr);
-static void cli_osci_state      (const uint8_t * p_attr);
-static void cli_osci_info       (const uint8_t * p_attr);
+static void cli_osci_start      (const char * p_attr);
+static void cli_osci_stop       (const char * p_attr);
+static void cli_osci_data       (const char * p_attr);
+static void cli_osci_channel    (const char * p_attr);
+static void cli_osci_trigger    (const char * p_attr);
+static void cli_osci_downsample (const char * p_attr);
+static void cli_osci_state      (const char * p_attr);
+static void cli_osci_info       (const char * p_attr);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -502,7 +502,7 @@ static bool cli_osci_trig_edge_both(const float32_t sig, const float32_t sig_pre
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_start(const uint8_t * p_attr)
+static void cli_osci_start(const char * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -544,7 +544,7 @@ static void cli_osci_start(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_stop(const uint8_t * p_attr)
+static void cli_osci_stop(const char * p_attr)
 {
     if ( NULL == p_attr )
     {
@@ -569,7 +569,7 @@ static void cli_osci_stop(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_data(const uint8_t * p_attr)
+static void cli_osci_data(const char * p_attr)
 {
     float32_t samp_val = 0.0f;
 
@@ -607,7 +607,7 @@ static void cli_osci_data(const uint8_t * p_attr)
                         // If not last -> send delimiter
                         if ( par_it < ( g_cli_osci.channel.num_of - 1U ))
                         {
-                            cli_send_str((const uint8_t*) "," );
+                            cli_send_str( "," );
                         }
                     }
                 }
@@ -644,7 +644,7 @@ static void cli_osci_data(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_channel(const uint8_t * p_attr)
+static void cli_osci_channel(const char * p_attr)
 {
     uint32_t    ch_cnt      = 0;
     uint32_t    par_id      = 0;
@@ -662,7 +662,7 @@ static void cli_osci_channel(const uint8_t * p_attr)
 
             // Parse live watch request command
             while(      ( g_cli_osci.channel.num_of <= CLI_CFG_PAR_MAX_IN_OSCI)
-                    &&  ( 1U == sscanf((const char*) p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
+                    &&  ( 1U == sscanf( p_attr, "%d%n", (int*) &par_id, (int*) &ch_cnt )))
             {
                 // Get parameter ID by number
                 if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
@@ -762,7 +762,7 @@ static void cli_osci_channel(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_trigger(const uint8_t * p_attr)
+static void cli_osci_trigger(const char * p_attr)
 {
     uint32_t    type        = 0U;
     uint32_t    par_id      = 0U;
@@ -778,7 +778,7 @@ static void cli_osci_trigger(const uint8_t * p_attr)
         {
             if ( g_cli_osci.channel.num_of > 0U )
             {
-                if ( 4U == sscanf((const char*) p_attr, "%d,%d,%f,%f", (int*) &type, (int*) &par_id, (float*) &threshold, (float32_t*) &pretrigger ))
+                if ( 4U == sscanf( p_attr, "%d,%d,%f,%f", (int*) &type, (int*) &par_id, (float*) &threshold, (float32_t*) &pretrigger ))
                 {
                     if  (   ( type < eCLI_OSCI_TRIG_NUM_OF )
                         &&  ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
@@ -840,7 +840,7 @@ static void cli_osci_trigger(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_downsample(const uint8_t * p_attr)
+static void cli_osci_downsample(const char * p_attr)
 {
     uint32_t downsample = 0U;
 
@@ -850,7 +850,7 @@ static void cli_osci_downsample(const uint8_t * p_attr)
         if  (   ( eCLI_OSCI_STATE_IDLE  == g_cli_osci.state )
             ||  ( eCLI_OSCI_STATE_DONE  == g_cli_osci.state ))
         {
-            if ( 1U == sscanf((const char*) p_attr, "%d", (int*) &downsample ))
+            if ( 1U == sscanf( p_attr, "%d", (int*) &downsample ))
             {
                 if  (   ( downsample > 0U )
                     &&  ( downsample <= 1000U ))
@@ -888,7 +888,7 @@ static void cli_osci_downsample(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_state(const uint8_t * p_attr)
+static void cli_osci_state(const char * p_attr)
 {
     if ( NULL == p_attr )
     {
