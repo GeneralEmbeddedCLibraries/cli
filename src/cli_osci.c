@@ -138,14 +138,14 @@ static bool         cli_osci_trig_edge_falling  (const float32_t sig, const floa
 static bool         cli_osci_trig_edge_both     (const float32_t sig, const float32_t sig_prev, const float32_t th);
 
 // Cli functions
-static void cli_osci_start      (const char * p_attr);
-static void cli_osci_stop       (const char * p_attr);
-static void cli_osci_data       (const char * p_attr);
-static void cli_osci_channel    (const char * p_attr);
-static void cli_osci_trigger    (const char * p_attr);
-static void cli_osci_downsample (const char * p_attr);
-static void cli_osci_state      (const char * p_attr);
-static void cli_osci_info       (const char * p_attr);
+static void cli_osci_start      (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_osci_stop       (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_osci_data       (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_osci_channel    (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_osci_trigger    (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_osci_downsample (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_osci_state      (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_osci_info       (const cli_cmd_t * p_cmd, const char * p_attr);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Variables
@@ -498,12 +498,15 @@ static bool cli_osci_trig_edge_both(const float32_t sig, const float32_t sig_pre
 *       Make sure to call "osci_data" command first, to retrieve sampled data, before
 *       starting oscilloscope again!
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_start(const char * p_attr)
+static void cli_osci_start(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         // Osci idle
@@ -539,13 +542,16 @@ static void cli_osci_start(const char * p_attr)
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        Stop or cancel ongoing sampling
-**
-* @param[in]    attr    - Inputed command attributes
+*
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_stop(const char * p_attr)
+static void cli_osci_stop(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         // Enter idle state
@@ -565,12 +571,15 @@ static void cli_osci_stop(const char * p_attr)
 *
 * @note     Available only after successful sampling session!
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_data(const char * p_attr)
+static void cli_osci_data(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     float32_t samp_val = 0.0f;
 
     if ( NULL == p_attr )
@@ -640,12 +649,15 @@ static void cli_osci_data(const char * p_attr)
 *
 *           Oscilloscope shall be stopped before configuring it!
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_channel(const char * p_attr)
+static void cli_osci_channel(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     uint32_t    ch_cnt      = 0;
     uint32_t    par_id      = 0;
     par_cfg_t   par_cfg     = {0};
@@ -758,12 +770,15 @@ static void cli_osci_channel(const char * p_attr)
 *
 *           Oscilloscope shall be stopped before configuring it!
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_trigger(const char * p_attr)
+static void cli_osci_trigger(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     uint32_t    type        = 0U;
     uint32_t    par_id      = 0U;
     float32_t   threshold   = 0.0f;
@@ -836,12 +851,15 @@ static void cli_osci_trigger(const char * p_attr)
 *
 *           Oscilloscope shall be stopped before configuring it!
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_downsample(const char * p_attr)
+static void cli_osci_downsample(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     uint32_t downsample = 0U;
 
     if ( NULL != p_attr )
@@ -884,12 +902,15 @@ static void cli_osci_downsample(const char * p_attr)
 /*!
 * @brief        Get oscilloscope state
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_state(const char * p_attr)
+static void cli_osci_state(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         const char * status_str[] = { "IDLE", "WAITING", "SAMPLING", "DONE" };
@@ -908,12 +929,15 @@ static void cli_osci_state(const char * p_attr)
 *
 * @note     Osci info is returned as "OK, TRIGGER INFO[parId,type,th,pre-trigger],DOWNSAMPLE,STATE,NUM_OF_CH,CHANNELS[par1,par2,...]
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_osci_info(const uint8_t * p_attr)
+static void cli_osci_info(const cli_cmd_t * p_cmd, const uint8_t * p_attr)
 {
+    UNUSED(p_cmd);
+
     uint16_t par_id = 0U;
 
     if ( NULL == p_attr )

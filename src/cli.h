@@ -51,17 +51,18 @@ typedef enum
     eCLI_ERROR_NVM      = 0x04U,    /**<Read/Write to NVM error */
 } cli_status_t;
 
+struct cli_cmd;
 /**
  * 	 CLI Command Function
  */
-typedef void(*pf_cli_cmd)(const char * const p_attr);
+typedef void(*pf_cli_cmd)(const struct cli_cmd *p_cmd, const char * const p_attr);
 
 /**
  * 	 Single CLI Command
  *
  * 	 Sizeof: 12 bytes
  */
-typedef struct
+typedef struct cli_cmd
 {
 	char * 		p_name;		/**<Command name*/
 	pf_cli_cmd	p_func;		/**<Command function */
