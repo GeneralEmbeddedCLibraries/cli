@@ -1053,6 +1053,12 @@ cli_status_t cli_deinit(void)
 		// De-init interface
 		status = cli_if_deinit();
 
+        // Disable all channels
+        for (cli_ch_opt_t ch = 0; ch < eCLI_CH_NUM_OF; ch++)
+        {
+            cli_cfg_set_ch_en( ch, false );
+        }
+
 		// Low level driver de-init error
 		CLI_ASSERT( eCLI_OK == status );
 
