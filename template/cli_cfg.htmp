@@ -38,8 +38,7 @@
 // Software revision module
 #include "revision/revision/src/version.h"
 
-// System
-#include "application/sys/sys.h"
+#include "application/sys.h"
 
 // USER CODE END...
 
@@ -55,19 +54,16 @@
  * 	@brief	Intro string will be transmitted at "cli_init()" function call,
  * 			if low level com driver are initialized OK.
  */
-#define CLI_CFG_INTRO_STRING_EN					( 1 )
+#define CLI_CFG_INTRO_STRING_EN					( 0 )
 
-#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-
-	/**
-	 * 	Intro strings
-	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "SCS Application" )
-	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
-	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
-	#define CLI_CFG_INTRO_BOOT_VER				((const char*) version_get_boot_str())
-	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
-#endif
+/**
+ * 	Intro strings
+ */
+#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "RCD20/W" )
+#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
+#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
+#define CLI_CFG_INTRO_BOOT_VER				((const char*) version_get_boot_str())
+#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
 
 /**
  * 	Enable/Disable arbitrary RAM access functionality
@@ -87,12 +83,12 @@
 /**
  * 	Transmission buffer size in bytes
  */
-#define CLI_CFG_TX_BUF_SIZE						( 1024 )
+#define CLI_CFG_TX_BUF_SIZE						( 512u )
 
 /**
  * 	Reception buffer size in bytes
  */
-#define CLI_CFG_RX_BUF_SIZE						( 512 )
+#define CLI_CFG_RX_BUF_SIZE						( 512u )
 
 /**
  *  Get system timetick in 32-bit unsigned integer form
@@ -122,7 +118,7 @@
  * 	@note	When enabled, Device Parameters must be part of the project!
  * 			Link to repository: https://github.com/GeneralEmbeddedCLibraries/parameters
  */
-#define CLI_CFG_PAR_USE_EN						( 0 )
+#define CLI_CFG_PAR_USE_EN						( 1 )
 
 /**
  *  Following configuration switches are directly connected to Device Parameters
@@ -166,7 +162,7 @@
      * 	@note 	User shall select region based on nvm_cfg.h region
      * 			definitions "nvm_region_name_t"
      */
-     #define CLI_CFG_PAR_NVM_REGION                 ( eNVM_REGION_FRAM_CLI )
+     #define CLI_CFG_PAR_NVM_REGION                 ( eNVM_REGION_EEPROM_CLI )
 
      /**
       *     Enable/Disable automatic storage of streaming info to NVM
@@ -202,7 +198,7 @@
          *
          *    Unit: byte
          */
-        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 8*1024 )
+        #define CLI_CFG_PAR_OSCI_SAMP_BUF_SIZE          ( 1000 )
 
         /**
          *     Section name of Oscilloscope specific data linkage
@@ -258,6 +254,15 @@ typedef enum
 
 	// USER_CODE_BEGIN
 
+	eCLI_CH_APP,            /**<Application channel */
+	eCLI_CH_COM,            /**<Communication translation unit */
+    eCLI_CH_BLE_LL,         /**<BLE LL driver channel */
+    eCLI_CH_STPB,           /**<BLE transport layer */
+    eCLI_CH_SCP,            /**<SCP channel */
+    eCLI_CH_COM_SUBS,       /**<Communication subscribtion */
+    eCLI_CH_COM_STATS,      /**<Communication statistics */
+    eCLI_CH_COM_SCP,        /**<SCP Communication */
+    eCLI_CH_STPS,           /**<Serial transport layer */
 
 	// USER_CODE_END
 

@@ -76,10 +76,7 @@ static void cli_uptime 		    (const uint8_t * p_attr);
 
 static void cli_ch_info  		(const uint8_t * p_attr);
 static void cli_ch_en  			(const uint8_t * p_attr);
-
-#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 static void	cli_send_intro		(const uint8_t * p_attr);
-#endif
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
 static void cli_ram_write       (const uint8_t * p_attr);
@@ -107,11 +104,7 @@ static cli_cmd_t g_cli_basic_table[] =
 	// 	name					function				help string
 	// -------------------------------------------------------------------------------------------------------------
 	{ 	"help", 				cli_help, 				"Print help message"                                        },
-
-#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 	{ 	"intro", 				cli_send_intro,         "Print intro message"                                       },
-#endif
-
 	{ 	"reset", 				cli_reset, 				"Reset device" 										        },
 	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					        },
 	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					        },
@@ -531,11 +524,7 @@ static void cli_sw_version(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-			cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
-		#else
-			cli_printf( "WAR, Not used..." );
-		#endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
 	}
 	else
 	{
@@ -555,11 +544,7 @@ static void cli_hw_version(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-			cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
-		#else
-			cli_printf( "WAR, Not used..." );
-		#endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
 	}
 	else
 	{
@@ -579,11 +564,7 @@ static void cli_boot_version(const uint8_t * p_attr)
 {
     if ( NULL == p_attr )
     {
-        #if ( 1 == CLI_CFG_INTRO_STRING_EN )
-            cli_printf( "OK, %s", CLI_CFG_INTRO_BOOT_VER );
-        #else
-            cli_printf( "WAR, Not used..." );
-        #endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_BOOT_VER );
     }
     else
     {
@@ -603,11 +584,7 @@ static void cli_proj_info(const uint8_t * p_attr)
 {
 	if ( NULL == p_attr )
 	{
-		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-			cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
-		#else
-			cli_printf( "WAR, Not used..." );
-		#endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
 	}
 	else
 	{
@@ -714,32 +691,29 @@ static void cli_ch_en(const uint8_t * p_attr)
 	}
 }
 
-#if ( 1 == CLI_CFG_INTRO_STRING_EN )
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Send intro string
+*
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void	cli_send_intro(const uint8_t * p_attr)
+{
+    (void) p_attr;
 
-	////////////////////////////////////////////////////////////////////////////////
-	/*!
-	* @brief        Send intro string
-	*
-	* @return       void
-	*/
-	////////////////////////////////////////////////////////////////////////////////
-	static void	cli_send_intro(const uint8_t * p_attr)
-	{
-	    (void) p_attr;
+    cli_printf( " " );
+    cli_printf( "********************************************************" );
+    cli_printf( "        %s", 	CLI_CFG_INTRO_PROJECT_NAME );
+    cli_printf( "********************************************************" );
+    cli_printf( " %s", 	CLI_CFG_INTRO_SW_VER );
+    cli_printf( " %s", 	CLI_CFG_INTRO_HW_VER );
+    cli_printf( " ");
+    cli_printf( " Enter 'help' to display supported commands" );
+    cli_printf( "********************************************************" );
+    cli_printf( "Ready to take orders..." );
+}
 
-		cli_printf( " " );
-		cli_printf( "********************************************************" );
-		cli_printf( "        %s", 	CLI_CFG_INTRO_PROJECT_NAME );
-		cli_printf( "********************************************************" );
-		cli_printf( " %s", 	CLI_CFG_INTRO_SW_VER );
-		cli_printf( " %s", 	CLI_CFG_INTRO_HW_VER );
-		cli_printf( " ");
-		cli_printf( " Enter 'help' to display supported commands" );
-		cli_printf( "********************************************************" );
-		cli_printf( "Ready to take orders..." );
-	}
-
-#endif
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
 ////////////////////////////////////////////////////////////////////////////////
