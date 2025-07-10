@@ -393,22 +393,22 @@ static void cli_par_get(const uint8_t * p_attr)
                 {
                     case ePAR_TYPE_U8:
                         status = par_get( par_num, &par_data.u8 );
-                        cli_printf( "OK,PAR_GET=%hhu", par_data.u8 );
+                        cli_printf( "OK,PAR_GET=%u", par_data.u8 );
                     break;
 
                     case ePAR_TYPE_I8:
                         status = par_get( par_num, &par_data.i8 );
-                        cli_printf(  "OK,PAR_GET=%hhi", par_data.i8 );
+                        cli_printf(  "OK,PAR_GET=%i", par_data.i8 );
                     break;
 
                     case ePAR_TYPE_U16:
                         status = par_get( par_num, &par_data.u16 );
-                        cli_printf(  "OK,PAR_GET=%hu", par_data.u16 );
+                        cli_printf(  "OK,PAR_GET=%u", par_data.u16 );
                     break;
 
                     case ePAR_TYPE_I16:
                         status = par_get( par_num, &par_data.i16 );
-                        cli_printf(  "OK,PAR_GET=%hi", par_data.i16 );
+                        cli_printf(  "OK,PAR_GET=%i", par_data.i16 );
                     break;
 
                     case ePAR_TYPE_U32:
