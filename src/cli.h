@@ -60,13 +60,14 @@ typedef void(*pf_cli_cmd)(const struct cli_cmd *p_cmd, const char * const p_attr
 /**
  * 	 Single CLI Command
  *
- * 	 Sizeof: 12 bytes
+ * 	 Sizeof: 16 bytes
  */
 typedef struct cli_cmd
 {
-	char * 		p_name;		/**<Command name*/
-	pf_cli_cmd	p_func;		/**<Command function */
-	char * 		p_help;		/**<Command help string */
+	char * 		p_name;		    /**<Command name*/
+	pf_cli_cmd	p_func;		    /**<Command function */
+	char * 		p_help;		    /**<Command help string */
+    void *      p_user_data;    /**<Pointer to command specific user data */
 } cli_cmd_t;
 
 ////////////////////////////////////////////////////////////////////////////////
