@@ -77,11 +77,6 @@ typedef struct cli_cmd
 } cli_cmd_t;
 
 /**
- *  CLI Command table builder helper
- */
-#define CLI_ASM_CMD(name, p_func, help, p_context)  { name, p_func, help, p_context }
-
-/**
  *  CLI Command Table
  */
 typedef struct
@@ -105,8 +100,8 @@ typedef struct cli_cmd_table_node
         .p_cmd = (cli_cmd_t*) CMD_TABLE, .num_of = NUM_OF_CMD      \
     };                                                                            \
     static cli_cmd_table_node_t TABLE_SYM##_node = { .p_table = (cli_cmd_table_t*) &TABLE_SYM, NULL };                \
-    static inline void TABLE_SYM##_register(void) {                                \
-        cli_register_cmd_table(&TABLE_SYM##_node);                                \
+    static inline cli_status_t TABLE_SYM##_cli_register_cmd_table(void) {                                \
+        return cli_register_cmd_table(&TABLE_SYM##_node);                                \
     }
 
 
