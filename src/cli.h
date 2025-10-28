@@ -81,6 +81,35 @@ typedef struct cli_cmd
  */
 #define CLI_ASM_CMD(name, p_func, help, p_context)  { name, p_func, help, p_context }
 
+/**
+ *  CLI Command Table
+ */
+typedef struct
+{
+    cli_cmd_t * p_cmd;      /**<Command table */
+    uint32_t    num_of;     /**<Number of commands */
+} cli_cmd_table_t;
+
+/**
+ *  CLI Command Table Node
+ */
+typedef struct cli_cmd_table_node
+{
+    cli_cmd_table_t *           p_table;    /**<Pointer to CLI command table */
+    struct cli_cmd_table_node * next;       /**<Pointer to next CLI command table */
+} cli_cmd_table_node_t;
+
+/* Macro that keeps tables const and hides the node + register function. */
+#define CLI_DECLARE_TABLE(TABLE_SYM, CMD_TABLE, NUM_OF_CMD)                                   \
+    static const cli_cmd_table_t TABLE_SYM = {                                         \
+        .p_cmd = (cli_cmd_t*) CMD_TABLE, .num_of = NUM_OF_CMD      \
+    };                                                                            \
+    static cli_cmd_table_node_t TABLE_SYM##_node = { .p_table = (cli_cmd_table_t*) &TABLE_SYM, NULL };                \
+    static inline void TABLE_SYM##_register(void) {                                \
+        cli_register_cmd_table(&TABLE_SYM##_node);                                \
+    }
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +120,12 @@ cli_status_t cli_hndl				(void);
 cli_status_t cli_send_str           (const char * const p_str);
 cli_status_t cli_printf				(char * p_format, ...);
 cli_status_t cli_printf_ch			(const cli_ch_opt_t ch, char * p_format, ...);
-cli_status_t cli_register_cmd_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
+
+
+cli_status_t cli_register_cmd_table (cli_cmd_table_node_t * const p_cmd_table);
+
+//cli_status_t cli_register_cmd_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
+
 cli_status_t cli_osci_hndl          (void);
 
 #endif // __CLI_H

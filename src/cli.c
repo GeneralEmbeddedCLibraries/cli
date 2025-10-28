@@ -42,20 +42,6 @@
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * 	Get max
- */
-#define CLI_MAX(a,b) 						((a >= b) ? (a) : (b))
-
-/**
- *  CLI Command Table
- */
-typedef struct
-{
-    cli_cmd_t * p_cmd;      /**<Command table */
-    uint32_t    num_of;     /**<Number of commands */
-} cli_cmd_table_t;
-
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,12 +116,21 @@ static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_t
 /**
  * 	References to user defined CLI tables
  */
-static cli_cmd_table_t g_cli_user_tables[CLI_CFG_MAX_NUM_OF_USER_TABLES] = { NULL };
+
+// TODO: Remove not used...
+//static cli_cmd_table_t g_cli_user_tables[CLI_CFG_MAX_NUM_OF_USER_TABLES] = { NULL };
 
 /**
  * 	User defined table counts
  */
-static uint32_t	gu32_user_table_count = 0;
+
+//TODO: Remove not used....
+//static uint32_t	gu32_user_table_count = 0;
+
+/**
+ *  Last registered CLI command table node
+ */
+static cli_cmd_table_node_t * gp_cli_cmd_tables = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -315,7 +310,7 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const uint32_t cmd
 		name_str = p_cli_cmd->name;
 
 		// String size to compare
-		size_to_compare = CLI_MAX( cmd_size, strlen(name_str));
+		size_to_compare = MAX( cmd_size, strlen(name_str));
 
 		// Valid command?
 		if ( 0 == ( strncmp( p_cmd, name_str, size_to_compare )))
@@ -356,6 +351,32 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const uint32_t cmd
 ////////////////////////////////////////////////////////////////////////////////
 static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size, const char * attr)
 {
+    // Iterate thru linked list
+    for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; node; node = node->next )
+    {
+        const cli_cmd_table_t * table = node->p_table;
+
+        // Iterate thru all commands in table
+        for (size_t cmd = 0; cmd < table->num_of; cmd++)
+        {
+            // String size to compare
+            const size_t size_to_compare = MAX( cmd_size, strlen( table->p_cmd[cmd].name ));
+
+            // Valid command?
+            if ( 0 == ( strncmp( p_cmd, table->p_cmd[cmd].name, size_to_compare )))
+            {
+                // Execute command
+                table->p_cmd[cmd].func( &table->p_cmd[cmd], attr );
+
+                // Command founded
+                return true;
+            }
+        }
+    }
+
+    return false;
+
+#if 0
 	uint32_t 	cmd_idx 		= 0;
 	uint32_t 	table_idx		= 0;
 	char* 		name_str 		= NULL;
@@ -377,7 +398,7 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_
             name_str = p_cli_cmd->name;
 
             // String size to compare
-            size_to_compare = CLI_MAX( cmd_size, strlen(name_str));
+            size_to_compare = MAX( cmd_size, strlen(name_str));
 
             // Valid command?
             if ( 0 == ( strncmp( p_cmd, name_str, size_to_compare )))
@@ -400,6 +421,8 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_
 	}
 
 	return cmd_found;
+
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,6 +489,31 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 		}
 
 		// User defined tables
+		for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; node; node = node->next )
+		{
+		    const cli_cmd_table_t * table = node->p_table;
+
+            // Are there any commands
+            if ( table->num_of > 0U )
+            {
+                // Print separator between user commands
+                cli_printf( "--------------------------------------------------------" );
+
+                // Show help for that table
+                for ( uint32_t cmd_idx = 0; cmd_idx < table->num_of; cmd_idx++ )
+                {
+                    // Get name and help string
+                    const char * name_str = table->p_cmd[cmd_idx].name;
+                    const char * help_str = table->p_cmd[cmd_idx].help;
+
+                    // Left adjust for 25 chars
+                    cli_printf( "%-25s%s", name_str, help_str );
+                }
+            }
+
+		}
+
+#if 0
 		for ( uint32_t cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
 		{
             // Are there any commands
@@ -486,6 +534,7 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
                 }
             }
 		}
+#endif
 
 		// Print separator at the end
 		cli_printf( "--------------------------------------------------------" );
@@ -1335,6 +1384,49 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 * @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+cli_status_t cli_register_cmd_table(cli_cmd_table_node_t * const p_cmd_table)
+{
+    cli_status_t status = eCLI_OK;
+
+    CLI_ASSERT( NULL != p_cmd_table );
+    if ( NULL == p_cmd_table ) return eCLI_ERROR;
+
+    // User table defined OK
+    if ( cli_validate_user_table( p_cmd_table->p_table->p_cmd, p_cmd_table->p_table->num_of ))
+    {
+        // Mutex obtain
+        if ( eCLI_OK == cli_if_aquire_mutex())
+        {
+            // Add table to linked list
+            p_cmd_table->next = gp_cli_cmd_tables;
+
+            // Store for later reference
+            gp_cli_cmd_tables = p_cmd_table;
+
+            // Release mutex
+            cli_if_release_mutex();
+        }
+    }
+
+    // User table definition error
+    else
+    {
+        CLI_DBG_PRINT( "CLI ERROR: Invalid definition of user table!");
+        CLI_ASSERT( 0 );
+        status = eCLI_ERROR;
+    }
+
+    return status;
+}
+
+
+#if 0
+
 cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd)
 {
 	cli_status_t status = eCLI_OK;
@@ -1386,6 +1478,8 @@ cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const u
 
 	return status;
 }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
