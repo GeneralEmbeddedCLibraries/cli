@@ -47,8 +47,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 static cli_status_t cli_parser_hndl					(void);
 static void 		cli_execute_cmd					(const char * const p_cmd);
+
+static bool         cli_table_check_and_exe   (const char * p_cmd, const uint32_t cmd_size, const char * attr);
+
+// TODO: Remove
+#if 0
 static bool 		cli_basic_table_check_and_exe	(const char * p_cmd, const uint32_t cmd_size, const char * attr);
 static bool 		cli_user_table_check_and_exe	(const char * p_cmd, const uint32_t cmd_size, const char * attr);
+#endif
+
 static uint32_t		cli_calc_cmd_size				(const char * p_cmd, const char * attr);
 
 // Basic CLI functions
@@ -107,11 +114,12 @@ static const cli_cmd_t g_cli_basic_table[] =
     { 	"ram_read", 			cli_ram_read,			"Read data from RAM. Args: [address<hex>][size]",               NULL	},
 #endif
 };
+CLI_DECLARE_TABLE( cli, &g_cli_basic_table, ARRAY_SIZE(g_cli_basic_table));
 
 /**
  *     Number of basic commands
  */
-static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_table ) / sizeof( cli_cmd_t )));
+//static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_table ) / sizeof( cli_cmd_t )));
 
 /**
  * 	References to user defined CLI tables
@@ -248,13 +256,16 @@ static cli_status_t cli_parser_hndl(void)
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_execute_cmd(const char * const p_cmd)
 {
-	bool cmd_found = false;
-
 	// Get command options
 	const char * attr = cli_find_char(p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
 
 	// Calculate size of command string
 	const uint32_t cmd_size = cli_calc_cmd_size( p_cmd, attr );
+
+    // Check and execute for basic commands
+    const bool cmd_found = cli_table_check_and_exe( p_cmd, cmd_size, attr );
+
+#if 0
 
 	// First check and execute for basic commands
 	cmd_found = cli_basic_table_check_and_exe( p_cmd, cmd_size, attr );
@@ -265,6 +276,7 @@ static void cli_execute_cmd(const char * const p_cmd)
 		// Check and execute user defined commands
 		cmd_found = cli_user_table_check_and_exe( p_cmd, cmd_size, attr );
 	}
+#endif
 
 	// No command found in any of the tables
 	if ( false == cmd_found )
@@ -272,6 +284,38 @@ static void cli_execute_cmd(const char * const p_cmd)
 		cli_util_unknown_cmd_rsp();
 	}
 }
+
+
+static bool cli_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size, const char * attr)
+{
+    // Iterate thru linked list
+    for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
+    {
+        const cli_cmd_table_t * table = node->p_table;
+
+        // Iterate thru all commands in table
+        for (size_t cmd = 0; cmd < table->num_of; cmd++)
+        {
+            // String size to compare
+            const size_t size_to_compare = MAX( cmd_size, strlen( table->p_cmd[cmd].name ));
+
+            // Valid command?
+            if ( 0 == ( strncmp( p_cmd, table->p_cmd[cmd].name, size_to_compare )))
+            {
+                // Execute command
+                table->p_cmd[cmd].func( &table->p_cmd[cmd], attr );
+
+                // Command founded
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+#if 0
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -327,6 +371,8 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const uint32_t cmd
 
 	return cmd_found;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -425,6 +471,9 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_
 #endif
 }
 
+#endif
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        Calculate inputed command size
@@ -477,6 +526,9 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 		cli_printf( "    List of device commands" );
 		cli_printf( "--------------------------------------------------------" );
 
+
+		// TODO:
+#if 0
 		// Basic command table printout
 		for ( uint32_t cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
 		{
@@ -487,9 +539,10 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 			// Left adjust for 25 chars
 			cli_printf( "%-25s%s", name_str, help_str );
 		}
+#endif
 
 		// User defined tables
-		for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; node; node = node->next )
+		for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
 		{
 		    const cli_cmd_table_t * table = node->p_table;
 
@@ -513,6 +566,8 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 
 		}
 
+
+		//TODO:
 #if 0
 		for ( uint32_t cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
 		{
@@ -1089,6 +1144,9 @@ cli_status_t cli_init(void)
 		{
 			// Init success
 			gb_is_init = true;
+
+			// Register basic table
+			cli_cli_register_cmd_table();
 
 			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 				cli_show_intro();
