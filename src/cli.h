@@ -64,10 +64,10 @@ typedef void(*pf_cli_cmd)(const struct cli_cmd *p_cmd, const char * const p_attr
  */
 typedef struct cli_cmd
 {
-	char * 		p_name;		    /**<Command name*/
-	pf_cli_cmd	p_func;		    /**<Command function */
-	char * 		p_help;		    /**<Command help string */
-    void *      p_user_data;    /**<Pointer to command specific user data */
+	char * 		name;		    /**<Command name*/
+	pf_cli_cmd	func;		    /**<Command function */
+	char * 		help;		    /**<Command help string */
+    void *      p_context;      /**<Pointer to command specific context */
 } cli_cmd_t;
 
 ////////////////////////////////////////////////////////////////////////////////
