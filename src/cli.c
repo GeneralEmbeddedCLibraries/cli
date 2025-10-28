@@ -60,27 +60,28 @@ typedef struct
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
 static cli_status_t cli_parser_hndl					(void);
-static void 		cli_execute_cmd					(const uint8_t * const p_cmd);
+static void 		cli_execute_cmd					(const char * const p_cmd);
 static bool 		cli_basic_table_check_and_exe	(const char * p_cmd, const uint32_t cmd_size, const char * attr);
 static bool 		cli_user_table_check_and_exe	(const char * p_cmd, const uint32_t cmd_size, const char * attr);
 static uint32_t		cli_calc_cmd_size				(const char * p_cmd, const char * attr);
 
 // Basic CLI functions
-static void cli_help		  	(const uint8_t * p_attr);
-static void cli_reset	   	  	(const uint8_t * p_attr);
-static void cli_sw_version  	(const uint8_t * p_attr);
-static void cli_hw_version  	(const uint8_t * p_attr);
-static void cli_boot_version  	(const uint8_t * p_attr);
-static void cli_proj_info  		(const uint8_t * p_attr);
-static void cli_uptime 		    (const uint8_t * p_attr);
+static void cli_help		  	(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_reset	   	  	(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_sw_version  	(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_hw_version  	(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_boot_version  	(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_proj_info  		(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_uptime 		    (const cli_cmd_t * p_cmd, const char * p_attr);
 
-static void cli_ch_info  		(const uint8_t * p_attr);
-static void cli_ch_en  			(const uint8_t * p_attr);
-static void	cli_send_intro		(const uint8_t * p_attr);
+static void cli_ch_info  		(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_ch_en  			(const cli_cmd_t * p_cmd, const char * p_attr);
+static void	cli_send_intro		(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_show_intro      (void);
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
-static void cli_ram_write       (const uint8_t * p_attr);
-static void cli_ram_read        (const uint8_t * p_attr);
+static void cli_ram_write       (const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_ram_read        (const cli_cmd_t * p_cmd, const char * p_attr);
 #endif
 
 static bool             cli_validate_user_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
@@ -98,26 +99,26 @@ static bool gb_is_init = false;
 /**
  * 		Basic CLI commands
  */
-static cli_cmd_t g_cli_basic_table[] =
+static const cli_cmd_t g_cli_basic_table[] =
 {
-	// -------------------------------------------------------------------------------------------------------------
-	// 	name					function				help string
-	// -------------------------------------------------------------------------------------------------------------
-	{ 	"help", 				cli_help, 				"Print help message"                                        },
-	{ 	"intro", 				cli_send_intro,         "Print intro message"                                       },
-	{ 	"reset", 				cli_reset, 				"Reset device" 										        },
-	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					        },
-	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					        },
-	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version" 		                },
-	{ 	"proj_info", 			cli_proj_info, 			"Print project informations" 						        },
-	{ 	"uptime",               cli_uptime,			    "Get device uptime [ms]"                                    },
+	// --------------------------------------------------------------------------------------------------------------------------
+	// 	name					function				help string                                                     context
+	// --------------------------------------------------------------------------------------------------------------------------
+	{ 	"help", 				cli_help, 				"Print help message",                                           NULL	},
+	{ 	"intro", 				cli_send_intro,         "Print intro message",                                          NULL	},
+	{ 	"reset", 				cli_reset, 				"Reset device", 										        NULL	},
+	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version", 					            NULL	},
+	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version", 					            NULL	},
+	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version", 		                NULL	},
+	{ 	"proj_info", 			cli_proj_info, 			"Print project informations", 						            NULL	},
+	{ 	"uptime",               cli_uptime,			    "Get device uptime [ms]",                                       NULL	},
 
-    { 	"ch_info", 				cli_ch_info, 			"Print COM channel informations" 					        },
-	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]"            },
+    { 	"ch_info", 				cli_ch_info, 			"Print COM channel informations", 					            NULL	},
+	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]",               NULL	},
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
-    { 	"ram_write", 			cli_ram_write,			"Write data to RAM. Args: [address<hex>][size][value<hex>]" },
-    { 	"ram_read", 			cli_ram_read,			"Read data from RAM. Args: [address<hex>][size]"            },
+    { 	"ram_write", 			cli_ram_write,			"Write data to RAM. Args: [address<hex>][size][value<hex>]",    NULL	},
+    { 	"ram_read", 			cli_ram_read,			"Read data from RAM. Args: [address<hex>][size]",               NULL	},
 #endif
 };
 
@@ -174,7 +175,7 @@ static cli_status_t cli_parser_hndl(void)
             memset((char*) p_term_str_start, 0, strlen( CLI_CFG_TERMINATION_STRING ));
 
             // Execute command
-            cli_execute_cmd( rx_buffer );
+            cli_execute_cmd( (const char *)rx_buffer );
 
             // Reset buffer
 			memset( &rx_buffer, 0U, sizeof( rx_buffer ));
@@ -250,24 +251,24 @@ static cli_status_t cli_parser_hndl(void)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_execute_cmd(const uint8_t * const p_cmd)
+static void cli_execute_cmd(const char * const p_cmd)
 {
 	bool cmd_found = false;
 
 	// Get command options
-	const char * attr = cli_find_char((const char * const) p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
+	const char * attr = cli_find_char(p_cmd, ' ', CLI_CFG_RX_BUF_SIZE );
 
 	// Calculate size of command string
-	const uint32_t cmd_size = cli_calc_cmd_size((const char*) p_cmd, (const char*) attr );
+	const uint32_t cmd_size = cli_calc_cmd_size( p_cmd, attr );
 
 	// First check and execute for basic commands
-	cmd_found = cli_basic_table_check_and_exe((const char*) p_cmd, cmd_size, attr );
+	cmd_found = cli_basic_table_check_and_exe( p_cmd, cmd_size, attr );
 
 	// Command not founded jet
 	if ( false == cmd_found )
 	{
 		// Check and execute user defined commands
-		cmd_found = cli_user_table_check_and_exe((const char*) p_cmd, cmd_size, attr );
+		cmd_found = cli_user_table_check_and_exe( p_cmd, cmd_size, attr );
 	}
 
 	// No command found in any of the tables
@@ -308,17 +309,19 @@ static bool cli_basic_table_check_and_exe(const char * p_cmd, const uint32_t cmd
 	// Walk thru basic commands
 	for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
 	{
+        const cli_cmd_t *p_cli_cmd = &g_cli_basic_table[cmd_idx];
+
 		// Get cmd name
-		name_str = g_cli_basic_table[cmd_idx].p_name;
+		name_str = p_cli_cmd->name;
 
 		// String size to compare
-		size_to_compare = CLI_MAX( cmd_size, strlen((const char*) name_str));
+		size_to_compare = CLI_MAX( cmd_size, strlen(name_str));
 
 		// Valid command?
-		if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, size_to_compare )))
+		if ( 0 == ( strncmp( p_cmd, name_str, size_to_compare )))
 		{
 			// Execute command
-			g_cli_basic_table[cmd_idx].p_func((const uint8_t*) attr );
+			p_cli_cmd->func( p_cli_cmd, attr );
 
 			// Command found
 			cmd_found = true;
@@ -368,17 +371,19 @@ static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_
         // Go thru command table
         for ( cmd_idx = 0; cmd_idx < num_of_user_cmd; cmd_idx++ )
         {
+            const cli_cmd_t *p_cli_cmd = &g_cli_user_tables[table_idx].p_cmd[cmd_idx];
+
             // Get cmd name
-            name_str = g_cli_user_tables[table_idx].p_cmd[cmd_idx].p_name;
+            name_str = p_cli_cmd->name;
 
             // String size to compare
-            size_to_compare = CLI_MAX( cmd_size, strlen((const char*) name_str));
+            size_to_compare = CLI_MAX( cmd_size, strlen(name_str));
 
             // Valid command?
-            if ( 0 == ( strncmp((const char*) p_cmd, (const char*) name_str, size_to_compare )))
+            if ( 0 == ( strncmp( p_cmd, name_str, size_to_compare )))
             {
                 // Execute command
-                g_cli_user_tables[table_idx].p_cmd[cmd_idx].p_func((const uint8_t*) attr );
+                p_cli_cmd->func( p_cli_cmd, attr );
 
                 // Command founded
                 cmd_found = true;
@@ -433,14 +438,14 @@ static uint32_t	cli_calc_cmd_size(const char * p_cmd, const char * attr)
 /*!
 * @brief        Show help
 *
-* @param[in]	attr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_help(const uint8_t * p_attr)
+static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 {
-	uint32_t cmd_idx 		= 0;
-	uint32_t user_cmd_idx 	= 0;
+    UNUSED(p_cmd);
 
 	// No additional attributes
 	if ( NULL == p_attr )
@@ -450,18 +455,18 @@ static void cli_help(const uint8_t * p_attr)
 		cli_printf( "--------------------------------------------------------" );
 
 		// Basic command table printout
-		for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
+		for ( uint32_t cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
 		{
 			// Get name and help string
-			const char * name_str = g_cli_basic_table[cmd_idx].p_name;
-			const char * help_str = g_cli_basic_table[cmd_idx].p_help ;
+			const char * name_str = g_cli_basic_table[cmd_idx].name;
+			const char * help_str = g_cli_basic_table[cmd_idx].help ;
 
 			// Left adjust for 25 chars
 			cli_printf( "%-25s%s", name_str, help_str );
 		}
 
 		// User defined tables
-		for ( cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
+		for ( uint32_t cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
 		{
             // Are there any commands
             if ( g_cli_user_tables[cmd_idx].num_of > 0U )
@@ -470,11 +475,11 @@ static void cli_help(const uint8_t * p_attr)
                 cli_printf( "--------------------------------------------------------" );
 
                 // Show help for that table
-                for ( user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
+                for ( uint32_t user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
                 {
                     // Get name and help string
-                    const char * name_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].p_name;
-                    const char * help_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].p_help;
+                    const char * name_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].name;
+                    const char * help_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].help;
 
                     // Left adjust for 25 chars
                     cli_printf( "%-25s%s", name_str, help_str );
@@ -495,12 +500,15 @@ static void cli_help(const uint8_t * p_attr)
 /*!
 * @brief        Reset device
 *
-* @param[in]	aattr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_reset(const uint8_t * p_attr)
+static void cli_reset(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
 	if ( NULL == p_attr )
 	{
 		cli_printf("OK, Reseting device...");
@@ -516,12 +524,15 @@ static void cli_reset(const uint8_t * p_attr)
 /*!
 * @brief        Show SW version
 *
-* @param[in]	attr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_sw_version(const uint8_t * p_attr)
+static void cli_sw_version(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
 	if ( NULL == p_attr )
 	{
         cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
@@ -536,12 +547,15 @@ static void cli_sw_version(const uint8_t * p_attr)
 /*!
 * @brief        Show HW version
 *
-* @param[in]	attr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_hw_version(const uint8_t * p_attr)
+static void cli_hw_version(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
 	if ( NULL == p_attr )
 	{
         cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
@@ -556,12 +570,15 @@ static void cli_hw_version(const uint8_t * p_attr)
 /*!
 * @brief        Show bootloader (SW) version
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_boot_version(const uint8_t * p_attr)
+static void cli_boot_version(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         cli_printf( "OK, %s", CLI_CFG_INTRO_BOOT_VER );
@@ -576,12 +593,15 @@ static void cli_boot_version(const uint8_t * p_attr)
 /*!
 * @brief        Show detailed project informations
 *
-* @param[in]	attr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_proj_info(const uint8_t * p_attr)
+static void cli_proj_info(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
 	if ( NULL == p_attr )
 	{
         cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
@@ -596,12 +616,15 @@ static void cli_proj_info(const uint8_t * p_attr)
 /*!
 * @brief        Get device uptime [ms]
 *
-* @param[in]	attr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_uptime(const uint8_t * p_attr)
+static void cli_uptime(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
 	if ( NULL == p_attr )
 	{
         const uint64_t uptime = cli_if_get_uptime();
@@ -619,12 +642,15 @@ static void cli_uptime(const uint8_t * p_attr)
 *
 * @note			Command format: >>>cli_ch_info
 *
-* @param[in]	attr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_ch_info(const uint8_t * p_attr)
+static void cli_ch_info(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
 	if ( NULL == p_attr )
 	{
 		cli_printf( "--------------------------------------------------------" );
@@ -656,12 +682,15 @@ static void cli_ch_info(const uint8_t * p_attr)
 * 				E.g.:	>>>cli_ch_en 0, 1	// Disable "WARNING" channel
 * 				E.g.:	>>>cli_ch_en 1, 0	// Enable "ERROR" channel
 *
-* @param[in]	attr 	- Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_ch_en(const uint8_t * p_attr)
+static void cli_ch_en(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
 	uint32_t ch;
 	uint32_t en;
 
@@ -693,15 +722,13 @@ static void cli_ch_en(const uint8_t * p_attr)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
-* @brief        Send intro string
+* @brief        Show intro
 *
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void	cli_send_intro(const uint8_t * p_attr)
+static void cli_show_intro(void)
 {
-    (void) p_attr;
-
     cli_printf( " " );
     cli_printf( "********************************************************" );
     cli_printf( "        %s", 	CLI_CFG_INTRO_PROJECT_NAME );
@@ -714,6 +741,22 @@ static void	cli_send_intro(const uint8_t * p_attr)
     cli_printf( "Ready to take orders..." );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Send intro string
+*
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void	cli_send_intro(const cli_cmd_t * p_cmd, const char * p_attr)
+{
+    UNUSED(p_cmd);
+    UNUSED(p_attr);
+
+    cli_show_intro();
+}
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
 ////////////////////////////////////////////////////////////////////////////////
@@ -734,7 +777,7 @@ static void	cli_send_intro(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_ram_write(const uint8_t * p_attr)
+static void cli_ram_write(const char * p_attr)
 {
 	uint32_t addr;
     uint32_t size;
@@ -811,7 +854,7 @@ static void cli_ram_write(const uint8_t * p_attr)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_ram_read(const uint8_t * p_attr)
+static void cli_ram_read(const char * p_attr)
 {
 	uint32_t addr;
     uint32_t size;
@@ -889,9 +932,9 @@ static bool cli_validate_user_table(const cli_cmd_t * const p_cmd_table, const u
     for (uint32_t cmd = 0; cmd < num_of_cmd; cmd++)
     {
         // Missing definitions?
-        if 	(	( NULL == p_cmd_table[cmd].p_name )
-            ||	( NULL == p_cmd_table[cmd].p_help )
-            ||	( NULL == p_cmd_table[cmd].p_func ))
+        if 	(	( NULL == p_cmd_table[cmd].name )
+            ||	( NULL == p_cmd_table[cmd].help )
+            ||	( NULL == p_cmd_table[cmd].func ))
         {
             valid = false;
             break;
@@ -999,7 +1042,7 @@ cli_status_t cli_init(void)
 			gb_is_init = true;
 
 			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-				cli_send_intro( NULL );
+				cli_show_intro();
 			#endif
 		}
 	}
@@ -1111,7 +1154,7 @@ cli_status_t cli_hndl(void)
 * @return       status  - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_send_str(const uint8_t * const p_str)
+cli_status_t cli_send_str(const char * const p_str)
 {
     cli_status_t status = eCLI_OK;
 
@@ -1119,7 +1162,7 @@ cli_status_t cli_send_str(const uint8_t * const p_str)
     if ( eCLI_OK == cli_if_aquire_mutex())
     {
         // Write to cli port
-        status |= cli_if_transmit( p_str );
+        status |= cli_if_transmit( (const uint8_t *)p_str );
 
         // Release mutex if taken
         status |= cli_if_release_mutex();
@@ -1184,7 +1227,7 @@ cli_status_t cli_printf(char * p_format, ...)
                     {
                         // Append termination string and send
                         strcat((char*) p_tx_buf, (const char*) CLI_CFG_TERMINATION_STRING);
-                        status = cli_send_str((const uint8_t*) p_tx_buf );
+                        status = cli_send_str((const char*) p_tx_buf );
                     } 
                     else 
                     {
@@ -1248,16 +1291,16 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 			    {
                     // Taking args from stack
                     va_start(args, p_format);
-                    vsprintf((char*) p_tx_buf, (const char*) p_format, args);
+                    vsprintf((char*) p_tx_buf, p_format, args);
                     va_end(args);
 
                     // Send channel name
-                    status |= cli_send_str((const uint8_t*) cli_cfg_get_ch_name( ch ));
-                    status |= cli_send_str((const uint8_t*) ": " );
+                    status |= cli_send_str( cli_cfg_get_ch_name( ch ));
+                    status |= cli_send_str( ": " );
 
                     // Send string
-                    status |= cli_send_str((const uint8_t*) p_tx_buf );
-                    status |= cli_send_str((const uint8_t*) CLI_CFG_TERMINATION_STRING );
+                    status |= cli_send_str((const char*) p_tx_buf );
+                    status |= cli_send_str( CLI_CFG_TERMINATION_STRING );
 
                     // Release mutex
                     cli_if_release_mutex();

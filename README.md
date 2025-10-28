@@ -2,19 +2,84 @@
 
 A Command Line Interface (CLI) is a general-purpose, console-based interpreter that is independent of the communication medium. Its purpose is to easily and quickly set up embedded device configurations and perform diagnostics via an application-defined communication channel. The only constraint for the communication channel is the usage of ASCII-formatted streams. A CLI also has the ability to adjust embedded device parameters and enables advanced diagnostics, allowing real-time monitoring of changes in device parameters. Furthermore, for fast hard real-time requirements, it can observe device parameter values using a software oscilloscope, providing high-resolution time period observations.
 
-CLI is build around command tables where command name, function and help message is specified. E.g.:
+CLI is build around command tables where command name, function and help message is specified and furthermore the context of each command. E.g.:
 ```C
-// ----------------------------------------------------------
-//  name        function        help string
-// ----------------------------------------------------------
-{   "help",     cli_help,       "Print all commands help"   },
-{   "reset",    cli_reset,      "Reset device"              },
+// ----------------------------------------------------------------------------------
+// 	name                    function                help string             context
+// ----------------------------------------------------------------------------------
+{   "help",                 cli_help,               "Print help message",   NULL	},
+{   "intro",                cli_send_intro,         "Print intro message",  NULL	},
+{   "reset",                cli_reset,              "Reset device",         NULL	},
 ```
 
 CLI divides two types of command tables:
  - ***BASIC COMMAND TABLE***: Is compile-time defined by CLI module itself and highly depends on user configurations of module. Commands inside basic table serves for PC tool interfacing with the embedded device.
  - ***USER COMMAND TABLE***: Is run-time defined list of command defined by the user application purposes.
 
+After defined ASCII string is received, a registrated function is raised. E.g. when device receives *help* string it raises following function:
+```C
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show help
+*
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
+{
+    UNUSED(p_cmd);
+
+	// No additional attributes
+	if ( NULL == p_attr )
+	{
+		cli_printf( " " );
+		cli_printf( "    List of device commands" );
+		cli_printf( "--------------------------------------------------------" );
+
+		// Basic command table printout
+		for ( uint32_t cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
+		{
+			// Get name and help string
+			const char * name_str = g_cli_basic_table[cmd_idx].name;
+			const char * help_str = g_cli_basic_table[cmd_idx].help ;
+
+			// Left adjust for 25 chars
+			cli_printf( "%-25s%s", name_str, help_str );
+		}
+
+		// User defined tables
+		for ( uint32_t cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
+		{
+            // Are there any commands
+            if ( g_cli_user_tables[cmd_idx].num_of > 0U )
+            {
+                // Print separator between user commands
+                cli_printf( "--------------------------------------------------------" );
+
+                // Show help for that table
+                for ( user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
+                {
+                    // Get name and help string
+                    const char * name_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].name;
+                    const char * help_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].help;
+
+                    // Left adjust for 25 chars
+                    cli_printf( "%-25s%s", name_str, help_str );
+                }
+            }
+		}
+
+		// Print separator at the end
+		cli_printf( "--------------------------------------------------------" );
+	}
+	else
+	{
+		cli_util_unknown_cmd_rsp();
+	}
+}
+```
 
 ### **Using CLI in RTOS environment**
 
@@ -260,29 +325,41 @@ Example of registration of user defined CLI command table:
 
 ```C
 // User test_1 function definiton
-void test_1 (const uint8_t * attr)
+void test_1(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    // Unused command info
+    UNUSED(p_cmd);
+
     if ( NULL != attr ) cli_printf("User command test 1... Attr: <%s>", attr);
     else                cli_printf("User command test 1... Attr: NULL");
 }
 
 // User test_2 function definiton
-void test_2 (const uint8_t * attr)
+void test_2(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    // Get my context
+    void * p_context = p_cmd->p_context;
+
     if ( NULL != attr ) cli_printf("User command test 2... Attr: <%s>", attr);
     else                cli_printf("User command test 2... Attr: NULL");
 }
 
 // User test_3 function definiton
-void test_3 (const uint8_t * attr)
+void test_3(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    // Unused command info
+    UNUSED(p_cmd);
+
     if ( NULL != attr ) cli_printf("User command test 3... Attr: <%s>", attr);
     else                cli_printf("User command test 3... Attr: NULL");
 }
 
 // User test_4 function definiton
-void test_4 (const uint8_t * attr)
+void test_4(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    // Unused command info
+    UNUSED(p_cmd);
+
     if ( NULL != attr ) cli_printf("User command test 4... Attr: <%s>", attr);
     else                cli_printf("User command test 4... Attr: NULL");
 }
@@ -291,12 +368,14 @@ void test_4 (const uint8_t * attr)
 static volatile const cli_cmd_t my_table[] =
 {
     // ----------------------------------------------------------------------
-    //     name         function            help string
+    //  name        function        help string         context
     // ----------------------------------------------------------------------
-    { "test_1",         test_1,             "Test 1 Help" },
-    { "test_2",         test_2,             "Test 2 Help" },
-    { "test_3",         test_3,             "Test 3 Help" },
-    { "test_4",         test_4,             "Test 4 Help" },
+    {   "test_1",   test_1,         "Test 1 Help",      NULL },      
+    {   "test_2",   test_2,         "Test 2 Help",      NULL },
+    
+    // Or alternatively using helper macro
+    CLI_ASM_CMD( "test_3", test_3, "Test 3 Help", NULL ),
+    CLI_ASM_CMD( "test_4", test_4, "Test 4 Help", NULL ),
 };
 
 void register_my_cli_commands()
