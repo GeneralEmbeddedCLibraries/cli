@@ -149,24 +149,24 @@ cli_status_t cli_if_release_mutex(void)
 
 ## **Dependencies**
 
-### **1. Device Parameters**
+### **1. Utils Module**
+[Utils module](https://github.com/GeneralEmbeddedCLibraries/utils) is a mandatory dependecy when using CLI and it must take following path:
+```
+"root/common/utils/src/utils.h"
+```
+
+### **2. Device Parameters**
 In case of using parameters *CLI_CFG_PAR_USE_EN = 1*, then [Device Parameters](https://github.com/GeneralEmbeddedCLibraries/parameters) must pe part of project. 
 Device Parameters module must take following path:
 ```
 "root/middleware/parameters/parameters/src/par.h"
 ```
 
-### **2. NVM Module**
+### **3. NVM Module**
 In case of using NVM module *CLI_CFG_STREAM_NVM_EN = 1*, then [NVM module](https://github.com/GeneralEmbeddedCLibraries/nvm) must pe part of project. 
 NVM module must take following path:
 ```
 "root/middleware/nvm/nvm/src/nvm.h"
-```
-
-### **3. Utils Module**
-Utils module must take following path:
-```
-"root/common/utils/src/utils.h"
 ```
 
 ## **Limitations**
