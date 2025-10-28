@@ -283,25 +283,25 @@ static void cli_par_set(const uint8_t * p_attr)
                         case ePAR_TYPE_U8:
                             (void) sscanf((const char*) p_attr, "%hu,%hhu", &par_id, &par_data.u8 );
                             status = par_set( par_num, &par_data.u8 );
-                            cli_printf( "OK,PAR_SET=%hhu", par_data.u8);
+                            cli_printf( "OK,PAR_SET=%u", par_data.u8);
                         break;
 
                         case ePAR_TYPE_I8:
                             sscanf((const char*) p_attr, "%hu,%hhi", &par_id, &par_data.i8 );
                             status = par_set( par_num, &par_data.i8 );
-                            cli_printf( "OK,PAR_SET=%hhi", par_data.i8);
+                            cli_printf( "OK,PAR_SET=%i", par_data.i8);
                         break;
 
                         case ePAR_TYPE_U16:
                             sscanf((const char*) p_attr, "%hu,%hu", &par_id, &par_data.u16 );
                             status = par_set( par_num, &par_data.u16 );
-                            cli_printf( "OK,PAR_SET=%hu", par_data.u16);
+                            cli_printf( "OK,PAR_SET=%u", par_data.u16);
                         break;
 
                         case ePAR_TYPE_I16:
                             sscanf((const char*) p_attr, "%hu,%hi", &par_id, &par_data.i16 );
                             status = par_set( par_num, &par_data.i16 );
-                            cli_printf( "OK,PAR_SET=%hi", par_data.i16);
+                            cli_printf( "OK,PAR_SET=%i", par_data.i16);
                         break;
 
                         case ePAR_TYPE_U32:
@@ -393,22 +393,22 @@ static void cli_par_get(const uint8_t * p_attr)
                 {
                     case ePAR_TYPE_U8:
                         status = par_get( par_num, &par_data.u8 );
-                        cli_printf( "OK,PAR_GET=%hhu", par_data.u8 );
+                        cli_printf( "OK,PAR_GET=%u", par_data.u8 );
                     break;
 
                     case ePAR_TYPE_I8:
                         status = par_get( par_num, &par_data.i8 );
-                        cli_printf(  "OK,PAR_GET=%hhi", par_data.i8 );
+                        cli_printf(  "OK,PAR_GET=%i", par_data.i8 );
                     break;
 
                     case ePAR_TYPE_U16:
                         status = par_get( par_num, &par_data.u16 );
-                        cli_printf(  "OK,PAR_GET=%hu", par_data.u16 );
+                        cli_printf(  "OK,PAR_GET=%u", par_data.u16 );
                     break;
 
                     case ePAR_TYPE_I16:
                         status = par_get( par_num, &par_data.i16 );
-                        cli_printf(  "OK,PAR_GET=%hi", par_data.i16 );
+                        cli_printf(  "OK,PAR_GET=%i", par_data.i16 );
                     break;
 
                     case ePAR_TYPE_U32:
