@@ -108,11 +108,7 @@ static const cli_cmd_t g_cli_basic_table[] =
 	// 	name					function				help string
 	// -------------------------------------------------------------------------------------------------------------
 	{ 	"help", 				cli_help, 				"Print help message"                                        },
-
-#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 	{ 	"intro", 				cli_send_intro,         "Print intro message"                                       },
-#endif
-
 	{ 	"reset", 				cli_reset, 				"Reset device" 										        },
 	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version" 					        },
 	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version" 					        },
@@ -545,11 +541,7 @@ static void cli_sw_version(const cli_cmd_t * p_cmd, const char * p_attr)
 
 	if ( NULL == p_attr )
 	{
-		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-			cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
-		#else
-			cli_printf( "WAR, Not used..." );
-		#endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_SW_VER );
 	}
 	else
 	{
@@ -572,11 +564,7 @@ static void cli_hw_version(const cli_cmd_t * p_cmd, const char * p_attr)
 
 	if ( NULL == p_attr )
 	{
-		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-			cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
-		#else
-			cli_printf( "WAR, Not used..." );
-		#endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_HW_VER );
 	}
 	else
 	{
@@ -599,11 +587,7 @@ static void cli_boot_version(const cli_cmd_t * p_cmd, const char * p_attr)
 
     if ( NULL == p_attr )
     {
-        #if ( 1 == CLI_CFG_INTRO_STRING_EN )
-            cli_printf( "OK, %s", CLI_CFG_INTRO_BOOT_VER );
-        #else
-            cli_printf( "WAR, Not used..." );
-        #endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_BOOT_VER );
     }
     else
     {
@@ -626,11 +610,7 @@ static void cli_proj_info(const cli_cmd_t * p_cmd, const char * p_attr)
 
 	if ( NULL == p_attr )
 	{
-		#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-			cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
-		#else
-			cli_printf( "WAR, Not used..." );
-		#endif
+        cli_printf( "OK, %s", CLI_CFG_INTRO_PROJ_INFO );
 	}
 	else
 	{
@@ -1099,6 +1079,12 @@ cli_status_t cli_deinit(void)
 		// De-init interface
 		status = cli_if_deinit();
 
+        // Disable all channels
+        for (cli_ch_opt_t ch = 0; ch < eCLI_CH_NUM_OF; ch++)
+        {
+            cli_cfg_set_ch_en( ch, false );
+        }
+
 		// Low level driver de-init error
 		CLI_ASSERT( eCLI_OK == status );
 
@@ -1219,24 +1205,50 @@ cli_status_t cli_printf(char * p_format, ...)
 	{
 		if ( NULL != p_format )
 		{
-		    // Get pointer to Tx buffer
-		    uint8_t * p_tx_buf = cli_util_get_tx_buf();
+            // Get pointer to Tx buffer
+            uint8_t * p_tx_buf = cli_util_get_tx_buf();
 
             // Mutex obtain
             if ( eCLI_OK == cli_if_aquire_mutex())
             {
                 // Taking args from stack
                 va_start(args, p_format);
-                vsprintf((char*) p_tx_buf, (const char*) p_format, args);
+
+                // Use vsnprintf to prevent buffer overflow and get the length written
+                const int printed_len = vsnprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, (const char*) p_format, args);
                 va_end(args);
 
-                // Send string
-                status = cli_send_str((const char*) p_tx_buf );
-                status |= cli_send_str((const char*) CLI_CFG_TERMINATION_STRING );
+                // Handle buffer overflow or encoding error from vsnprintf
+                // The string might be truncated or invalid
+                if  (   ( printed_len < 0 ) 
+                    ||  ( printed_len >= CLI_CFG_TX_BUF_SIZE )) 
+                {
+                    status = eCLI_ERROR;
+                    CLI_ASSERT(0);
+                } 
+                else 
+                {
+                    // Append the termination string to the buffer
+                    // Check if there's enough space left for the termination string
+                    const size_t term_len = strlen(CLI_CFG_TERMINATION_STRING);
+
+                    if ((size_t)printed_len + term_len < CLI_CFG_TX_BUF_SIZE ) 
+                    {
+                        // Append termination string and send
+                        strcat((char*) p_tx_buf, (const char*) CLI_CFG_TERMINATION_STRING);
+                        status = cli_send_str((const uint8_t*) p_tx_buf );
+                    } 
+                    else 
+                    {
+                        // Not enough space for termination string
+                        status = eCLI_ERROR;
+                        CLI_ASSERT(0);
+                    }
+                }
 
                 // Release mutex
                 cli_if_release_mutex();
-            }
+            }   
             else
             {
                 status = eCLI_ERROR;
