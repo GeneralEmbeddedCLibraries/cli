@@ -53,7 +53,13 @@ typedef enum
 
 struct cli_cmd;
 /**
- * 	 CLI Command Function
+ *      CLI Command Function
+ *
+ *  @note   User shall use callback function declared as: "void my_cli_func(const cli_cmd_t *p_cmd, const char * const p_attr)"
+ *
+ * @param[in]   p_cmd   - Pointer to command itself
+ * @param[in]   p_attr  - Pointer to additional attributes beside command
+ * @return      void
  */
 typedef void(*pf_cli_cmd)(const struct cli_cmd *p_cmd, const char * const p_attr);
 
@@ -69,6 +75,11 @@ typedef struct cli_cmd
 	char * 		help;		    /**<Command help string */
     void *      p_context;      /**<Pointer to command specific context */
 } cli_cmd_t;
+
+/**
+ *  CLI Command table builder helper
+ */
+#define CLI_ASM_CMD(name, p_func, help, p_context)  { name, p_func, help, p_context }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions

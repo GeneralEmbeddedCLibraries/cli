@@ -475,7 +475,7 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
                 cli_printf( "--------------------------------------------------------" );
 
                 // Show help for that table
-                for ( user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
+                for ( uint32_t user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
                 {
                     // Get name and help string
                     const char * name_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].name;
