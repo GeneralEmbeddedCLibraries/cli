@@ -2,7 +2,7 @@
 
 A Command Line Interface (CLI) is a general-purpose, console-based interpreter that is independent of the communication medium. Its purpose is to easily and quickly set up embedded device configurations and perform diagnostics via an application-defined communication channel. The only constraint for the communication channel is the usage of ASCII-formatted streams. A CLI also has the ability to adjust embedded device parameters and enables advanced diagnostics, allowing real-time monitoring of changes in device parameters. Furthermore, for fast hard real-time requirements, it can observe device parameter values using a software oscilloscope, providing high-resolution time period observations.
 
-CLI is build around command tables where command name, function and help message is specified and furthermore the context of each command. E.g.:
+CLI is build around command tables where command name, function and help message is specified and additionaly the context of each command. E.g.:
 ```C
 // ----------------------------------------------------------------------------------
 // 	name                    function                help string             context
@@ -11,6 +11,10 @@ CLI is build around command tables where command name, function and help message
 {   "intro",                cli_send_intro,         "Print intro message",  NULL	},
 {   "reset",                cli_reset,              "Reset device",         NULL	},
 ```
+
+Later those commands are accesable using your favorite COM port terminal program:
+
+![](doc/cli_from_pc_tool.png)
 
 CLI divides two types of command tables:
  - ***BASIC COMMAND TABLE***: Is compile-time defined by CLI module itself and highly depends on user configurations of module. Commands inside basic table serves for PC tool interfacing with the embedded device.
