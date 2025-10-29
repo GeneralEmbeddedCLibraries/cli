@@ -372,11 +372,18 @@ static volatile const cli_cmd_t my_table[] =
     // ----------------------------------------------------------------------
     {   "test_1",   test_1,         "Test 1 Help",      NULL },      
     {   "test_2",   test_2,         "Test 2 Help",      NULL },
-    
-    // Or alternatively using helper macro
-    CLI_ASM_CMD( "test_3", test_3, "Test 3 Help", NULL ),
-    CLI_ASM_CMD( "test_4", test_4, "Test 4 Help", NULL ),
+    {   "test_3",   test_3,         "Test 3 Help",      NULL },
+    {   "test_4",   test_4,         "Test 4 Help",      NULL },        
 };
+
+
+
+
+// TODO: Update table configuration instructions...
+
+
+
+
 
 void register_my_cli_commands()
 {
