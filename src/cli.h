@@ -29,6 +29,9 @@
 
 #include "../../cli_cfg.h"
 
+// Common goods
+#include "common/utils/src/utils.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,12 +82,26 @@ typedef struct cli_cmd
 /**
  *  CLI Command Table
  */
-typedef struct
+typedef struct cli_cmd_table
 {
-    cli_cmd_t * p_cmd;      /**<Command table */
-    uint32_t    num_of;     /**<Number of commands */
+    cli_cmd_t *             p_cmd;      /**<Command table */
+    uint32_t                num_of;     /**<Number of commands */
+    struct cli_cmd_table ** p_next;     /**<Pointer to next table */
 } cli_cmd_table_t;
 
+
+
+#define CLI_DEFINE_CMD_TABLE(name,...)                      \
+    static const cli_cmd_table_t name =                     \
+    {                                                       \
+        .p_cmd  = (cli_cmd_t[]){__VA_ARGS__},               \
+        .num_of = ARRAY_SIZE(((cli_cmd_t[]){__VA_ARGS__})), \
+        .p_next = &(cli_cmd_table_t*){NULL},                \
+    }
+
+
+
+#if 0
 /**
  *  CLI Command Table Node
  */
@@ -93,6 +110,11 @@ typedef struct cli_cmd_table_node
     cli_cmd_table_t *           p_table;    /**<Pointer to CLI command table */
     struct cli_cmd_table_node * next;       /**<Pointer to next CLI command table */
 } cli_cmd_table_node_t;
+
+
+
+
+
 
 /* Macro that keeps tables const and hides the node + register function. */
 #define CLI_DECLARE_TABLE(TABLE_SYM, CMD_TABLE, NUM_OF_CMD)                                   \
@@ -104,6 +126,7 @@ typedef struct cli_cmd_table_node
         return cli_register_cmd_table(&TABLE_SYM##_node);                                \
     }
 
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -115,7 +138,7 @@ cli_status_t cli_hndl				(void);
 cli_status_t cli_send_str           (const char * const p_str);
 cli_status_t cli_printf				(char * p_format, ...);
 cli_status_t cli_printf_ch			(const cli_ch_opt_t ch, char * p_format, ...);
-cli_status_t cli_register_cmd_table (cli_cmd_table_node_t * const p_cmd_table);
+cli_status_t cli_register_cmd_table (cli_cmd_table_t *  p_cmd_table);
 cli_status_t cli_osci_hndl          (void);
 
 #endif // __CLI_H

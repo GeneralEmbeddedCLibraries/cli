@@ -36,9 +36,6 @@
 #include "../../cli_cfg.h"
 #include "../../cli_if.h"
 
-// Common goods
-#include "common/utils/src/utils.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,34 +82,27 @@ static bool gb_is_init = false;
 /**
  * 		Basic CLI commands
  */
-static const cli_cmd_t g_cli_basic_table[] =
-{
-	// --------------------------------------------------------------------------------------------------------------------------
-	// 	name					function				help string                                                     context
-	// --------------------------------------------------------------------------------------------------------------------------
-	{ 	"help", 				cli_help, 				"Print help message",                                           NULL	},
-	{ 	"intro", 				cli_send_intro,         "Print intro message",                                          NULL	},
-	{ 	"reset", 				cli_reset, 				"Reset device", 										        NULL	},
-	{ 	"sw_ver", 				cli_sw_version, 		"Print device software version", 					            NULL	},
-	{ 	"hw_ver", 				cli_hw_version, 		"Print device hardware version", 					            NULL	},
-	{ 	"boot_ver", 		    cli_boot_version, 		"Print device bootloader (sw) version", 		                NULL	},
-	{ 	"proj_info", 			cli_proj_info, 			"Print project informations", 						            NULL	},
-	{ 	"uptime",               cli_uptime,			    "Get device uptime [ms]",                                       NULL	},
+CLI_DEFINE_CMD_TABLE( g_cli_basic_table,
 
-    { 	"ch_info", 				cli_ch_info, 			"Print COM channel informations", 					            NULL	},
-	{ 	"ch_en", 				cli_ch_en, 				"Enable/disable COM channel. Args: [chEnum][en]",               NULL	},
-
-#if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
-    { 	"ram_write", 			cli_ram_write,			"Write data to RAM. Args: [address<hex>][size][value<hex>]",    NULL	},
-    { 	"ram_read", 			cli_ram_read,			"Read data from RAM. Args: [address<hex>][size]",               NULL	},
-#endif
-};
-CLI_DECLARE_TABLE( cli, &g_cli_basic_table, ARRAY_SIZE(g_cli_basic_table));
+    // --------------------------------------------------------------------------------------------------------------------------
+    //  name                    function                help string                                                     context
+    // --------------------------------------------------------------------------------------------------------------------------
+    {   "help",                 cli_help,               "Print help message",                                           NULL    },
+    {   "intro",                cli_send_intro,         "Print intro message",                                          NULL    },
+    {   "reset",                cli_reset,              "Reset device",                                                 NULL    },
+    {   "sw_ver",               cli_sw_version,         "Print device software version",                                NULL    },
+    {   "hw_ver",               cli_hw_version,         "Print device hardware version",                                NULL    },
+    {   "boot_ver",             cli_boot_version,       "Print device bootloader (sw) version",                         NULL    },
+    {   "proj_info",            cli_proj_info,          "Print project informations",                                   NULL    },
+    {   "uptime",               cli_uptime,             "Get device uptime [ms]",                                       NULL    },
+    {   "ch_info",              cli_ch_info,            "Print COM channel informations",                               NULL    },
+    {   "ch_en",                cli_ch_en,              "Enable/disable COM channel. Args: [chEnum][en]",               NULL    },
+);
 
 /**
  *  Pointer to first registered CLI command table
  */
-static cli_cmd_table_node_t * gp_cli_cmd_tables = NULL;
+static cli_cmd_table_t * gp_cli_cmd_tables = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -270,10 +260,8 @@ static void cli_execute_cmd(const char * const p_cmd)
 static bool cli_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size, const char * attr)
 {
     // Iterate thru table linked list
-    for ( const cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
+    for ( const cli_cmd_table_t * table = gp_cli_cmd_tables; NULL != table; table = (*table->p_next) )
     {
-        const cli_cmd_table_t * table = node->p_table;
-
         // Iterate thru all commands in table
         for (size_t cmd = 0; cmd < table->num_of; cmd++)
         {
@@ -346,11 +334,9 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 		cli_printf( " " );
 		cli_printf( "    List of device commands" );
 
-		// Iterate thrugh all tables
-		for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
-		{
-		    const cli_cmd_table_t * table = node->p_table;
-
+	    // Iterate thru table linked list
+	    for ( const cli_cmd_table_t * table = gp_cli_cmd_tables; NULL != table; table = (*table->p_next) )
+	    {
             // Are there any commands
             if ( table->num_of > 0U )
             {
@@ -925,7 +911,7 @@ cli_status_t cli_init(void)
 			gb_is_init = true;
 
 			// Register basic table
-			cli_cli_register_cmd_table();
+			cli_register_cmd_table((cli_cmd_table_t*) &g_cli_basic_table );
 
 			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 				cli_show_intro();
@@ -1220,17 +1206,16 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 * @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_register_cmd_table(cli_cmd_table_node_t * const p_cmd_table)
+cli_status_t cli_register_cmd_table(cli_cmd_table_t * p_cmd_table)
 {
     cli_status_t status = eCLI_OK;
-
-    static cli_cmd_table_node_t * prev_table = NULL;
+    static cli_cmd_table_t * prev_table = NULL;
 
     CLI_ASSERT( NULL != p_cmd_table );
     if ( NULL == p_cmd_table ) return eCLI_ERROR;
 
     // User table defined OK
-    if ( cli_validate_user_table( p_cmd_table->p_table->p_cmd, p_cmd_table->p_table->num_of ))
+    if ( cli_validate_user_table( p_cmd_table->p_cmd, p_cmd_table->num_of ))
     {
         // Mutex obtain
         if ( eCLI_OK == cli_if_aquire_mutex())
@@ -1244,7 +1229,7 @@ cli_status_t cli_register_cmd_table(cli_cmd_table_node_t * const p_cmd_table)
             // On non-first table registration assign next pointer of lastly registrated table to the current one...
             else
             {
-                prev_table->next = p_cmd_table;
+                (*prev_table->p_next) = p_cmd_table;
             }
 
             // Store previous table
