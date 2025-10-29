@@ -893,6 +893,9 @@ cli_status_t cli_init(void)
 		// Initialize interface
 		status = cli_if_init();
 
+        // Register basic table
+        cli_register_cmd_table((cli_cmd_table_t*) &g_cli_basic_table );
+
 		// Initialize cli sub-components
         #if ( 1 == CLI_CFG_PAR_USE_EN )
 		    status |= cli_par_init();
@@ -909,9 +912,6 @@ cli_status_t cli_init(void)
 		{
 			// Init success
 			gb_is_init = true;
-
-			// Register basic table
-			cli_register_cmd_table((cli_cmd_table_t*) &g_cli_basic_table );
 
 			#if ( 1 == CLI_CFG_INTRO_STRING_EN )
 				cli_show_intro();
