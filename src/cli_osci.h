@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Osciliscope
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      08.05.2025
-*@version   V2.2.0
+*@date      29.10.2025
+*@version   V3.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
