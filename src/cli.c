@@ -524,7 +524,10 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 	{
 		cli_printf( " " );
 		cli_printf( "    List of device commands" );
-		cli_printf( "--------------------------------------------------------" );
+
+
+
+		//cli_printf( "--------------------------------------------------------" );
 
 
 		// TODO:
@@ -541,7 +544,7 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 		}
 #endif
 
-		// User defined tables
+		// Iterate thrugh all tables
 		for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
 		{
 		    const cli_cmd_table_t * table = node->p_table;
@@ -1451,6 +1454,8 @@ cli_status_t cli_register_cmd_table(cli_cmd_table_node_t * const p_cmd_table)
 {
     cli_status_t status = eCLI_OK;
 
+    static cli_cmd_table_node_t * prev_table = NULL;
+
     CLI_ASSERT( NULL != p_cmd_table );
     if ( NULL == p_cmd_table ) return eCLI_ERROR;
 
@@ -1460,11 +1465,20 @@ cli_status_t cli_register_cmd_table(cli_cmd_table_node_t * const p_cmd_table)
         // Mutex obtain
         if ( eCLI_OK == cli_if_aquire_mutex())
         {
-            // Add table to linked list
-            p_cmd_table->next = gp_cli_cmd_tables;
+            // First table registration entry -> store start of the table linked list
+            if ( NULL == gp_cli_cmd_tables )
+            {
+                gp_cli_cmd_tables = p_cmd_table;
+            }
 
-            // Store for later reference
-            gp_cli_cmd_tables = p_cmd_table;
+            // On non-first table registration assign next pointer of lastly registrated table to the current one...
+            else
+            {
+                prev_table->next = p_cmd_table;
+            }
+
+            // Store previous table
+            prev_table = p_cmd_table;
 
             // Release mutex
             cli_if_release_mutex();
