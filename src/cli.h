@@ -113,7 +113,7 @@ typedef struct cli_cmd_table
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_init				(void);
 cli_status_t cli_deinit				(void);
-cli_status_t cli_is_init			(bool * const p_is_init);
+bool         cli_is_init			(void);
 cli_status_t cli_hndl				(void);
 cli_status_t cli_send_str           (const char * const p_str);
 cli_status_t cli_printf				(char * p_format, ...);

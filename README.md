@@ -40,34 +40,22 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 	{
 		cli_printf( " " );
 		cli_printf( "    List of device commands" );
-		cli_printf( "--------------------------------------------------------" );
 
-		// Basic command table printout
-		for ( uint32_t cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
-		{
-			// Get name and help string
-			const char * name_str = g_cli_basic_table[cmd_idx].name;
-			const char * help_str = g_cli_basic_table[cmd_idx].help ;
-
-			// Left adjust for 25 chars
-			cli_printf( "%-25s%s", name_str, help_str );
-		}
-
-		// User defined tables
-		for ( uint32_t cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
-		{
+	    // Iterate thru table linked list
+	    for ( const cli_cmd_table_t * table = gp_cli_cmd_tables; NULL != table; table = (*table->p_next))
+	    {
             // Are there any commands
-            if ( g_cli_user_tables[cmd_idx].num_of > 0U )
+            if ( table->num_of > 0U )
             {
                 // Print separator between user commands
                 cli_printf( "--------------------------------------------------------" );
 
                 // Show help for that table
-                for ( user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
+                for ( uint32_t cmd_idx = 0; cmd_idx < table->num_of; cmd_idx++ )
                 {
                     // Get name and help string
-                    const char * name_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].name;
-                    const char * help_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].help;
+                    const char * name_str = table->p_cmd[cmd_idx].name;
+                    const char * help_str = table->p_cmd[cmd_idx].help;
 
                     // Left adjust for 25 chars
                     cli_printf( "%-25s%s", name_str, help_str );
@@ -255,12 +243,12 @@ root/middleware/cli/cli/"module_space"
 | --- | ----------- | ----- |
 | **cli_init** 					| Initialization of CLI module 								| cli_status_t cli_init(void) |
 | **cli_deinit** 				| De-initialization of CLI module 							| cli_status_t cli_deinit(void) |
-| **cli_is_init** 				| Get initialization status 								| cli_status_t cli_is_init(bool * const p_is_init) |
+| **cli_is_init** 				| Get initialization status 								| bool cli_is_init(void) |
 | **cli_hndl** 					| Main handler for CLI module 								| cli_status_t cli_hndl(void) |
 | **cli_send_str** 				| Send string thrugh CLI COM port 				            | cli_status_t cli_send_str(const uint8_t * const p_str) |
 | **cli_printf** 				| Print formated string thrugh CLI COM port 				| cli_status_t cli_printf(char * p_format, ...) |
 | **cli_printf_ch** 			| Print COM channel formated string thrugh CLI COM port 	| cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...) |
-| **cli_register_cmd_table** 	| Register user define CLI command table 					| cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd) |
+| **cli_register_cmd_table** 	| Register user define CLI command table 					| cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table) |
 | **cli_osci_hndl** 			| Oscilloscope handler										| cli_status_t cli_osci_hndl(void)|
 
 ## **Usage**

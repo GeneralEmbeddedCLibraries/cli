@@ -335,7 +335,7 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 		cli_printf( "    List of device commands" );
 
 	    // Iterate thru table linked list
-	    for ( const cli_cmd_table_t * table = gp_cli_cmd_tables; NULL != table; table = (*table->p_next) )
+	    for ( const cli_cmd_table_t * table = gp_cli_cmd_tables; NULL != table; table = (*table->p_next))
 	    {
             // Are there any commands
             if ( table->num_of > 0U )
@@ -968,26 +968,12 @@ cli_status_t cli_deinit(void)
 /*!
 * @brief        Get initialization flag
 *
-* @param[out]	p_is_init	- Initialization flag
-* @return       status      - Status of operation
+* @return       Initialization flag
 */
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_is_init(bool * const p_is_init)
+bool cli_is_init(void)
 {
-	cli_status_t status = eCLI_OK;
-
-	CLI_ASSERT( NULL != p_is_init  );
-
-	if ( NULL != p_is_init )
-	{
-		*p_is_init = gb_is_init;
-	}
-	else
-	{
-		status = eCLI_ERROR;
-	}
-
-	return status;
+	return gb_is_init;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
