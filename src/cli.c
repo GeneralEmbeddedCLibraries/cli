@@ -36,6 +36,7 @@
 #include "../../cli_cfg.h"
 #include "../../cli_if.h"
 
+// Common goods
 #include "common/utils/src/utils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,18 +46,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Function prototypes
 ////////////////////////////////////////////////////////////////////////////////
-static cli_status_t cli_parser_hndl					(void);
-static void 		cli_execute_cmd					(const char * const p_cmd);
-
-static bool         cli_table_check_and_exe   (const char * p_cmd, const uint32_t cmd_size, const char * attr);
-
-// TODO: Remove
-#if 0
-static bool 		cli_basic_table_check_and_exe	(const char * p_cmd, const uint32_t cmd_size, const char * attr);
-static bool 		cli_user_table_check_and_exe	(const char * p_cmd, const uint32_t cmd_size, const char * attr);
-#endif
-
-static uint32_t		cli_calc_cmd_size				(const char * p_cmd, const char * attr);
+static cli_status_t cli_parser_hndl			(void);
+static void 		cli_execute_cmd			(const char * const p_cmd);
+static bool         cli_table_check_and_exe (const char * p_cmd, const uint32_t cmd_size, const char * attr);
+static uint32_t		cli_calc_cmd_size		(const char * p_cmd, const char * attr);
 
 // Basic CLI functions
 static void cli_help		  	(const cli_cmd_t * p_cmd, const char * p_attr);
@@ -117,26 +110,7 @@ static const cli_cmd_t g_cli_basic_table[] =
 CLI_DECLARE_TABLE( cli, &g_cli_basic_table, ARRAY_SIZE(g_cli_basic_table));
 
 /**
- *     Number of basic commands
- */
-//static const uint32_t gu32_basic_cmd_num_of = ((uint32_t)( sizeof( g_cli_basic_table ) / sizeof( cli_cmd_t )));
-
-/**
- * 	References to user defined CLI tables
- */
-
-// TODO: Remove not used...
-//static cli_cmd_table_t g_cli_user_tables[CLI_CFG_MAX_NUM_OF_USER_TABLES] = { NULL };
-
-/**
- * 	User defined table counts
- */
-
-//TODO: Remove not used....
-//static uint32_t	gu32_user_table_count = 0;
-
-/**
- *  Last registered CLI command table node
+ *  Pointer to first registered CLI command table
  */
 static cli_cmd_table_node_t * gp_cli_cmd_tables = NULL;
 
@@ -265,19 +239,6 @@ static void cli_execute_cmd(const char * const p_cmd)
     // Check and execute for basic commands
     const bool cmd_found = cli_table_check_and_exe( p_cmd, cmd_size, attr );
 
-#if 0
-
-	// First check and execute for basic commands
-	cmd_found = cli_basic_table_check_and_exe( p_cmd, cmd_size, attr );
-
-	// Command not founded jet
-	if ( false == cmd_found )
-	{
-		// Check and execute user defined commands
-		cmd_found = cli_user_table_check_and_exe( p_cmd, cmd_size, attr );
-	}
-#endif
-
 	// No command found in any of the tables
 	if ( false == cmd_found )
 	{
@@ -285,11 +246,31 @@ static void cli_execute_cmd(const char * const p_cmd)
 	}
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Check and execute table commands
+*
+* @note         Commands are divided into simple and combined commands
+*
+*               SIMPLE COMMAND: Do not pass additional attributes
+*
+*                   E.g.: >>>help
+*
+*               COMBINED COMMAND:   Has additional attributes separated by
+*                                   empty spaces (' ').
+*
+*                   E.g.: >>>par_get 0
+*
+*
+* @param[in]    p_cmd       - NULL terminated input string
+* @param[in]    attr        - Additional command attributes
+* @return       cmd_found   - Command found flag
+*/
+////////////////////////////////////////////////////////////////////////////////
 static bool cli_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size, const char * attr)
 {
-    // Iterate thru linked list
-    for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
+    // Iterate thru table linked list
+    for ( const cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
     {
         const cli_cmd_table_t * table = node->p_table;
 
@@ -313,166 +294,6 @@ static bool cli_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size,
 
     return false;
 }
-
-
-#if 0
-
-////////////////////////////////////////////////////////////////////////////////
-/*!
-* @brief        Check and execute basic table commands
-*
-* @note			Commands are divided into simple and combined commands
-*
-* 				SIMPLE COMMAND: Do not pass additional attributes
-*
-* 					E.g.: >>>help
-*
-* 				COMBINED COMMAND: 	Has additional attributes separated by
-* 									empty spaces (' ').
-*
-*					E.g.: >>>par_get 0
-*
-*
-* @param[in]	p_cmd		- NULL terminated input string
-* @param[in]	attr		- Additional command attributes
-* @return       cmd_found	- Command found flag
-*/
-////////////////////////////////////////////////////////////////////////////////
-static bool cli_basic_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size, const char * attr)
-{
-	uint32_t 	cmd_idx 		= 0UL;
-	char* 		name_str 		= NULL;
-	uint32_t	size_to_compare = 0UL;
-	bool 		cmd_found 		= false;
-
-	// Walk thru basic commands
-	for ( cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
-	{
-        const cli_cmd_t *p_cli_cmd = &g_cli_basic_table[cmd_idx];
-
-		// Get cmd name
-		name_str = p_cli_cmd->name;
-
-		// String size to compare
-		size_to_compare = MAX( cmd_size, strlen(name_str));
-
-		// Valid command?
-		if ( 0 == ( strncmp( p_cmd, name_str, size_to_compare )))
-		{
-			// Execute command
-			p_cli_cmd->func( p_cli_cmd, attr );
-
-			// Command found
-			cmd_found = true;
-
-			break;
-		}
-	}
-
-	return cmd_found;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/*!
-* @brief        Check and execute user table commands
-*
-* @note			Commands are divided into simple and combined commands
-*
-* 				SIMPLE COMMAND: Do not pass additional attributes
-*
-* 					E.g.: >>>help
-*
-* 				COMBINED COMMAND: 	Has additional attributes separated by
-* 									empty spaces (' ').
-*
-*					E.g.: >>>par_get 0
-*
-*
-* @param[in]	p_cmd		- NULL terminated input string
-* @param[in]	attr		- Additional command attributes
-* @return       cmd_found	- Command found flag
-*/
-////////////////////////////////////////////////////////////////////////////////
-static bool cli_user_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size, const char * attr)
-{
-    // Iterate thru linked list
-    for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; node; node = node->next )
-    {
-        const cli_cmd_table_t * table = node->p_table;
-
-        // Iterate thru all commands in table
-        for (size_t cmd = 0; cmd < table->num_of; cmd++)
-        {
-            // String size to compare
-            const size_t size_to_compare = MAX( cmd_size, strlen( table->p_cmd[cmd].name ));
-
-            // Valid command?
-            if ( 0 == ( strncmp( p_cmd, table->p_cmd[cmd].name, size_to_compare )))
-            {
-                // Execute command
-                table->p_cmd[cmd].func( &table->p_cmd[cmd], attr );
-
-                // Command founded
-                return true;
-            }
-        }
-    }
-
-    return false;
-
-#if 0
-	uint32_t 	cmd_idx 		= 0;
-	uint32_t 	table_idx		= 0;
-	char* 		name_str 		= NULL;
-	uint32_t	size_to_compare = 0UL;
-	bool 		cmd_found 		= false;
-
-	// Search thru user defined tables
-	for ( table_idx = 0; table_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; table_idx++ )
-	{
-        // Get number of user commands inside single table
-        const uint32_t num_of_user_cmd = g_cli_user_tables[table_idx].num_of;
-
-        // Go thru command table
-        for ( cmd_idx = 0; cmd_idx < num_of_user_cmd; cmd_idx++ )
-        {
-            const cli_cmd_t *p_cli_cmd = &g_cli_user_tables[table_idx].p_cmd[cmd_idx];
-
-            // Get cmd name
-            name_str = p_cli_cmd->name;
-
-            // String size to compare
-            size_to_compare = MAX( cmd_size, strlen(name_str));
-
-            // Valid command?
-            if ( 0 == ( strncmp( p_cmd, name_str, size_to_compare )))
-            {
-                // Execute command
-                p_cli_cmd->func( p_cli_cmd, attr );
-
-                // Command founded
-                cmd_found = true;
-
-                break;
-            }
-        }
-
-		// When command is found stop searching
-		if ( true == cmd_found )
-		{
-			break;
-		}
-	}
-
-	return cmd_found;
-
-#endif
-}
-
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -525,25 +346,6 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
 		cli_printf( " " );
 		cli_printf( "    List of device commands" );
 
-
-
-		//cli_printf( "--------------------------------------------------------" );
-
-
-		// TODO:
-#if 0
-		// Basic command table printout
-		for ( uint32_t cmd_idx = 0; cmd_idx < gu32_basic_cmd_num_of; cmd_idx++ )
-		{
-			// Get name and help string
-			const char * name_str = g_cli_basic_table[cmd_idx].name;
-			const char * help_str = g_cli_basic_table[cmd_idx].help ;
-
-			// Left adjust for 25 chars
-			cli_printf( "%-25s%s", name_str, help_str );
-		}
-#endif
-
 		// Iterate thrugh all tables
 		for ( cli_cmd_table_node_t * node = gp_cli_cmd_tables; NULL != node; node = node->next )
 		{
@@ -566,33 +368,7 @@ static void cli_help(const cli_cmd_t * p_cmd, const char * p_attr)
                     cli_printf( "%-25s%s", name_str, help_str );
                 }
             }
-
 		}
-
-
-		//TODO:
-#if 0
-		for ( uint32_t cmd_idx = 0; cmd_idx < CLI_CFG_MAX_NUM_OF_USER_TABLES; cmd_idx++ )
-		{
-            // Are there any commands
-            if ( g_cli_user_tables[cmd_idx].num_of > 0U )
-            {
-                // Print separator between user commands
-                cli_printf( "--------------------------------------------------------" );
-
-                // Show help for that table
-                for ( uint32_t user_cmd_idx = 0; user_cmd_idx < g_cli_user_tables[cmd_idx].num_of; user_cmd_idx++ )
-                {
-                    // Get name and help string
-                    const char * name_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].name;
-                    const char * help_str = g_cli_user_tables[cmd_idx].p_cmd[user_cmd_idx].help;
-
-                    // Left adjust for 25 chars
-                    cli_printf( "%-25s%s", name_str, help_str );
-                }
-            }
-		}
-#endif
 
 		// Print separator at the end
 		cli_printf( "--------------------------------------------------------" );
@@ -1440,16 +1216,10 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 *
 * @note     Shall not be used in ISR!
 *
-* @param[in]	p_cmd_table	- Pointer to user cmd table
-* @param[in]	num_of_cmd	- Number of commands
+* @param[in]	p_cmd_table	- Pointer to command table node
 * @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 cli_status_t cli_register_cmd_table(cli_cmd_table_node_t * const p_cmd_table)
 {
     cli_status_t status = eCLI_OK;
@@ -1496,63 +1266,6 @@ cli_status_t cli_register_cmd_table(cli_cmd_table_node_t * const p_cmd_table)
     return status;
 }
 
-
-#if 0
-
-cli_status_t cli_register_cmd_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd)
-{
-	cli_status_t status = eCLI_OK;
-
-	CLI_ASSERT( NULL != p_cmd_table );
-
-    // Mutex obtain
-    if ( eCLI_OK == cli_if_aquire_mutex())
-    {
-        if ( NULL != p_cmd_table )
-        {
-            // Is there any space left for user tables?
-            if ( gu32_user_table_count < CLI_CFG_MAX_NUM_OF_USER_TABLES )
-            {
-                // User table defined OK
-                if ( true == cli_validate_user_table( p_cmd_table, num_of_cmd ))
-                {
-                    // Store
-                    g_cli_user_tables[gu32_user_table_count].p_cmd    = (cli_cmd_t*) p_cmd_table;
-                    g_cli_user_tables[gu32_user_table_count].num_of   = num_of_cmd;
-                    gu32_user_table_count++;
-                }
-
-                // User table definition error
-                else
-                {
-                    CLI_DBG_PRINT( "CLI ERROR: Invalid definition of user table!");
-                    CLI_ASSERT( 0 );
-                    status = eCLI_ERROR;
-                }
-            }
-            else
-            {
-                status = eCLI_ERROR;
-            }
-        }
-        else
-        {
-            status = eCLI_ERROR;
-        }
-
-        // Release mutex
-        cli_if_release_mutex();
-    }
-    else
-    {
-        status = eCLI_ERROR;
-    }
-
-	return status;
-}
-
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 /*!
 * @brief        CLI Oscilloscope Sampling handler
@@ -1569,7 +1282,6 @@ cli_status_t cli_osci_hndl(void)
 #if ( 1 == CLI_CFG_PAR_OSCI_EN )
     cli_osci_samp_hndl();
 #endif
-
     return eCLI_OK;
 }
 
