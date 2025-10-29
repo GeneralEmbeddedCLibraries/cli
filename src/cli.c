@@ -97,6 +97,11 @@ CLI_DEFINE_CMD_TABLE( g_cli_basic_table,
     {   "uptime",               cli_uptime,             "Get device uptime [ms]",                                       NULL    },
     {   "ch_info",              cli_ch_info,            "Print COM channel informations",                               NULL    },
     {   "ch_en",                cli_ch_en,              "Enable/disable COM channel. Args: [chEnum][en]",               NULL    },
+
+#if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
+    {   "ram_write",            cli_ram_write,          "Write data to RAM. Args: [address<hex>][size][value<hex>]",    NULL    },
+    {   "ram_read",             cli_ram_read,           "Read data from RAM. Args: [address<hex>][size]",               NULL    },
+#endif
 );
 
 /**
@@ -628,160 +633,166 @@ static void	cli_send_intro(const cli_cmd_t * p_cmd, const char * p_attr)
 }
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
-////////////////////////////////////////////////////////////////////////////////
-/*!
-* @brief        Write data to RAM
-*
-*
-* @note			Command format: >>>cli_ram_write [address,size,value]
-*               Address and value arguments must be inputed in hexadecimal format
-*               with '0x' prefix and followed by lowercase characters.
-*               Size must be in decimal format, with only valid values being:
-*               1, 2 and 4.
-*
-* 				E.g.:	>>>cli_ram_write 0xabcdef01,2,0x1234
-* 				E.g.:	>>>cli_ram_write 0x1234,4,0xab112233
-*
-* @param[in]	attr 	- Inputed command attributes
-* @return       void
-*/
-////////////////////////////////////////////////////////////////////////////////
-static void cli_ram_write(const char * p_attr)
-{
-	uint32_t addr;
-    uint32_t size;
-	uint32_t val;
+    ////////////////////////////////////////////////////////////////////////////////
+    /*!
+    * @brief        Write data to RAM
+    *
+    *
+    * @note			Command format: >>>cli_ram_write [address,size,value]
+    *               Address and value arguments must be inputed in hexadecimal format
+    *               with '0x' prefix and followed by lowercase characters.
+    *               Size must be in decimal format, with only valid values being:
+    *               1, 2 and 4.
+    *
+    * 				E.g.:	>>>cli_ram_write 0xabcdef01,2,0x1234
+    * 				E.g.:	>>>cli_ram_write 0x1234,4,0xab112233
+    *
+    * @param[in]    p_cmd   - Pointer to command
+    * @param[in]    p_attr  - Inputed command attributes
+    * @return       void
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static void cli_ram_write(const cli_cmd_t * p_cmd, const char * p_attr)
+    {
+        UNUSED(p_cmd);
 
-    // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
-    // for example unsigned long to unsigned int
-    STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+        uint32_t addr;
+        uint32_t size;
+        uint32_t val;
 
-	if ( NULL != p_attr )
-	{
-		if ( 3U == sscanf((const char*) p_attr, "0x%x,%u,0x%x", (unsigned int *)&addr, (unsigned int *)&size, (unsigned int *)&val ))
-		{
-            if ((1 == size) || (2 == size) || (4 == size))
+        // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
+        // for example unsigned long to unsigned int
+        STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+
+        if ( NULL != p_attr )
+        {
+            if ( 3U == sscanf((const char*) p_attr, "0x%x,%u,0x%x", (unsigned int *)&addr, (unsigned int *)&size, (unsigned int *)&val ))
             {
-                if (cli_if_check_ram_addr_range(addr, size) == eCLI_OK)
+                if ((1 == size) || (2 == size) || (4 == size))
                 {
-                    switch (size)
+                    if (cli_if_check_ram_addr_range(addr, size) == eCLI_OK)
                     {
-                        case 1:
-                            *(uint8_t *)addr = (uint8_t)val;
-                            break;
-                        case 2:
-                            *(uint16_t *)addr = (uint16_t)val;
-                            break;
-                        case 4:
-                            *(uint32_t *)addr = (uint32_t)val;
-                            break;
-                        default:
-                            // Internal inconsistency. Should not reach here since we check
-                            // size above.
-                            CLI_ASSERT(0);
-                            break;
-                    }
+                        switch (size)
+                        {
+                            case 1:
+                                *(uint8_t *)addr = (uint8_t)val;
+                                break;
+                            case 2:
+                                *(uint16_t *)addr = (uint16_t)val;
+                                break;
+                            case 4:
+                                *(uint32_t *)addr = (uint32_t)val;
+                                break;
+                            default:
+                                // Internal inconsistency. Should not reach here since we check
+                                // size above.
+                                CLI_ASSERT(0);
+                                break;
+                        }
 
-                    cli_printf( "OK, [0x%08x,0x%08x] = 0x%x", addr, addr + size - 1, val);
+                        cli_printf( "OK, [0x%08x,0x%08x] = 0x%x", addr, addr + size - 1, val);
+                    }
+                    else
+                    {
+                        cli_printf( "ERR, Invalid address!" );
+                    }
                 }
                 else
                 {
-                    cli_printf( "ERR, Invalid address!" );
+                    cli_printf( "ERR, Invalid size!" );
                 }
             }
             else
             {
-                cli_printf( "ERR, Invalid size!" );
+                cli_util_unknown_cmd_rsp();
             }
-		}
-		else
-		{
-			cli_util_unknown_cmd_rsp();
-		}
-	}
-	else
-	{
-		cli_util_unknown_cmd_rsp();
-	}
-}
+        }
+        else
+        {
+            cli_util_unknown_cmd_rsp();
+        }
+    }
 
-////////////////////////////////////////////////////////////////////////////////
-/*!
-* @brief        Read data from RAM
-*
-*
-* @note			Command format: >>>cli_ram_read [address,size]
-*               Address argument must be inputed in hexadecimal format with '0x'
-*               prefix and followed by lowercase characters.
-*               Size must be in decimal format, with only valid values being:
-*               1, 2 and 4.
-*
-* 				E.g.:	>>>cli_ram_read 0xabcdef01,1
-* 				E.g.:	>>>cli_ram_read 0x1234,4
-*
-* @param[in]	attr 	- Inputed command attributes
-* @return       void
-*/
-////////////////////////////////////////////////////////////////////////////////
-static void cli_ram_read(const char * p_attr)
-{
-	uint32_t addr;
-    uint32_t size;
+    ////////////////////////////////////////////////////////////////////////////////
+    /*!
+    * @brief        Read data from RAM
+    *
+    *
+    * @note			Command format: >>>cli_ram_read [address,size]
+    *               Address argument must be inputed in hexadecimal format with '0x'
+    *               prefix and followed by lowercase characters.
+    *               Size must be in decimal format, with only valid values being:
+    *               1, 2 and 4.
+    *
+    * 				E.g.:	>>>cli_ram_read 0xabcdef01,1
+    * 				E.g.:	>>>cli_ram_read 0x1234,4
+    *
+    * @param[in]    p_cmd   - Pointer to command
+    * @param[in]    p_attr  - Inputed command attributes
+    * @return       void
+    */
+    ////////////////////////////////////////////////////////////////////////////////
+    static void cli_ram_read(const cli_cmd_t * p_cmd, const char * p_attr)
+    {
+        UNUSED(p_cmd);
 
-    // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
-    // for example unsigned long to unsigned int
-    STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+        uint32_t addr;
+        uint32_t size;
 
-	if ( NULL != p_attr )
-	{
-		if ( 2U == sscanf((const char*) p_attr, "0x%x,%u", (unsigned int *)&addr, (unsigned int *)&size ))
-		{
-            if ((1 == size) || (2 == size) || (4 == size))
+        // Make sure we can cast uint32_t to unsigned int below to supress compiler warning when types do not match exactly
+        // for example unsigned long to unsigned int
+        STATIC_ASSERT_TYPES(uint32_t, unsigned int);
+
+        if ( NULL != p_attr )
+        {
+            if ( 2U == sscanf((const char*) p_attr, "0x%x,%u", (unsigned int *)&addr, (unsigned int *)&size ))
             {
-                if (cli_if_check_ram_addr_range(addr, size) == eCLI_OK)
+                if ((1 == size) || (2 == size) || (4 == size))
                 {
-                    uint32_t val;
-
-                    switch (size)
+                    if (cli_if_check_ram_addr_range(addr, size) == eCLI_OK)
                     {
-                        case 1:
-                            val = *(uint8_t *)addr;
-                            break;
-                        case 2:
-                            val = *(uint16_t *)addr;
-                            break;
-                        case 4:
-                            val = *(uint32_t *)addr;
-                            break;
-                        default:
-                            // Internal inconsistency. Should not reach here since we check
-                            // size above.
-                            CLI_ASSERT(0);
-                            break;
-                    }
+                        uint32_t val = 0;
 
-                    cli_printf( "0x%x", val);
+                        switch (size)
+                        {
+                            case 1:
+                                val = *(uint8_t *)addr;
+                                break;
+                            case 2:
+                                val = *(uint16_t *)addr;
+                                break;
+                            case 4:
+                                val = *(uint32_t *)addr;
+                                break;
+                            default:
+                                // Internal inconsistency. Should not reach here since we check
+                                // size above.
+                                CLI_ASSERT(0);
+                                break;
+                        }
+
+                        cli_printf( "0x%x", val);
+                    }
+                    else
+                    {
+                        cli_printf( "ERR, Invalid address!" );
+                    }
                 }
                 else
                 {
-                    cli_printf( "ERR, Invalid address!" );
+                    cli_printf( "ERR, Invalid size!" );
                 }
             }
             else
             {
-                cli_printf( "ERR, Invalid size!" );
+                cli_util_unknown_cmd_rsp();
             }
-		}
-		else
-		{
-			cli_util_unknown_cmd_rsp();
-		}
-	}
-	else
-	{
-		cli_util_unknown_cmd_rsp();
-	}
-}
+        }
+        else
+        {
+            cli_util_unknown_cmd_rsp();
+        }
+    }
 #endif // CLI_CFG_ARBITRARY_RAM_ACCESS_EN
 
 ////////////////////////////////////////////////////////////////////////////////
