@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Configuration
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      08.05.2025
-*@version   V2.2.0
+*@date      29.10.2025
+*@version   V3.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -67,8 +67,8 @@ static cli_cfg_ch_data_t g_cli_ch[eCLI_CH_NUM_OF] =
 	// --------------------------------------------------------------------------
 	//						Name of channel				Default state of channel
 	// --------------------------------------------------------------------------
-	[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = true 				},
-	[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = true 				},
+	[eCLI_CH_WAR] 		= {	.name = "WARNING", 			.en = false 			},
+	[eCLI_CH_ERR] 		= {	.name = "ERROR", 			.en = false 		    },
 
 	// USER_CODE_BEGIN
 

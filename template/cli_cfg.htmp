@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Configurations
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      08.05.2025
-*@version   V2.2.0
+*@date      29.10.2025
+*@version   V3.0.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -38,8 +38,7 @@
 // Software revision module
 #include "revision/revision/src/version.h"
 
-// System
-#include "application/sys/sys.h"
+#include "application/sys.h"
 
 // USER CODE END...
 
@@ -57,22 +56,19 @@
  */
 #define CLI_CFG_INTRO_STRING_EN					( 1 )
 
-#if ( 1 == CLI_CFG_INTRO_STRING_EN )
-
-	/**
-	 * 	Intro strings
-	 */
-	#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "SCS Application" )
-	#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
-	#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
-	#define CLI_CFG_INTRO_BOOT_VER				((const char*) version_get_boot_str())
-	#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
-#endif
+/**
+ * 	Intro strings
+ */
+#define CLI_CFG_INTRO_PROJECT_NAME			((const char*) "MyApplication" )
+#define CLI_CFG_INTRO_SW_VER				((const char*) version_get_sw_str())
+#define CLI_CFG_INTRO_HW_VER				((const char*) version_get_hw_str())
+#define CLI_CFG_INTRO_BOOT_VER				((const char*) version_get_boot_str())
+#define CLI_CFG_INTRO_PROJ_INFO				((const char*) version_get_proj_info_str())
 
 /**
  * 	Enable/Disable arbitrary RAM access functionality
  */
-#define CLI_CFG_ARBITRARY_RAM_ACCESS_EN         ( 0 )
+#define CLI_CFG_ARBITRARY_RAM_ACCESS_EN         ( 1 )
 
 /**
  * 	Termination string
@@ -100,21 +96,6 @@
  *  Unit: ms
  */
 #define CLI_GET_SYSTICK()                      ( sys_systick_get_ms())
-
-/**
- * 	Maximum number of user defined command tables
- *
- * @note	Space for table command is allocated statically in compile time therefore
- * 			take special care defining that number. It is recommended to set
- * 			to a minimum as needed.
- *
- * @note    When using "Device Parameters" (CLI_CFG_PAR_USE_EN = 1), then TWO entries of
- *          CLI user command is consumed by CLI parameter implementation.
- *
- * @note    When using "Oscilloscope" (CLI_CFG_PAR_OSCI_EN = 1), then ONE entry of
- *          CLI user command is consumed by Oscilloscope implementation.
- */
-#define CLI_CFG_MAX_NUM_OF_USER_TABLES			( 8 )
 
 /**
  * 	Enable/Disable Device Parameters usage
@@ -257,7 +238,6 @@ typedef enum
 	eCLI_CH_ERR,			/**<Error channel */
 
 	// USER_CODE_BEGIN
-
 
 	// USER_CODE_END
 
