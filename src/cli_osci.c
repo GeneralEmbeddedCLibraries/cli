@@ -189,8 +189,8 @@ static const pf_cli_trig_check gpf_cli_osci_check_trig[eCLI_OSCI_TRIG_NUM_OF] =
 /**
  *      Oscilloscope CLI commands
  */
-static const cli_cmd_t g_cli_osci_table[] =
-{
+CLI_DEFINE_CMD_TABLE( g_cli_osci_table,
+
     // ----------------------------------------------------------------------------------------------------------------------------------
     //  name                    function                    help string                                                         context
     // ----------------------------------------------------------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ static const cli_cmd_t g_cli_osci_table[] =
     {   "osci_downsample",      cli_osci_downsample,    	"Set oscilloscope downsample factor. Args: [downsample]",           NULL    },
     {   "osci_state",           cli_osci_state,             "Get oscilloscope state",                                           NULL    },
     {   "osci_info",            cli_osci_info,              "Get information of oscilloscope configuration",                    NULL    },
-};
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
@@ -1013,7 +1013,7 @@ cli_status_t cli_osci_init(void)
     g_cli_osci.samp.downsample_factor = 1U;
 
     // Register Device Parameters CLI table
-    cli_register_cmd_table((const cli_cmd_t*) &g_cli_osci_table, ( sizeof(g_cli_osci_table) / sizeof(cli_cmd_t)));
+    cli_register_cmd_table( &g_cli_osci_table );
 
     return status;
 }

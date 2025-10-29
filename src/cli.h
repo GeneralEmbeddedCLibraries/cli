@@ -29,6 +29,9 @@
 
 #include "../../cli_cfg.h"
 
+// Common goods
+#include "common/utils/src/utils.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,21 +80,45 @@ typedef struct cli_cmd
 } cli_cmd_t;
 
 /**
- *  CLI Command table builder helper
+ *  CLI Command Table
+ *
+ * @note  Const table with writable link cell
+ *        - The CLI table is a const object in flash (read-only).
+ *        - `p_next` does not point to the next table directly; it points to a
+ *          writable pointer (the table’s “link cell”) stored in RAM.
+ *        - At registration time we modify that cell via `*p_next` to chain tables.
+ *        - This design avoids embedding a writable field inside the const table and
+ *          removes any fixed limit on the number of tables.
  */
-#define CLI_ASM_CMD(name, p_func, help, p_context)  { name, p_func, help, p_context }
+typedef struct cli_cmd_table
+{
+    const cli_cmd_t *       p_cmd;      /**<Command table */
+    const uint32_t          num_of;     /**<Number of commands */
+    struct cli_cmd_table ** p_next;     /**<Pointer to next table */
+} cli_cmd_table_t;
+
+/**
+ *  Define CLI command table helper
+ */
+#define CLI_DEFINE_CMD_TABLE(name,...)                                              \
+    static const cli_cmd_table_t name =                                             \
+    {                                                                               \
+        .p_cmd  = (cli_cmd_t[]){__VA_ARGS__},   /**<Non-const anonymous array */    \
+        .num_of = ARRAY_SIZE(((cli_cmd_t[]){__VA_ARGS__})),                         \
+        .p_next = &(cli_cmd_table_t*){NULL},                                        \
+    }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
 cli_status_t cli_init				(void);
 cli_status_t cli_deinit				(void);
-cli_status_t cli_is_init			(bool * const p_is_init);
+bool         cli_is_init			(void);
 cli_status_t cli_hndl				(void);
 cli_status_t cli_send_str           (const char * const p_str);
 cli_status_t cli_printf				(char * p_format, ...);
 cli_status_t cli_printf_ch			(const cli_ch_opt_t ch, char * p_format, ...);
-cli_status_t cli_register_cmd_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
+cli_status_t cli_register_cmd_table (const cli_cmd_table_t * const p_cmd_table);
 cli_status_t cli_osci_hndl          (void);
 
 #endif // __CLI_H
