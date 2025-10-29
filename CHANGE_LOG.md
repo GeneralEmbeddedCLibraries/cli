@@ -5,18 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V3.0.0 - 28.10.2025
+## V3.0.0 - 29.10.2025
 
 ### Added
- - Context to CLI comamnd function
- - Added pointer to CLI command itself in function
+ - Added context to CLI command function
+ - Added CLI command itself to command function argument 
 
 ### Changed
- - API change: CLI command function prototype changed
+ - API change: 
+    + CLI command function prototype changed
+    + Get initialization flag API function changed
  - Remove support for long long dependency as increase portability and reduces memory footprint
 
-### Fixed
-
+### Removed
+ - Removed configuration of maximum user table, now implemented using links between user tables
 
 ---
 ## V2.2.0 - 08.05.2025
