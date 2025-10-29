@@ -310,9 +310,7 @@ root/middleware/cli/cli/"module_space"
 
 ### **Registration of user command**
 
-Registration of user command is done in run-time with no pre-conditions. Maximum number of commands is limited to *uint8_t* data type, meaning 255. Additionally there is also maximum number of all user table limitation. It is adjustable by *CLI_CFG_MAX_NUM_OF_USER_TABLES* macro inside *cli_cfg.h*.
-
-Example of registration of user defined CLI command table:
+Registration of user command can be done in run-time with no pre-conditions, as shown in example below:
 
 ```C
 // User test_1 function definiton
