@@ -272,14 +272,13 @@ root/middleware/cli/cli/"module_space"
 | **CLI_CFG_INTRO_PROJECT_NAME** 		| Project name string. Part of intro string. |
 | **CLI_CFG_INTRO_SW_VER** 				| Software version. Part of intro string. |
 | **CLI_CFG_INTRO_HW_VER** 				| Hardware version. Part of intro string. |
+| **CLI_CFG_INTRO_BOOT_VER** 		    | Bootloader version. Part of intro string. |
 | **CLI_CFG_INTRO_PROJ_INFO** 			| Project detailed info. Part of "revision" module. |
 | **CLI_CFG_ARBITRARY_RAM_ACCESS_EN**   | Enable/Disable arbitrary RAM access functionality |
 | **CLI_CFG_TERMINATION_STRING** 		| String that will be send after each "cli_printf" and "cli_printf_ch". |
 | **CLI_CFG_TX_BUF_SIZE** 				| Transmitting buffer size in bytes. |
 | **CLI_CFG_RX_BUF_SIZE** 				| Reception buffer size in bytes. |
 | **CLI_GET_SYSTICK** 				    | Get system timetick in 32-bit unsigned integer form. |
-| **CLI_CFG_MAX_NUM_OF_USER_TABLES** 	| Maximum number of user define command tables. |
-| **CLI_CFG_MUTEX_EN** 					| Enable/Disable usage of mutex in order to protect low level communication driver. |
 | **CLI_CFG_PAR_USE_EN** 				| Enable/Disable usage of Device Parameters. |
 | **CLI_CFG_HNDL_PERIOD_MS** 			| Time period of "cli_hndl()" function call in ms. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
 | **CLI_CFG_DEF_STREAM_PER_MS** 		| Defaulf time period of parameter streaming in ms. (Applicable only if CLI_CFG_PAR_USE_EN=1) |
@@ -365,8 +364,8 @@ void test_4(const cli_cmd_t * p_cmd, const char * p_attr)
 }
 
 // Define user table
-static volatile const cli_cmd_t my_table[] =
-{
+CLI_DEFINE_CMD_TABLE( my_table,
+
     // ----------------------------------------------------------------------
     //  name        function        help string         context
     // ----------------------------------------------------------------------
@@ -374,21 +373,12 @@ static volatile const cli_cmd_t my_table[] =
     {   "test_2",   test_2,         "Test 2 Help",      NULL },
     {   "test_3",   test_3,         "Test 3 Help",      NULL },
     {   "test_4",   test_4,         "Test 4 Help",      NULL },        
-};
-
-
-
-
-// TODO: Update table configuration instructions...
-
-
-
-
+);
 
 void register_my_cli_commands()
 {
-    // Register shell commands
-    cli_register_cmd_table((const cli_cmd_t*) &my_table, ( sizeof(my_table) / sizeof(cli_cmd_t)));
+    // Register CLI commands
+    cli_register_cmd_table( &my_table );
 }
 ```
 
