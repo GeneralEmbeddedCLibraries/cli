@@ -81,52 +81,32 @@ typedef struct cli_cmd
 
 /**
  *  CLI Command Table
+ *
+ * @note  Const table with writable link cell
+ *        - The CLI table is a const object in flash (read-only).
+ *        - `p_next` does not point to the next table directly; it points to a
+ *          writable pointer (the table’s “link cell”) stored in RAM.
+ *        - At registration time we modify that cell via `*p_next` to chain tables.
+ *        - This design avoids embedding a writable field inside the const table and
+ *          removes any fixed limit on the number of tables.
  */
 typedef struct cli_cmd_table
 {
-    cli_cmd_t *             p_cmd;      /**<Command table */
-    uint32_t                num_of;     /**<Number of commands */
+    const cli_cmd_t *       p_cmd;      /**<Command table */
+    const uint32_t          num_of;     /**<Number of commands */
     struct cli_cmd_table ** p_next;     /**<Pointer to next table */
 } cli_cmd_table_t;
 
-
-
-#define CLI_DEFINE_CMD_TABLE(name,...)                      \
-    static const cli_cmd_table_t name =                     \
-    {                                                       \
-        .p_cmd  = (cli_cmd_t[]){__VA_ARGS__},               \
-        .num_of = ARRAY_SIZE(((cli_cmd_t[]){__VA_ARGS__})), \
-        .p_next = &(cli_cmd_table_t*){NULL},                \
-    }
-
-
-
-#if 0
 /**
- *  CLI Command Table Node
+ *  Define CLI command table helper
  */
-typedef struct cli_cmd_table_node
-{
-    cli_cmd_table_t *           p_table;    /**<Pointer to CLI command table */
-    struct cli_cmd_table_node * next;       /**<Pointer to next CLI command table */
-} cli_cmd_table_node_t;
-
-
-
-
-
-
-/* Macro that keeps tables const and hides the node + register function. */
-#define CLI_DECLARE_TABLE(TABLE_SYM, CMD_TABLE, NUM_OF_CMD)                                   \
-    static const cli_cmd_table_t TABLE_SYM = {                                         \
-        .p_cmd = (cli_cmd_t*) CMD_TABLE, .num_of = NUM_OF_CMD      \
-    };                                                                            \
-    static cli_cmd_table_node_t TABLE_SYM##_node = { .p_table = (cli_cmd_table_t*) &TABLE_SYM, NULL };                \
-    static inline cli_status_t TABLE_SYM##_cli_register_cmd_table(void) {                                \
-        return cli_register_cmd_table(&TABLE_SYM##_node);                                \
+#define CLI_DEFINE_CMD_TABLE(name,...)                                              \
+    static const cli_cmd_table_t name =                                             \
+    {                                                                               \
+        .p_cmd  = (cli_cmd_t[]){__VA_ARGS__},   /**<Non-const anonymous array */    \
+        .num_of = ARRAY_SIZE(((cli_cmd_t[]){__VA_ARGS__})),                         \
+        .p_next = &(cli_cmd_table_t*){NULL},                                        \
     }
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functions

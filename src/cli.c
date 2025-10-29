@@ -260,7 +260,7 @@ static void cli_execute_cmd(const char * const p_cmd)
 static bool cli_table_check_and_exe(const char * p_cmd, const uint32_t cmd_size, const char * attr)
 {
     // Iterate thru table linked list
-    for ( const cli_cmd_table_t * table = gp_cli_cmd_tables; NULL != table; table = (*table->p_next) )
+    for ( const cli_cmd_table_t * table = gp_cli_cmd_tables; NULL != table; table = (*table->p_next))
     {
         // Iterate thru all commands in table
         for (size_t cmd = 0; cmd < table->num_of; cmd++)
