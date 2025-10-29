@@ -1206,7 +1206,7 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 * @return       status      - Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_register_cmd_table(cli_cmd_table_t * p_cmd_table)
+cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
 {
     cli_status_t status = eCLI_OK;
     static cli_cmd_table_t * prev_table = NULL;
@@ -1223,17 +1223,17 @@ cli_status_t cli_register_cmd_table(cli_cmd_table_t * p_cmd_table)
             // First table registration entry -> store start of the table linked list
             if ( NULL == gp_cli_cmd_tables )
             {
-                gp_cli_cmd_tables = p_cmd_table;
+                gp_cli_cmd_tables = (cli_cmd_table_t*) p_cmd_table;
             }
 
             // On non-first table registration assign next pointer of lastly registrated table to the current one...
             else
             {
-                (*prev_table->p_next) = p_cmd_table;
+                (*prev_table->p_next) = (cli_cmd_table_t*) p_cmd_table;
             }
 
             // Store previous table
-            prev_table = p_cmd_table;
+            prev_table = (cli_cmd_table_t*) p_cmd_table;
 
             // Release mutex
             cli_if_release_mutex();

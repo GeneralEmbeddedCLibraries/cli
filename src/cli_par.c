@@ -82,11 +82,11 @@ static void         cli_par_group_print         (const par_num_t par_num);
 /**
  *      Device Parameters CLI commands
  */
-static const cli_cmd_t g_cli_par_table[] =
-{
-        // --------------------------------------------------------------------------------------------------
-        //  name                    function                help string                             context
-        // --------------------------------------------------------------------------------------------------
+CLI_DEFINE_CMD_TABLE( g_cli_par_table,
+
+    // ------------------------------------------------------------------------------------------------------
+    //  name                    function                help string                                 context
+    // ------------------------------------------------------------------------------------------------------
     {   "par_info",             cli_par_info,           "Get device parameter informations",        NULL    },
     {   "par_set",              cli_par_set,            "Set parameter. Args: [parId,value]",       NULL    },
     {   "par_get",              cli_par_get,            "Get parameter. Args: [parId]",             NULL    },
@@ -97,13 +97,13 @@ static const cli_cmd_t g_cli_par_table[] =
 #if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
     {   "par_save_clean",       cli_par_store_reset,    "Clean saved parameters space in NVM",      NULL    },
 #endif
-};
+);
 
 /**
  *      Live watch CLI commands
  */
-static const cli_cmd_t g_cli_watch_table[] =
-{
+CLI_DEFINE_CMD_TABLE( g_cli_watch_table,
+
     // ----------------------------------------------------------------------------------------------------------------------
     //  name                    function                help string                                                 context
     // ----------------------------------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ static const cli_cmd_t g_cli_watch_table[] =
 #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
     {   "watch_save",          cli_watch_save,          "Save live watch configuration into to NVM",                 NULL   },
 #endif
-};
+);
 
 /**
  *      Live watch data
@@ -1142,8 +1142,8 @@ cli_status_t cli_par_init(void)
     #endif
 
     // Register Device Parameters CLI table
-    cli_register_cmd_table((const cli_cmd_t*) &g_cli_par_table, ( sizeof(g_cli_par_table) / sizeof(cli_cmd_t)));
-    cli_register_cmd_table((const cli_cmd_t*) &g_cli_watch_table, ( sizeof(g_cli_watch_table) / sizeof(cli_cmd_t)));
+    cli_register_cmd_table( &g_cli_par_table );
+    cli_register_cmd_table( &g_cli_watch_table );
 
     return status;
 }
