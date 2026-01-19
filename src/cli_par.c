@@ -283,42 +283,49 @@ static void cli_par_set(const cli_cmd_t * p_cmd, const char * p_attr)
                         case ePAR_TYPE_U8:
                             (void) sscanf( p_attr, "%hu,%hhu", &par_id, &par_data.u8 );
                             status = par_set( par_num, &par_data.u8 );
-                            cli_printf( "OK,PAR_SET=%u", par_data.u8);
+                            if (ePAR_OK == status)  cli_printf( "OK,PAR_SET=%u", par_data.u8);
+                            else                    cli_printf( "ERR, error code=0x%X", (par_status_t)status);
                         break;
 
                         case ePAR_TYPE_I8:
                             sscanf( p_attr, "%hu,%hhi", &par_id, &par_data.i8 );
                             status = par_set( par_num, &par_data.i8 );
-                            cli_printf( "OK,PAR_SET=%i", par_data.i8);
+                            if (ePAR_OK == status)  cli_printf( "OK,PAR_SET=%i", par_data.i8);
+                            else                    cli_printf( "ERR, error code=0x%X", (par_status_t)status);
                         break;
 
                         case ePAR_TYPE_U16:
                             sscanf( p_attr, "%hu,%hu", &par_id, &par_data.u16 );
                             status = par_set( par_num, &par_data.u16 );
-                            cli_printf( "OK,PAR_SET=%u", par_data.u16);
+                            if (ePAR_OK == status)  cli_printf( "OK,PAR_SET=%u", par_data.u16);
+                            else                    cli_printf( "ERR, error code=0x%X", (par_status_t)status);
                         break;
 
                         case ePAR_TYPE_I16:
                             sscanf( p_attr, "%hu,%hi", &par_id, &par_data.i16 );
                             status = par_set( par_num, &par_data.i16 );
-                            cli_printf( "OK,PAR_SET=%i", par_data.i16);
+                            if (ePAR_OK == status)  cli_printf( "OK,PAR_SET=%i", par_data.i16);
+                            else                    cli_printf( "ERR, error code=0x%X", (par_status_t)status);
                         break;
 
                         case ePAR_TYPE_U32:
                             sscanf( p_attr, "%hu,%u", &par_id, (unsigned int*)&par_data.u32 );
                             status = par_set( par_num, &par_data.u32 );
-                            cli_printf( "OK,PAR_SET=%u", par_data.u32);
+                            if (ePAR_OK == status)  cli_printf( "OK,PAR_SET=%u", par_data.u32);
+                            else                    cli_printf( "ERR, error code=0x%X", (par_status_t)status);
                         break;
 
                         case ePAR_TYPE_I32:
                             sscanf( p_attr, "%hu,%i", &par_id, (int*)&par_data.i32 );
                             status = par_set( par_num, &par_data.i32 );
-                            cli_printf( "OK,PAR_SET=%i", par_data.i32);
+                            if (ePAR_OK == status)  cli_printf( "OK,PAR_SET=%i", par_data.i32);
+                            else                    cli_printf( "ERR, error code=0x%X", (par_status_t)status);
                         break;
 
                         case ePAR_TYPE_F32:
                             status = par_set( par_num, &par_data.f32 );
-                            cli_printf( "OK,PAR_SET=%g", par_data.f32);
+                            if (ePAR_OK == status)  cli_printf( "OK,PAR_SET=%g", par_data.f32);
+                            else                    cli_printf( "ERR, error code=0x%X", (par_status_t)status);
                         break;
 
                         case ePAR_TYPE_NUM_OF:
@@ -326,11 +333,6 @@ static void cli_par_set(const cli_cmd_t * p_cmd, const char * p_attr)
                             CLI_DBG_PRINT( "ERR, Invalid parameter type!" );
                             CLI_ASSERT( 0 );
                         break;
-                    }
-
-                    if ( ePAR_OK != status )
-                    {
-                        cli_printf( "ERR, err_code: %u", (uint16_t)status);
                     }
                 }
                 else
