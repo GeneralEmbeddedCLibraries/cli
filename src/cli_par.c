@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Ziga Miklosic
+// Copyright (c) 2026 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Device Parameters
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      08.05.2025
-*@version   V2.2.0
+*@date      26.01.2026
+*@version   V3.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -49,30 +49,30 @@ static void         cli_par_print_info          (const par_cfg_t * const p_par_c
 static void         cli_par_print_header        (void);
 
 // Device parameters CLI commands
-static void         cli_par_info                (const uint8_t * p_attr);
-static void         cli_par_set                 (const uint8_t * p_attr);
-static void         cli_par_get                 (const uint8_t * p_attr);
-static void         cli_par_def                 (const uint8_t * p_attr);
-static void         cli_par_def_all             (const uint8_t * p_attr);
-static void         cli_par_store               (const uint8_t * p_attr);
+static void         cli_par_info                (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_par_set                 (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_par_get                 (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_par_def                 (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_par_def_all             (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_par_store               (const cli_cmd_t * p_cmd, const char * p_attr);
 
 // Live watch CLI commands
-static void         cli_watch_start             (const uint8_t * p_attr);
-static void         cli_watch_stop              (const uint8_t * p_attr);
-static void         cli_watch_channel           (const uint8_t * p_attr);
-static void         cli_watch_rate              (const uint8_t * p_attr);
-static void         cli_watch_info              (const uint8_t * p_attr);
+static void         cli_watch_start             (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_watch_stop              (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_watch_channel           (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_watch_rate              (const cli_cmd_t * p_cmd, const char * p_attr);
+static void         cli_watch_info              (const cli_cmd_t * p_cmd, const char * p_attr);
 
 static float32_t    cli_par_val_to_float        (const par_type_list_t par_type, const void * p_val);
 static void         cli_par_live_watch_hndl     (void);
 static void         cli_par_group_print         (const par_num_t par_num);
 
 #if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
-    static void cli_par_store_reset(const uint8_t * p_attr);
+    static void cli_par_store_reset(const cli_cmd_t * p_cmd, const char * p_attr);
 #endif
 
 #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
-    static void cli_watch_save(const uint8_t * p_attr);
+    static void cli_watch_save(const cli_cmd_t * p_cmd, const char * p_attr);
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,41 +82,41 @@ static void         cli_par_group_print         (const par_num_t par_num);
 /**
  *      Device Parameters CLI commands
  */
-static const cli_cmd_t g_cli_par_table[] =
-{
-    // ----------------------------------------------------------------------------------------------------------
-    //  name                    function                help string
-    // ----------------------------------------------------------------------------------------------------------
-    {   "par_info",             cli_par_info,           "Get device parameter informations"                     },
-    {   "par_set",              cli_par_set,            "Set parameter. Args: [parId,value]"                    },
-    {   "par_get",              cli_par_get,            "Get parameter. Args: [parId]"                          },
-    {   "par_def",              cli_par_def,            "Set parameter to default. Args: [parId]"               },
-    {   "par_def_all",          cli_par_def_all,        "Set all parameters to default"                     	},
-    {   "par_save",             cli_par_store,          "Save parameter to NVM"                             	},
+CLI_DEFINE_CMD_TABLE( g_cli_par_table,
+
+    // ------------------------------------------------------------------------------------------------------
+    //  name                    function                help string                                 context
+    // ------------------------------------------------------------------------------------------------------
+    {   "par_info",             cli_par_info,           "Get device parameter informations",        NULL    },
+    {   "par_set",              cli_par_set,            "Set parameter. Args: [parId,value]",       NULL    },
+    {   "par_get",              cli_par_get,            "Get parameter. Args: [parId]",             NULL    },
+    {   "par_def",              cli_par_def,            "Set parameter to default. Args: [parId]",  NULL    },
+    {   "par_def_all",          cli_par_def_all,        "Set all parameters to default",            NULL    },
+    {   "par_save",             cli_par_store,          "Save parameter to NVM",                    NULL    },
 
 #if (( 1 == CLI_CFG_DEBUG_EN ) && ( 1 == PAR_CFG_NVM_EN ))
-    {   "par_save_clean",       cli_par_store_reset,    "Clean saved parameters space in NVM"                   },
+    {   "par_save_clean",       cli_par_store_reset,    "Clean saved parameters space in NVM",      NULL    },
 #endif
-};
+);
 
 /**
  *      Live watch CLI commands
  */
-static const cli_cmd_t g_cli_watch_table[] =
-{
-    // ----------------------------------------------------------------------------------------------------------
-    //  name                    function                help string
-    // ----------------------------------------------------------------------------------------------------------
-    {   "watch_start",          cli_watch_start,        "Start parameter value live watch"                              },
-    {   "watch_stop",           cli_watch_stop,         "Stop parameter value live watch"                               },
-    {   "watch_channel",        cli_watch_channel,      "Set live watch channels. Args: [parId1,parId2,...,parIdN]"     },
-    {   "watch_rate",           cli_watch_rate,         "Change live watch streaming period. Args: [miliseconds]"       },
-    {   "watch_info",           cli_watch_info,         "Get live watch configuration info"                             },
+CLI_DEFINE_CMD_TABLE( g_cli_watch_table,
+
+    // ----------------------------------------------------------------------------------------------------------------------
+    //  name                    function                help string                                                 context
+    // ----------------------------------------------------------------------------------------------------------------------
+    {   "watch_start",          cli_watch_start,        "Start parameter value live watch",                          NULL   },
+    {   "watch_stop",           cli_watch_stop,         "Stop parameter value live watch",                           NULL   },
+    {   "watch_channel",        cli_watch_channel,      "Set live watch channels. Args: [parId1,parId2,...,parIdN]", NULL   },
+    {   "watch_rate",           cli_watch_rate,         "Change live watch streaming period. Args: [miliseconds]",   NULL   },
+    {   "watch_info",           cli_watch_info,         "Get live watch configuration info",                         NULL   },
 
 #if ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
-    {   "watch_save",          cli_watch_save,          "Save live watch configuration into to NVM"                     },
+    {   "watch_save",          cli_watch_save,          "Save live watch configuration into to NVM",                 NULL   },
 #endif
-};
+);
 
 /**
  *      Live watch data
@@ -128,7 +128,7 @@ static cli_live_watch_t g_cli_live_watch =
     .period     = CLI_CFG_PAR_DEF_LIVE_WATCH_PER_MS,
     .period_cnt = (uint32_t)( CLI_CFG_PAR_DEF_LIVE_WATCH_PER_MS / CLI_CFG_PAR_HNDL_PERIOD_MS ),
     .active     = false,
-    .num_of     = 0,
+    .num_of     = 0U,
     .par_list   = {0}
 };
 
@@ -200,15 +200,16 @@ static void cli_par_print_header(void)
 *
 * @note         Command format: >>>par_print
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_info(const uint8_t * p_attr)
+static void cli_par_info(const cli_cmd_t * p_cmd, const char * p_attr)
 {
-    par_cfg_t   par_cfg     = { 0 };
-    uint32_t    par_num     = 0UL;
-    uint32_t    par_val     = 0UL;
+    UNUSED(p_cmd);
+
+    uint32_t par_val = 0U;
 
     if ( NULL == p_attr )
     {
@@ -216,10 +217,10 @@ static void cli_par_info(const uint8_t * p_attr)
         cli_par_print_header();
 
         // For each parameter
-        for ( par_num = 0; par_num < ePAR_NUM_OF; par_num++ )
+        for ( par_num_t par_num = 0U; par_num < ePAR_NUM_OF; par_num++ )
         {
             // Get parameter configuration
-            par_get_config( par_num, &par_cfg );
+            const par_cfg_t * const par_cfg = par_get_config( par_num );
 
             // Get current parameter value
             par_get( par_num, &par_val );
@@ -228,7 +229,7 @@ static void cli_par_info(const uint8_t * p_attr)
             cli_par_group_print( par_num );
 
             // Print parameter info
-            cli_par_print_info((const par_cfg_t*) &par_cfg, par_val );
+            cli_par_print_info( par_cfg, par_val );
         }
 
         // Table termination string
@@ -246,17 +247,19 @@ static void cli_par_info(const uint8_t * p_attr)
 *
 * @note         Command format: >>>par_set [ID,value]
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_set(const uint8_t * p_attr)
+static void cli_par_set(const cli_cmd_t * p_cmd, const char * p_attr)
 {
-    uint16_t        par_id      = 0;
-    par_num_t       par_num     = 0;
-    par_type_t      par_data    = { .u32 = 0UL };
+    UNUSED(p_cmd);
+
+    uint16_t        par_id      = 0U;
+    par_num_t       par_num     = 0U;
+    par_type_t      par_data    = { .u32 = 0U };
     par_status_t    status      = ePAR_OK;
-    par_cfg_t       par_cfg     = {0};
 
     // Make sure we can cast uint32_t to unsigned int and int32_t to int below to supress compiler warning
     // when types do not match exactly for example unsigned long to unsigned int
@@ -271,54 +274,51 @@ static void cli_par_set(const uint8_t * p_attr)
             // Check if parameter exist
             if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
             {
-                // Get parameter configurations
-                par_get_config( par_num, &par_cfg );
-
                 // Check if parameter writable
-                if ( ePAR_ACCESS_RW == par_cfg.access )
+                if ( ePAR_ACCESS_RW == par_get_access( par_num ))
                 {
                     // Based on type get parameter
-                    switch( par_cfg.type )
+                    switch( par_get_type( par_num ))
                     {
                         case ePAR_TYPE_U8:
-                            (void) sscanf((const char*) p_attr, "%hu,%hhu", &par_id, &par_data.u8 );
+                            (void) sscanf( p_attr, "%hu,%hhu", &par_id, &par_data.u8 );
                             status = par_set( par_num, &par_data.u8 );
-                            cli_printf( "OK,PAR_SET=%hhu", par_data.u8);
+                            if (ePAR_OK == status) cli_printf( "OK,PAR_SET=%u", par_data.u8);
                         break;
 
                         case ePAR_TYPE_I8:
-                            sscanf((const char*) p_attr, "%hu,%hhi", &par_id, &par_data.i8 );
+                            sscanf( p_attr, "%hu,%hhi", &par_id, &par_data.i8 );
                             status = par_set( par_num, &par_data.i8 );
-                            cli_printf( "OK,PAR_SET=%hhi", par_data.i8);
+                            if (ePAR_OK == status) cli_printf( "OK,PAR_SET=%i", par_data.i8);
                         break;
 
                         case ePAR_TYPE_U16:
-                            sscanf((const char*) p_attr, "%hu,%hu", &par_id, &par_data.u16 );
+                            sscanf( p_attr, "%hu,%hu", &par_id, &par_data.u16 );
                             status = par_set( par_num, &par_data.u16 );
-                            cli_printf( "OK,PAR_SET=%hu", par_data.u16);
+                            if (ePAR_OK == status) cli_printf( "OK,PAR_SET=%u", par_data.u16);
                         break;
 
                         case ePAR_TYPE_I16:
-                            sscanf((const char*) p_attr, "%hu,%hi", &par_id, &par_data.i16 );
+                            sscanf( p_attr, "%hu,%hi", &par_id, &par_data.i16 );
                             status = par_set( par_num, &par_data.i16 );
-                            cli_printf( "OK,PAR_SET=%hi", par_data.i16);
+                            if (ePAR_OK == status) cli_printf( "OK,PAR_SET=%i", par_data.i16);
                         break;
 
                         case ePAR_TYPE_U32:
-                            sscanf((const char*) p_attr, "%hu,%u", &par_id, (unsigned int*)&par_data.u32 );
+                            sscanf( p_attr, "%hu,%u", &par_id, (unsigned int*)&par_data.u32 );
                             status = par_set( par_num, &par_data.u32 );
-                            cli_printf( "OK,PAR_SET=%u", par_data.u32);
+                            if (ePAR_OK == status) cli_printf( "OK,PAR_SET=%u", par_data.u32);
                         break;
 
                         case ePAR_TYPE_I32:
-                            sscanf((const char*) p_attr, "%hu,%i", &par_id, (int*)&par_data.i32 );
+                            sscanf( p_attr, "%hu,%i", &par_id, (int*)&par_data.i32 );
                             status = par_set( par_num, &par_data.i32 );
-                            cli_printf( "OK,PAR_SET=%i", par_data.i32);
+                            if (ePAR_OK == status) cli_printf( "OK,PAR_SET=%i", par_data.i32);
                         break;
 
                         case ePAR_TYPE_F32:
                             status = par_set( par_num, &par_data.f32 );
-                            cli_printf( "OK,PAR_SET=%g", par_data.f32);
+                            if (ePAR_OK == status) cli_printf( "OK,PAR_SET=%g", par_data.f32);
                         break;
 
                         case ePAR_TYPE_NUM_OF:
@@ -328,10 +328,10 @@ static void cli_par_set(const uint8_t * p_attr)
                         break;
                     }
 
-                    if ( ePAR_OK != status )
-                    {
-                        cli_printf( "ERR, err_code: %u", (uint16_t)status);
-                    }
+                    if      ( ePAR_ERROR_VALUE == status ) cli_printf( "ERR, Trying to set invalid parameter value!" );
+                    else if ( ePAR_ERROR_MUTEX == status ) cli_printf( "ERR, Failed to obtain mutex!" );
+                    else if ( ePAR_WAR_LIMITED == status ) cli_printf( "WAR, Parameter value limited to its min/max range!" );
+                    else if ( ePAR_OK != status)           cli_printf( "%s, Parameter setting code: 0x%X", (status & ePAR_STATUS_ERROR_MASK) ? "ERR" : "WAR", (par_status_t)status);
                 }
                 else
                 {
@@ -360,17 +360,19 @@ static void cli_par_set(const uint8_t * p_attr)
 *
 * @note         Command format: >>>par_get [ID]
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_get(const uint8_t * p_attr)
+static void cli_par_get(const cli_cmd_t * p_cmd, const char * p_attr)
 {
-    uint16_t        par_id      = 0;
-    par_num_t       par_num     = 0;
-    par_type_t      par_data    = { .u32 = 0UL };
+    UNUSED(p_cmd);
+
+    uint16_t        par_id      = 0U;
+    par_num_t       par_num     = 0U;
+    par_type_t      par_data    = { .u32 = 0U };
     par_status_t    status      = ePAR_OK;
-    par_cfg_t       par_cfg     = {0};
 
     // Make sure we can cast uint32_t to unsigned int and int32_t to int below to supress compiler warning
     // when types do not match exactly for example unsigned long to unsigned int
@@ -380,35 +382,32 @@ static void cli_par_get(const uint8_t * p_attr)
     if ( NULL != p_attr )
     {
         // Check input command
-        if ( 1U == sscanf((const char*) p_attr, "%hu", &par_id ))
+        if ( 1U == sscanf( p_attr, "%hu", &par_id ))
         {
             // Check if parameter exist
             if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
             {
-                // Get par configurations
-                par_get_config( par_num, &par_cfg );
-
                 // Based on type get parameter
-                switch ( par_cfg.type )
+                switch ( par_get_type( par_num ))
                 {
                     case ePAR_TYPE_U8:
                         status = par_get( par_num, &par_data.u8 );
-                        cli_printf( "OK,PAR_GET=%hhu", par_data.u8 );
+                        cli_printf( "OK,PAR_GET=%u", par_data.u8 );
                     break;
 
                     case ePAR_TYPE_I8:
                         status = par_get( par_num, &par_data.i8 );
-                        cli_printf(  "OK,PAR_GET=%hhi", par_data.i8 );
+                        cli_printf(  "OK,PAR_GET=%i", par_data.i8 );
                     break;
 
                     case ePAR_TYPE_U16:
                         status = par_get( par_num, &par_data.u16 );
-                        cli_printf(  "OK,PAR_GET=%hu", par_data.u16 );
+                        cli_printf(  "OK,PAR_GET=%u", par_data.u16 );
                     break;
 
                     case ePAR_TYPE_I16:
                         status = par_get( par_num, &par_data.i16 );
-                        cli_printf(  "OK,PAR_GET=%hi", par_data.i16 );
+                        cli_printf(  "OK,PAR_GET=%i", par_data.i16 );
                     break;
 
                     case ePAR_TYPE_U32:
@@ -435,7 +434,7 @@ static void cli_par_get(const uint8_t * p_attr)
 
                 if ( ePAR_OK != status )
                 {
-                    cli_printf( "ERR, err_code: %u", (uint16_t)status);
+                    cli_printf( "%s, Parameter getting code: 0x%X", (status & ePAR_STATUS_ERROR_MASK) ? "ERR" : "WAR", (par_status_t)status);
                 }
             }
             else
@@ -460,19 +459,22 @@ static void cli_par_get(const uint8_t * p_attr)
 *
 * @note         Command format: >>>par_def [ID]
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_def(const uint8_t * p_attr)
+static void cli_par_def(const cli_cmd_t * p_cmd, const char * p_attr)
 {
-    par_num_t   par_num = 0UL;
-    uint16_t    par_id  = 0UL;
+    UNUSED(p_cmd);
+
+    par_num_t par_num = 0U;
+    uint16_t  par_id  = 0U;
 
     if ( NULL != p_attr )
     {
         // Check input command
-        if ( 1U == sscanf((const char*) p_attr, "%u", (unsigned int*)&par_id ))
+        if ( 1U == sscanf( p_attr, "%u", (unsigned int*)&par_id ))
         {
             // Check if parameter exist
             if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
@@ -505,12 +507,15 @@ static void cli_par_def(const uint8_t * p_attr)
 *
 * @note         Command format: >>>par_def_all
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_def_all(const uint8_t * p_attr)
+static void cli_par_def_all(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         // Set to default
@@ -531,12 +536,15 @@ static void cli_par_def_all(const uint8_t * p_attr)
 *
 * @note         Command format: >>>par_store
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_par_store(const uint8_t * p_attr)
+static void cli_par_store(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         #if ( 1 == PAR_CFG_NVM_EN )
@@ -568,12 +576,15 @@ static void cli_par_store(const uint8_t * p_attr)
     *
     * @note         Command format: >>>par_save_clean
     *
-    * @param[in]    attr    - Inputed command attributes
+    * @param[in]    p_cmd   - Pointer to command
+    * @param[in]	p_attr 	- Inputed command attributes
     * @return       void
     */
     ////////////////////////////////////////////////////////////////////////////////
-    static void cli_par_store_reset(const uint8_t * p_attr)
+    static void cli_par_store_reset(const cli_cmd_t * p_cmd, const char * p_attr)
     {
+        UNUSED(p_cmd);
+
         if ( NULL == p_attr )
         {
             if ( ePAR_OK == par_save_clean())
@@ -601,12 +612,15 @@ static void cli_par_store(const uint8_t * p_attr)
     *
     * @note         Command format: >>>watch_save
     *
-    * @param[in]    attr    - Inputed command attributes
+    * @param[in]    p_cmd   - Pointer to command
+    * @param[in]	p_attr 	- Inputed command attributes
     * @return       void
     */
     ////////////////////////////////////////////////////////////////////////////////
-    static void cli_watch_save(const uint8_t * p_attr)
+    static void cli_watch_save(const cli_cmd_t * p_cmd, const char * p_attr)
     {
+        UNUSED(p_cmd);
+
         if ( NULL == p_attr )
         {
             if ( eCLI_OK == cli_nvm_write( &g_cli_live_watch ))
@@ -632,12 +646,15 @@ static void cli_par_store(const uint8_t * p_attr)
 *
 * @note         Command format: >>>watch_start
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_start(const uint8_t * p_attr)
+static void cli_watch_start(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         if ( g_cli_live_watch.num_of > 0 )
@@ -667,12 +684,15 @@ static void cli_watch_start(const uint8_t * p_attr)
 *
 * @note         Command format: >>>watch_stop
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_stop(const uint8_t * p_attr)
+static void cli_watch_stop(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     if ( NULL == p_attr )
     {
         g_cli_live_watch.active = false;
@@ -696,16 +716,18 @@ static void cli_watch_stop(const uint8_t * p_attr)
 * @note         Command format: >>>watch_des [parID1,parID2,..parIDn]
 *
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_channel(const uint8_t * p_attr)
+static void cli_watch_channel(const cli_cmd_t * p_cmd, const char * p_attr)
 {
-    uint32_t    ch_cnt      = 0;
-    uint16_t    par_id      = 0;
-    par_cfg_t   par_cfg     = {0};
-    par_num_t   par_num     = 0;
+    UNUSED(p_cmd);
+
+    uint32_t    ch_cnt      = 0U;
+    uint16_t    par_id      = 0U;
+    par_num_t   par_num     = 0U;
     bool        invalid_par = false;
 
     if ( NULL != p_attr )
@@ -715,7 +737,7 @@ static void cli_watch_channel(const uint8_t * p_attr)
 
         // Parse live watch request command
         while(      ( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH )
-                &&  ( 1U == sscanf((const char*) p_attr, "%hu%n", &par_id, (int*) &ch_cnt )))
+                &&  ( 1U == sscanf( p_attr, "%hu%n", &par_id, (int*) &ch_cnt )))
         {
             // Get parameter ID by number
             if ( ePAR_OK == par_get_num_by_id( par_id, &par_num ))
@@ -759,19 +781,18 @@ static void cli_watch_channel(const uint8_t * p_attr)
 
             // Send sample time
             snprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( (float32_t)g_cli_live_watch.period / 1000.0f ));
-            cli_send_str( p_tx_buf );
+            cli_send_str((char*) p_tx_buf );
 
             // Print streaming parameters/variables
             for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
             {
-                // Get parameter configurations
-                par_get_config( g_cli_live_watch.par_list[ par_idx ], &par_cfg );
+                par_num = g_cli_live_watch.par_list[par_idx];
 
                 // Format string with parameters info
-                sprintf((char*) p_tx_buf, ",%s,d,1", par_cfg.name );
+                sprintf((char*) p_tx_buf, ",%s,d,1", par_get_name( par_num ));
 
                 // Send
-                cli_send_str( p_tx_buf );
+                cli_send_str((char*) p_tx_buf );
             }
 
             // Terminate line
@@ -807,17 +828,20 @@ static void cli_watch_channel(const uint8_t * p_attr)
 *
 * @example      >>>status_rate 100 --> Will change period to 100 ms
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_rate(const uint8_t * p_attr)
+static void cli_watch_rate(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     uint32_t period;
 
     if ( NULL != p_attr )
     {
-        if ( 1U == sscanf((const char*) p_attr, "%d", (int*) &period ))
+        if ( 1U == sscanf( p_attr, "%d", (int*) &period ))
         {
             // Check if within wanted range
             if  (   ( period >= CLI_CFG_PAR_HNDL_PERIOD_MS )
@@ -862,12 +886,15 @@ static void cli_watch_rate(const uint8_t * p_attr)
 *
 * @note         Command format: >>>watch_info
 *
-* @param[in]    attr    - Inputed command attributes
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-static void cli_watch_info(const uint8_t * p_attr)
+static void cli_watch_info(const cli_cmd_t * p_cmd, const char * p_attr)
 {
+    UNUSED(p_cmd);
+
     uint16_t par_id = 0U;
 
     if ( NULL == p_attr )
@@ -878,19 +905,19 @@ static void cli_watch_info(const uint8_t * p_attr)
         // Send streaming info as
         // OK, PERIOD,ACTIVE,NUM_OF,PAR_LIST
         sprintf((char*) p_tx_buf, "OK, %d,%d,%d", (int)g_cli_live_watch.period, g_cli_live_watch.active, g_cli_live_watch.num_of );
-        cli_send_str( p_tx_buf );
+        cli_send_str((char*) p_tx_buf );
 
         // Print streaming parameters/variables
         for ( uint8_t par_idx = 0; par_idx < g_cli_live_watch.num_of; par_idx++ )
         {
-            // Get parameter ID
-            (void) par_get_id( g_cli_live_watch.par_list[par_idx], &par_id );
+            const par_num_t par_num = g_cli_live_watch.par_list[par_idx];
+            par_get_id_by_num( par_num, &par_id );
 
             // Format string with parameters info
             sprintf((char*) p_tx_buf, ",%d", par_id );
 
             // Send
-            cli_send_str( p_tx_buf );
+            cli_send_str((char*) p_tx_buf );
         }
 
         // Terminate line
@@ -968,8 +995,7 @@ static float32_t cli_par_val_to_float(const par_type_list_t par_type, const void
 ////////////////////////////////////////////////////////////////////////////////
 static void cli_par_live_watch_hndl(void)
 {
-    par_type_t  par_val = { .u32 = 0UL };
-    par_cfg_t   par_cfg = {0};
+    par_type_t par_val = { .u32 = 0UL };
 
     // Stream data only if:
     //      1. Live watch is active
@@ -983,14 +1009,13 @@ static void cli_par_live_watch_hndl(void)
         // Loop thru streaming parameters
         for ( uint8_t par_it = 0; par_it < g_cli_live_watch.num_of; par_it++ )
         {
-            // Get parameter data type
-            par_get_config( g_cli_live_watch.par_list[par_it], &par_cfg );
+            const par_num_t par_num = g_cli_live_watch.par_list[par_it];
 
             // Get parameter
             par_get( g_cli_live_watch.par_list[par_it], &par_val.u32 );
 
             // Based on type fill streaming buffer
-            switch ( par_cfg.type )
+            switch ( par_get_type( par_num ))
             {
                 case ePAR_TYPE_U8:
                     sprintf((char*) p_tx_buf, "%d", (int)par_val.u8 );
@@ -1021,12 +1046,12 @@ static void cli_par_live_watch_hndl(void)
             }
 
             // Send
-            cli_send_str( p_tx_buf );
+            cli_send_str((char*) p_tx_buf );
 
             // If not last -> send delimiter
             if ( par_it < ( g_cli_live_watch.num_of - 1 ))
             {
-                cli_send_str((const uint8_t*) "," );
+                cli_send_str((char*) "," );
             }
         }
 
@@ -1103,8 +1128,8 @@ cli_status_t cli_par_init(void)
     #endif
 
     // Register Device Parameters CLI table
-    cli_register_cmd_table((const cli_cmd_t*) &g_cli_par_table, ( sizeof(g_cli_par_table) / sizeof(cli_cmd_t)));
-    cli_register_cmd_table((const cli_cmd_t*) &g_cli_watch_table, ( sizeof(g_cli_watch_table) / sizeof(cli_cmd_t)));
+    cli_register_cmd_table( &g_cli_par_table );
+    cli_register_cmd_table( &g_cli_watch_table );
 
     return status;
 }

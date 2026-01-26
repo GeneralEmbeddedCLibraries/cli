@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Ziga Miklosic
+// Copyright (c) 2026 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Device Parameters
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      08.05.2025
-*@version   V2.2.0
+*@date      26.01.2026
+*@version   V3.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -36,10 +36,9 @@
 /**
  *  Compatibility check with Parameters module
  *
- *  Support version V2.0.x
+ *  Support version V3.x.x
  */
-_Static_assert( 2 == PAR_VER_MAJOR );
-_Static_assert( 0 <= PAR_VER_MINOR );
+_Static_assert( 3 == PAR_VER_MAJOR );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions

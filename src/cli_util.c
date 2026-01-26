@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Ziga Miklosic
+// Copyright (c) 2026 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Utility
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      08.05.2025
-*@version   V2.2.0
+*@date      26.01.2026
+*@version   V3.1.0
 */
 ////////////////////////////////////////////////////////////////////////////////
 /*!
@@ -99,62 +99,57 @@ uint8_t * cli_util_get_tx_buf(void)
 * @return       f32_par_val - Floating representation of parameter value
 */
 ////////////////////////////////////////////////////////////////////////////////
-float32_t cli_util_par_val_to_float(const par_num_t par)
+float32_t cli_util_par_val_to_float(const par_num_t par_num)
 {
-    float32_t   f32_par_val = 0.0f;
-    par_cfg_t   par_cfg     = {0};
+    float32_t f32_par_val = 0.0f;
 
-    // Get parameter type
-    if ( ePAR_OK == par_get_config( par, &par_cfg ))
+    // Based on type convert to float
+    switch ( par_get_type( par_num ))
     {
-        // Based on type convert to float
-        switch ( par_cfg.type )
-        {
-            case ePAR_TYPE_U8:
-                uint8_t u8_val = 0U;
-                (void) par_get( par, (uint8_t*) &u8_val );
-                f32_par_val = (float32_t) u8_val;
-                break;
+        case ePAR_TYPE_U8:
+            uint8_t u8_val = 0U;
+            (void) par_get( par_num, (uint8_t*) &u8_val );
+            f32_par_val = (float32_t) u8_val;
+            break;
 
-            case ePAR_TYPE_I8:
-                int8_t i8_val = 0U;
-                (void) par_get( par, (int8_t*) &i8_val );
-                f32_par_val = (float32_t) i8_val;
-                break;
+        case ePAR_TYPE_I8:
+            int8_t i8_val = 0U;
+            (void) par_get( par_num, (int8_t*) &i8_val );
+            f32_par_val = (float32_t) i8_val;
+            break;
 
-            case ePAR_TYPE_U16:
-                uint16_t u16_val = 0U;
-                (void) par_get( par, (uint16_t*) &u16_val );
-                f32_par_val = (float32_t) u16_val;
-                break;
+        case ePAR_TYPE_U16:
+            uint16_t u16_val = 0U;
+            (void) par_get( par_num, (uint16_t*) &u16_val );
+            f32_par_val = (float32_t) u16_val;
+            break;
 
-            case ePAR_TYPE_I16:
-                int16_t i16_val = 0U;
-                (void) par_get( par, (int16_t*) &i16_val );
-                f32_par_val = (float32_t) i16_val;
-                break;
+        case ePAR_TYPE_I16:
+            int16_t i16_val = 0U;
+            (void) par_get( par_num, (int16_t*) &i16_val );
+            f32_par_val = (float32_t) i16_val;
+            break;
 
-            case ePAR_TYPE_U32:
-                uint32_t u32_val = 0U;
-                (void) par_get( par, (uint32_t*) &u32_val );
-                f32_par_val = (float32_t) u32_val;
-                break;
+        case ePAR_TYPE_U32:
+            uint32_t u32_val = 0U;
+            (void) par_get( par_num, (uint32_t*) &u32_val );
+            f32_par_val = (float32_t) u32_val;
+            break;
 
-            case ePAR_TYPE_I32:
-                int32_t i32_val = 0U;
-                (void) par_get( par, (int32_t*) &i32_val );
-                f32_par_val = (float32_t) i32_val;
-                break;
+        case ePAR_TYPE_I32:
+            int32_t i32_val = 0U;
+            (void) par_get( par_num, (int32_t*) &i32_val );
+            f32_par_val = (float32_t) i32_val;
+            break;
 
-            case ePAR_TYPE_F32:
-                (void) par_get( par, (float32_t*) &f32_par_val );
-                break;
+        case ePAR_TYPE_F32:
+            (void) par_get( par_num, (float32_t*) &f32_par_val );
+            break;
 
-            case ePAR_TYPE_NUM_OF:
-            default:
-                PAR_ASSERT( 0 );
-                break;
-        }
+        case ePAR_TYPE_NUM_OF:
+        default:
+            PAR_ASSERT( 0 );
+            break;
     }
 
     return f32_par_val;
