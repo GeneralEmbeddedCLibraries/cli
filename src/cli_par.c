@@ -434,7 +434,7 @@ static void cli_par_get(const cli_cmd_t * p_cmd, const char * p_attr)
 
                 if ( ePAR_OK != status )
                 {
-                    cli_printf( "ERR, err_code: %u", (uint16_t)status);
+                    cli_printf( "%s, Parameter getting code: 0x%X", (status & ePAR_STATUS_ERROR_MASK) ? "ERR" : "WAR", (par_status_t)status);
                 }
             }
             else
