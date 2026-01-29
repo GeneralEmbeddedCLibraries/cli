@@ -67,7 +67,7 @@ static void cli_ram_write       (const cli_cmd_t * p_cmd, const char * p_attr);
 static void cli_ram_read        (const cli_cmd_t * p_cmd, const char * p_attr);
 #endif
 
-static bool             cli_validate_user_table (const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd);
+static bool             cli_validate_user_table (const cli_cmd_t * const p_cmd_table, const uint32_t num_of_cmd);
 static const char * 	cli_find_char			(const char * const str, const char target_char, const uint32_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -804,7 +804,7 @@ static void	cli_send_intro(const cli_cmd_t * p_cmd, const char * p_attr)
 * @return		valid			- Validation flag
 */
 ////////////////////////////////////////////////////////////////////////////////
-static bool cli_validate_user_table(const cli_cmd_t * const p_cmd_table, const uint8_t num_of_cmd)
+static bool cli_validate_user_table(const cli_cmd_t * const p_cmd_table, const uint32_t num_of_cmd)
 {
     bool valid = true;
 
