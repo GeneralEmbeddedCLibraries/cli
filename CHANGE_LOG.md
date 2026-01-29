@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## V3.1.1 - 29.01.2026
+
+### Fixed
+ - Fixed mutex self deadlock (in function chain: *cli_printf*->*cli_send_str*)
+
+### Removed
+ - Removed mutex protection for *cli_register_cmd_table* and thus removing dependency of calling *cli_init* before
+
+---
+## V3.1.0 - 26.01.2026
+
+### Added
+ - Support for latest Device Paramaters module V3.0.0
+
+---
 ## V3.0.0 - 29.10.2025
 
 ### Added

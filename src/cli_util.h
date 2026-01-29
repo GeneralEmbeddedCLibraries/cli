@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Ziga Miklosic
+// Copyright (c) 2026 Ziga Miklosic
 // All Rights Reserved
 // This software is under MIT licence (https://opensource.org/licenses/MIT)
 ////////////////////////////////////////////////////////////////////////////////
@@ -7,8 +7,8 @@
 *@brief     Command Line Interface Utility
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      29.10.2025
-*@version   V3.0.0
+*@date      29.01.2026
+*@version   V3.1.1
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -42,11 +42,11 @@ typedef float float32_t;
 ////////////////////////////////////////////////////////////////////////////////
 // Functions
 ////////////////////////////////////////////////////////////////////////////////
-void        cli_util_unknown_cmd_rsp    (void);
-uint8_t *   cli_util_get_tx_buf         (void);
+void   cli_util_unknown_cmd_rsp(void);
+char * cli_util_get_tx_buf     (void);
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )
-float32_t cli_util_par_val_to_float(const par_num_t par);
+float32_t cli_util_par_val_to_float(const par_num_t par_num);
 #endif
 
 #endif // __CLI_UTIL_H
