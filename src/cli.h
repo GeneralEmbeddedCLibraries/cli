@@ -7,8 +7,8 @@
 *@brief     Command Line Interface API
 *@author    Ziga Miklosic
 *@email     ziga.miklosic@gmail.com
-*@date      26.01.2026
-*@version   V3.1.0
+*@date      29.01.2026
+*@version   V3.1.1
 */
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -41,18 +41,19 @@
  */
 #define CLI_VER_MAJOR		( 3 )
 #define CLI_VER_MINOR		( 1 )
-#define CLI_VER_DEVELOP		( 0 )
+#define CLI_VER_DEVELOP		( 1 )
 
 /**
  * 	CLI Status
  */
-typedef enum
+enum
 {
 	eCLI_OK				= 0U,		/**<Normal operation */
 	eCLI_ERROR			= 0x01U,	/**<General error code */
 	eCLI_ERROR_INIT		= 0x02U,	/**<Initialization error or usage before initialization */
     eCLI_ERROR_NVM      = 0x04U,    /**<Read/Write to NVM error */
-} cli_status_t;
+};
+typedef uint8_t cli_status_t;
 
 struct cli_cmd;
 /**
