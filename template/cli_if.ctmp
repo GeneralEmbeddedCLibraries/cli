@@ -142,7 +142,7 @@ cli_status_t cli_if_deinit(void)
 * @return 		status 	- Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_if_receive(uint8_t * const p_data)
+cli_status_t cli_if_receive(char * const p_data)
 {
 	cli_status_t status = eCLI_OK;
 
@@ -166,7 +166,7 @@ cli_status_t cli_if_receive(uint8_t * const p_data)
 * @return 		status 	- Status of operation
 */
 ////////////////////////////////////////////////////////////////////////////////
-cli_status_t cli_if_transmit(const uint8_t * const p_data)
+cli_status_t cli_if_transmit(const char * const p_data)
 {
 	cli_status_t status = eCLI_OK;
 
