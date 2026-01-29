@@ -46,13 +46,14 @@
 /**
  * 	CLI Status
  */
-typedef enum
+enum
 {
 	eCLI_OK				= 0U,		/**<Normal operation */
 	eCLI_ERROR			= 0x01U,	/**<General error code */
 	eCLI_ERROR_INIT		= 0x02U,	/**<Initialization error or usage before initialization */
     eCLI_ERROR_NVM      = 0x04U,    /**<Read/Write to NVM error */
-} cli_status_t;
+};
+typedef uint8_t cli_status_t;
 
 struct cli_cmd;
 /**
