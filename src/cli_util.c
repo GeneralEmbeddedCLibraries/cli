@@ -84,9 +84,9 @@ void cli_util_unknown_cmd_rsp(void)
 * @return       void
 */
 ////////////////////////////////////////////////////////////////////////////////
-uint8_t * cli_util_get_tx_buf(void)
+char * cli_util_get_tx_buf(void)
 {
-    return (uint8_t*) &gu8_tx_buffer;
+    return (char*) &gu8_tx_buffer;
 }
 
 #if ( 1 == CLI_CFG_PAR_USE_EN )

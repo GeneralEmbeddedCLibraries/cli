@@ -777,7 +777,7 @@ static void cli_watch_channel(const cli_cmd_t * p_cmd, const char * p_attr)
             &&  ( g_cli_live_watch.num_of <= CLI_CFG_PAR_MAX_IN_LIVE_WATCH ))
         {
             // Get pointer to Tx buffer
-            uint8_t * p_tx_buf = cli_util_get_tx_buf();
+            char * p_tx_buf = cli_util_get_tx_buf();
 
             // Send sample time
             snprintf((char*) p_tx_buf, CLI_CFG_TX_BUF_SIZE, "OK,%g", ( (float32_t)g_cli_live_watch.period / 1000.0f ));
@@ -900,7 +900,7 @@ static void cli_watch_info(const cli_cmd_t * p_cmd, const char * p_attr)
     if ( NULL == p_attr )
     {
         // Get pointer to Tx buffer
-        uint8_t * p_tx_buf = cli_util_get_tx_buf();
+        char * p_tx_buf = cli_util_get_tx_buf();
 
         // Send streaming info as
         // OK, PERIOD,ACTIVE,NUM_OF,PAR_LIST
@@ -1004,7 +1004,7 @@ static void cli_par_live_watch_hndl(void)
         &&  ( g_cli_live_watch.num_of > 0 ))
     {
         // Get pointer to Tx buffer
-        uint8_t * p_tx_buf = cli_util_get_tx_buf();
+        char * p_tx_buf = cli_util_get_tx_buf();
 
         // Loop thru streaming parameters
         for ( uint8_t par_it = 0; par_it < g_cli_live_watch.num_of; par_it++ )

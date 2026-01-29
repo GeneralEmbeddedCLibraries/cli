@@ -125,7 +125,7 @@ static cli_status_t cli_parser_hndl(void)
 			cli_status_t 	status      = eCLI_OK;
 	 static uint32_t  		buf_idx 	= 0;
             uint32_t        escape_cnt  = 0;
-     static uint8_t         rx_buffer[CLI_CFG_RX_BUF_SIZE] = {0};
+     static char            rx_buffer[CLI_CFG_RX_BUF_SIZE] = {0};
      static uint32_t        first_byte_time = 0U;
 
 	// Take all data from reception buffer
@@ -1030,11 +1030,7 @@ cli_status_t cli_send_str(const char * const p_str)
     // Mutex obtain
     if ( eCLI_OK == cli_if_aquire_mutex())
     {
-        // Write to cli port
-        status |= cli_if_transmit( (const uint8_t *)p_str );
-
-        // Release mutex if taken
-        status |= cli_if_release_mutex();
+        status = cli_if_transmit(p_str);
     }
     else
     {
@@ -1066,7 +1062,7 @@ cli_status_t cli_printf(char * p_format, ...)
 		if ( NULL != p_format )
 		{
             // Get pointer to Tx buffer
-            uint8_t * p_tx_buf = cli_util_get_tx_buf();
+            char * p_tx_buf = cli_util_get_tx_buf();
 
             // Mutex obtain
             if ( eCLI_OK == cli_if_aquire_mutex())
@@ -1096,7 +1092,7 @@ cli_status_t cli_printf(char * p_format, ...)
                     {
                         // Append termination string and send
                         strcat((char*) p_tx_buf, (const char*) CLI_CFG_TERMINATION_STRING);
-                        status = cli_send_str((const char*) p_tx_buf );
+                        status = cli_if_transmit((const char*) p_tx_buf );
                     } 
                     else 
                     {
@@ -1153,7 +1149,7 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 			if ( true == cli_cfg_get_ch_en( ch ))
 			{
 			    // Get pointer to Tx buffer
-			    uint8_t * p_tx_buf = cli_util_get_tx_buf();
+			    char * p_tx_buf = cli_util_get_tx_buf();
 
 			    // Mutex obtain
 			    if ( eCLI_OK == cli_if_aquire_mutex())
@@ -1164,12 +1160,12 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
                     va_end(args);
 
                     // Send channel name
-                    status |= cli_send_str( cli_cfg_get_ch_name( ch ));
-                    status |= cli_send_str( ": " );
+                    status |= cli_if_transmit( cli_cfg_get_ch_name( ch ));
+                    status |= cli_if_transmit( ": " );
 
                     // Send string
-                    status |= cli_send_str((const char*) p_tx_buf );
-                    status |= cli_send_str( CLI_CFG_TERMINATION_STRING );
+                    status |= cli_if_transmit((const char*) p_tx_buf );
+                    status |= cli_if_transmit( CLI_CFG_TERMINATION_STRING );
 
                     // Release mutex
                     cli_if_release_mutex();
@@ -1197,7 +1193,10 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 /*!
 * @brief        Register user defined CLI command table
 *
-* @note     Shall not be used in ISR!
+* @note         Shall not be used in ISR!
+*   
+* @limitation   This function shall only be called from single task as its not
+*               protected from possible multi-task race conditions. 
 *
 * @param[in]	p_cmd_table	- Pointer to command table node
 * @return       status      - Status of operation
@@ -1214,27 +1213,20 @@ cli_status_t cli_register_cmd_table(const cli_cmd_table_t * const p_cmd_table)
     // User table defined OK
     if ( cli_validate_user_table( p_cmd_table->p_cmd, p_cmd_table->num_of ))
     {
-        // Mutex obtain
-        if ( eCLI_OK == cli_if_aquire_mutex())
+        // First table registration entry -> store start of the table linked list
+        if ( NULL == gp_cli_cmd_tables )
         {
-            // First table registration entry -> store start of the table linked list
-            if ( NULL == gp_cli_cmd_tables )
-            {
-                gp_cli_cmd_tables = (cli_cmd_table_t*) p_cmd_table;
-            }
-
-            // On non-first table registration assign next pointer of lastly registrated table to the current one...
-            else
-            {
-                (*prev_table->p_next) = (cli_cmd_table_t*) p_cmd_table;
-            }
-
-            // Store previous table
-            prev_table = (cli_cmd_table_t*) p_cmd_table;
-
-            // Release mutex
-            cli_if_release_mutex();
+            gp_cli_cmd_tables = (cli_cmd_table_t*) p_cmd_table;
         }
+
+        // On non-first table registration assign next pointer of lastly registrated table to the current one...
+        else
+        {
+            (*prev_table->p_next) = (cli_cmd_table_t*) p_cmd_table;
+        }
+
+        // Store previous table
+        prev_table = (cli_cmd_table_t*) p_cmd_table;
     }
 
     // User table definition error
