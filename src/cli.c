@@ -1196,7 +1196,7 @@ cli_status_t cli_printf_ch(const cli_ch_opt_t ch, char * p_format, ...)
 * @note         Shall not be used in ISR!
 *   
 * @limitation   This function shall only be called from single task as its not
-*               protected from possible multi-task race conditions. 
+*               protected from possible race conditions.
 *
 * @param[in]	p_cmd_table	- Pointer to command table node
 * @return       status      - Status of operation
