@@ -1031,6 +1031,7 @@ cli_status_t cli_send_str(const char * const p_str)
     if ( eCLI_OK == cli_if_aquire_mutex())
     {
         status = cli_if_transmit(p_str);
+        cli_if_release_mutex();
     }
     else
     {
