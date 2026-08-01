@@ -38,7 +38,7 @@
  *
  *  Support version V3.x.x
  */
-_Static_assert( 3 == PAR_VER_MAJOR );
+_Static_assert( 3 == PAR_VER_MAJOR, "Requires Device Parameter module V3.x.x!" );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
