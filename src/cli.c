@@ -56,9 +56,9 @@ static void cli_hw_version  	(const cli_cmd_t * p_cmd, const char * p_attr);
 static void cli_boot_version  	(const cli_cmd_t * p_cmd, const char * p_attr);
 static void cli_proj_info  		(const cli_cmd_t * p_cmd, const char * p_attr);
 static void cli_uptime 		    (const cli_cmd_t * p_cmd, const char * p_attr);
-
 static void cli_ch_info  		(const cli_cmd_t * p_cmd, const char * p_attr);
 static void cli_ch_en  			(const cli_cmd_t * p_cmd, const char * p_attr);
+static void cli_sys_info        (const cli_cmd_t * p_cmd, const char * p_attr);
 static void	cli_send_intro		(const cli_cmd_t * p_cmd, const char * p_attr);
 static void cli_show_intro      (void);
 
@@ -97,6 +97,7 @@ CLI_DEFINE_CMD_TABLE( g_cli_basic_table,
     {   "uptime",               cli_uptime,             "Get device uptime [ms]",                                       NULL    },
     {   "ch_info",              cli_ch_info,            "Print COM channel informations",                               NULL    },
     {   "ch_en",                cli_ch_en,              "Enable/disable COM channel. Args: [chEnum][en]",               NULL    },
+    {   "sys_info",             cli_sys_info,           "Print system informations",                                    NULL    },
 
 #if ( 1 == CLI_CFG_ARBITRARY_RAM_ACCESS_EN )
     {   "ram_write",            cli_ram_write,          "Write data to RAM. Args: [address<hex>][size][value<hex>]",    NULL    },
@@ -592,6 +593,66 @@ static void cli_ch_en(const cli_cmd_t * p_cmd, const char * p_attr)
 	{
 		cli_util_unknown_cmd_rsp();
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*!
+* @brief        Show system informations about errors & warnings
+*
+* @param[in]    p_cmd   - Pointer to command
+* @param[in]	p_attr 	- Inputed command attributes
+* @return       void
+*/
+////////////////////////////////////////////////////////////////////////////////
+static void cli_sys_info(const cli_cmd_t * p_cmd, const char * p_attr)
+{
+    UNUSED(p_cmd);
+    UNUSED(p_attr);
+
+    cli_printf( "--------------------------------------------------------" );
+    cli_printf( "  System Errors (%d total)", (int)eSYS_ERR_NUM_OF );
+    cli_printf( "--------------------------------------------------------" );
+    cli_printf( "  %-6s  %-6s  %-6s  %-8s  %s", "Enum", "Src", "Code", "Status", "Description" );
+    cli_printf( "--------------------------------------------------------" );
+
+    for ( sys_err_t err = 0; err < eSYS_ERR_NUM_OF; err++ )
+    {
+        const bool           active = sys_diag_is_err_active( err );
+        const sys_diag_src_t src    = sys_diag_get_err_source( err );
+        const uint8_t        code   = sys_diag_get_err_code( err );
+        const char *         desc   = sys_diag_get_err_desc( err );
+
+        cli_printf( "  %-6u  %-6u  %-6u  %-8s  %s",
+                    (unsigned)err,
+                    (unsigned)src,
+                    (unsigned)code,
+                    active ? "ACTIVE" : "---",
+                    ( desc != NULL ) ? desc : "-" );
+    }
+
+    cli_printf( " " );
+    cli_printf( "--------------------------------------------------------" );
+    cli_printf( "  System Warnings (%d total)", (int)eSYS_WAR_NUM_OF );
+    cli_printf( "--------------------------------------------------------" );
+    cli_printf( "  %-6s  %-6s  %-6s  %-8s  %s", "Enum", "Src", "Code", "Status", "Description" );
+    cli_printf( "--------------------------------------------------------" );
+
+    for ( sys_war_t war = 0; war < eSYS_WAR_NUM_OF; war++ )
+    {
+        const bool           active = sys_diag_is_war_active( war );
+        const sys_diag_src_t src    = sys_diag_get_war_source( war );
+        const uint8_t        code   = sys_diag_get_war_code( war );
+        const char *         desc   = sys_diag_get_war_desc( war );
+
+        cli_printf( "  %-6u  %-6u  %-6u  %-8s  %s",
+                    (unsigned)war,
+                    (unsigned)src,
+                    (unsigned)code,
+                    active ? "ACTIVE" : "---",
+                    ( desc != NULL ) ? desc : "-" );
+    }
+
+    cli_printf( "--------------------------------------------------------" );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

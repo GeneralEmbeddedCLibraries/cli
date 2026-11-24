@@ -36,8 +36,7 @@
 /**
  * 	Check NVM module compatibility
  */
-_Static_assert( 2 == NVM_VER_MAJOR );
-_Static_assert( 1 <= NVM_VER_MINOR );
+_Static_assert( 2 == NVM_VER_MAJOR || 3 == NVM_VER_MAJOR, "Requires NVM module version V2.x.x or V3.x.x!" );
 
 #endif // ( 1 == CLI_CFG_PAR_STREAM_NVM_EN )
 
